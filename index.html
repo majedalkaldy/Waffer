@@ -94,7 +94,7 @@ async function start(){
  const file=document.getElementById('file').files[0]; if(!file){alert('اختر صورة أو PDF أولًا');return}
  if(file.size>4*1024*1024){alert('الحد الحالي 4MB. صغّر الملف ثم حاول مجددًا.');return}
  show('loading');
- try{const fileData=await fileToDataURL(file); const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileData,fileName:file.name,mimeType:file.type,vehicle:{make:document.getElementById('make').value,model:document.getElementById('model').value,year:document.getElementById('year').value,vin:document.getElementById('vin').value}})}); const d=await resp.json(); if(!resp.ok)throw new Error(d.error||'تعذر التحليل'); analysis=d; render(); show('result')}catch(e){show('home');alert('تعذر التحليل: '+e.message)}
+ try{const fileData=await fileToDataURL(file); const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileData,fileName:file.name,mimeType:file.type,vehicle:{make:document.getElementById('make').value,model:document.getElementById('model').value,year:document.getElementById('year').value,vin:document.getElementById('vin').value}})}); const d=await resp.json(); if(!resp.ok)throw new Error(d.error||'تعذر التحليل'); analysis=d; render(); show('result'); if(window.matchWafferParts&&window.wafferVehicleId){window.matchWafferParts().catch(console.error)}}catch(e){show('home');alert('تعذر التحليل: '+e.message)}
 }
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function render(){
