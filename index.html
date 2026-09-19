@@ -23,7 +23,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:focus,input:focus,sele
 .scores{display:grid;grid-template-columns:1fr 1fr;gap:10px}.score{text-align:center}.score b{font-size:30px;display:block}.bad{color:var(--red)}
 .alert{background:var(--redbg);border-radius:14px;padding:13px;margin:9px 0;color:#7d1e17}.lock{background:#f0f4f3;border-radius:14px;padding:14px;margin:12px 0}
 .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.top h2{margin:0}.pill{font-size:12px;padding:6px 9px;background:#e9f5f1;color:var(--g);border-radius:999px}
-table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px 5px;border-bottom:1px solid var(--line);text-align:right}.note{font-size:12px;color:var(--muted);line-height:1.7}
+.table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}table{width:100%;border-collapse:collapse;font-size:13px;min-width:650px}th,td{padding:10px 5px;border-bottom:1px solid var(--line);text-align:right}.note{font-size:12px;color:var(--muted);line-height:1.7}
 .nav{display:flex;gap:8px;margin-top:16px}.nav button{margin:0}.price{font-size:28px;font-weight:900;color:var(--g);text-align:center}
 </style>
 </head>
@@ -71,9 +71,13 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px 5px;
 <section id="advanced" class="hidden">
  <div class="top"><span class="pill">نموذج تجريبي</span><h2>التحليل المتقدم</h2></div>
  <div class="card"><h3>تفاصيل القطع المقروءة</h3>
- <table><thead><tr><th>البند</th><th>رقم القطعة</th><th>السعر</th><th>الهوية</th><th>التوافق</th><th>السعر</th><th>التداخل</th></tr></thead>
- <tbody id="itemsBody"></tbody></table>
+ <div class="table-wrap"><table><thead><tr><th>البند</th><th>رقم القطعة</th><th>السعر</th><th>الهوية</th><th>التوافق</th><th>السعر</th><th>التداخل</th></tr></thead>
+ <tbody id="itemsBody"></tbody></table></div>
  <p class="note">البيانات مستخرجة من العرض المرفوع. الحكم مبدئي ولا يمثل مقارنة سعرية نهائية قبل التحقق من هوية القطعة ومصدر السعر.</p></div>
+ <div id="catalogMatches" class="card">
+  <h3>🔎 مطابقة كتالوج القطع</h3>
+  <div class="note">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>
+ </div>
  <div class="card"><h3>قبل أن تدفع</h3><div id="nextActions"></div></div>
  <div class="card"><div class="price">التوفير المؤكد: غير محسوب</div><p class="lead">لا يحسب «وفّر» التوفير قبل مطابقة هوية القطعة بمصدر سعر موثوق.</p>
  <button onclick="messageWorkshop()">أنشئ رسالة استكمال للورشة</button></div>
@@ -91,10 +95,63 @@ const ids=['home','loading','result','advanced','msg']; let analysis=null;
 function show(id){ids.forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));scrollTo(0,0)}
 function fileToDataURL(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)})}
 async function start(){
- const file=document.getElementById('file').files[0]; if(!file){alert('اختر صورة أو PDF أولًا');return}
+ const file=document.getElementById('file').files[0];
+ if(!file){alert('اختر صورة أو PDF أولًا');return}
  if(file.size>4*1024*1024){alert('الحد الحالي 4MB. صغّر الملف ثم حاول مجددًا.');return}
+
+ const vin=String(document.getElementById('vin').value||'').trim().toUpperCase();
  show('loading');
- try{const fileData=await fileToDataURL(file); const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileData,fileName:file.name,mimeType:file.type,vehicle:{make:document.getElementById('make').value,model:document.getElementById('model').value,year:document.getElementById('year').value,vin:document.getElementById('vin').value}})}); const d=await resp.json(); if(!resp.ok)throw new Error(d.error||'تعذر التحليل'); analysis=d; window.analysis=d; render(); show('result'); if(window.matchWafferParts&&window.wafferVehicleId){window.matchWafferParts(d).catch(console.error)}}catch(e){show('home');alert('تعذر التحليل: '+e.message)}
+
+ try{
+   if(vin){
+     if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)){
+       throw new Error('رقم الهيكل VIN يجب أن يتكون من 17 خانة صحيحة');
+     }
+     if(typeof window.ensureWafferVehicle!=='function'){
+       throw new Error('وحدة التحقق من VIN لم يتم تحميلها');
+     }
+     const vehicleData=await window.ensureWafferVehicle();
+     if(!vehicleData || !vehicleData.vehicleId){
+       throw new Error('تعذر تحديد Vehicle ID من رقم الهيكل');
+     }
+   }
+
+   const fileData=await fileToDataURL(file);
+   const resp=await fetch('/api/analyze',{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({
+       fileData,
+       fileName:file.name,
+       mimeType:file.type,
+       vehicle:{
+         make:document.getElementById('make').value,
+         model:document.getElementById('model').value,
+         year:document.getElementById('year').value,
+         vin
+       }
+     })
+   });
+
+   const d=await resp.json();
+   if(!resp.ok)throw new Error(d.error||d.message||'تعذر التحليل');
+
+   analysis=d;
+   window.analysis=d;
+   render();
+   show('result');
+
+   if(window.wafferVehicleId && typeof window.matchWafferParts==='function'){
+     try{
+       await window.matchWafferParts(analysis);
+     }catch(matchError){
+       console.error('Parts matching error:',matchError);
+     }
+   }
+ }catch(e){
+   show('home');
+   alert('تعذر التحليل: '+(e.message||e));
+ }
 }
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function render(){
@@ -107,139 +164,60 @@ function advanced(){show('advanced')} function messageWorkshop(){show('msg')}
 async function copyMsg(){try{await navigator.clipboard.writeText(document.getElementById('message').innerText);alert('تم نسخ الرسالة')}catch(e){alert('حدد النص وانسخه يدويًا')}}
 document.getElementById('file').addEventListener('change',e=>{if(e.target.files[0])document.getElementById('fileText').textContent='تم اختيار: '+e.target.files[0].name})
 fetch('/api/vehicles').then(r=>{if(!r.ok)throw new Error('API '+r.status);return r.json()}).then(d=>{const m=document.getElementById('make');m.innerHTML='<option value="">اختر الشركة</option>';(d.manufacturers||[]).forEach(x=>m.add(new Option(x.manufacturerName,x.manufacturerId)));}).catch(e=>{console.error(e);document.getElementById('make').innerHTML='<option value="">تعذر تحميل الشركات</option>';});
- window.addEventListener('wafferPartsMatched', function (event) {
-  const matches = event.detail || [];
+window.addEventListener('wafferPartsMatched', function(event){
+ const matches=Array.isArray(event.detail)?event.detail:[];
+ const items=Array.isArray(analysis?.items)?analysis.items:[];
 
-  if (!matches.length) return;
+ items.forEach((item,index)=>{
+   const m=matches[index];
+   if(m && m.productId){
+     item.catalogMatch={
+       productId:m.productId,
+       productName:m.productName,
+       matchScore:m.matchScore,
+       countArticles:m.countArticles,
+       articles:Array.isArray(m.articles)?m.articles:[]
+     };
+   }
+ });
 
-  const items = Array.isArray(analysis?.items) ? analysis.items : [];
+ const box=document.getElementById('catalogMatches');
+ if(!box)return;
 
-  items.forEach((item, index) => {
-    const m = matches[index];
+ const matched=matches.filter(m=>m && m.productId);
 
-    if (!m || !m.productId) return;
+ if(!matched.length){
+   box.innerHTML='<h3>🔎 مطابقة كتالوج القطع</h3>'+
+     '<div class="note">تم فحص الكتالوج، لكن لم يتم العثور على مطابقة مناسبة للبنود المستخرجة.</div>';
+   return;
+ }
 
-    // إضافة بيانات المطابقة إلى العنصر نفسه
-    item.catalogMatch = {
-      productId: m.productId,
-      productName: m.productName,
-      matchScore: m.matchScore,
-      countArticles: m.countArticles,
-      articles: m.articles || []
-    };
-  });
+ box.innerHTML='<h3>🔎 مطابقة كتالوج القطع</h3>'+
+   '<p class="note">تمت مقارنة بنود عرض الورشة بكتالوج القطع المتوافقة مع السيارة.</p>'+
+   matched.map(m=>{
+     const articles=Array.isArray(m.articles)?m.articles.slice(0,5):[];
+     const articleHtml=articles.length?articles.map(a=>{
+       const image=a.image||a.s3image||'';
+       return '<div style="margin-top:10px;padding:10px;background:#eef8f4;border-radius:10px">'+
+         '<div>رقم القطعة: <strong>'+esc(a.articleNo||'غير متوفر')+'</strong></div>'+
+         '<div>المصنع: <strong>'+esc(a.supplierName||'غير متوفر')+'</strong></div>'+
+         '<div>الوصف: '+esc(a.articleProductName||'')+'</div>'+
+         (image?'<img src="'+esc(image)+'" alt="" loading="lazy" style="width:70px;height:70px;object-fit:contain;border-radius:10px;margin-top:8px;background:#fff">':'')+
+         '</div>';
+     }).join(''):'<div class="note">تم تحديد نوع القطعة، لكن لم تُحمّل أرقام بديلة.</div>';
 
-  // إنشاء صندوق نتائج الكتالوج
-  let box = document.getElementById('catalogMatches');
-
-  if (!box) {
-    box = document.createElement('div');
-    box.id = 'catalogMatches';
-    box.className = 'card';
-
-    const itemsTable = document.getElementById('itemsBody');
-
-    if (itemsTable) {
-      const parentCard = itemsTable.closest('.card');
-
-      if (parentCard) {
-        parentCard.insertAdjacentElement('afterend', box);
-      }
-    }
-  }
-
-  if (!box) return;
-
-  const matched = matches.filter(
-    m => m && m.productId
-  );
-
-  if (!matched.length) {
-    box.innerHTML =
-      '<h2>مطابقة كتالوج القطع</h2>' +
-      '<div class="note">لم يتم العثور على مطابقة مؤكدة في كتالوج السيارة.</div>';
-
-    return;
-  }
-
-  box.innerHTML =
-    '<h2>🔎 مطابقة كتالوج القطع</h2>' +
-
-    matched.map(m => {
-
-      const articles = Array.isArray(m.articles)
-        ? m.articles.slice(0, 5)
-        : [];
-
-      const articleHtml = articles.length
-        ? articles.map(a => {
-
-            const image = a.image
-              ? '<img src="' + esc(a.image) + '" ' +
-                'style="width:70px;height:70px;object-fit:contain;border-radius:10px;margin-top:8px" ' +
-                'loading="lazy">'
-              : '';
-
-            return (
-              '<div style="padding:10px 0;border-top:1px solid #eee">' +
-
-                '<b>' +
-                  esc(a.articleNo || 'رقم غير متوفر') +
-                '</b>' +
-
-                '<div>' +
-                  esc(a.supplierName || 'المصنع غير متوفر') +
-                '</div>' +
-
-                image +
-
-              '</div>'
-            );
-          }).join('')
-        : '<div class="note">تم تحديد نوع القطعة، لكن لم تُحمّل أرقام بديلة.</div>';
-
-      return (
-        '<div style="margin:16px 0;padding:14px;border:1px solid #e1e7e4;border-radius:14px">' +
-
-          '<b>' +
-            esc(m.workshopItem || 'قطعة') +
-          '</b>' +
-
-          '<div style="margin-top:8px">' +
-            'مطابقة الكتالوج: ' +
-            '<strong>' +
-              esc(m.productName || '-') +
-            '</strong>' +
-          '</div>' +
-
-          '<div>' +
-            'Product ID: ' +
-            esc(m.productId) +
-          '</div>' +
-
-          '<div>' +
-            'درجة المطابقة: ' +
-            esc(m.matchScore) +
-            '%' +
-          '</div>' +
-
-          '<div>' +
-            'عدد النتائج المتوافقة: ' +
-            esc(m.countArticles) +
-          '</div>' +
-
-          articleHtml +
-
-        '</div>'
-      );
-    }).join('');
+     return '<div style="margin:16px 0;padding:14px;border:1px solid #e1e7e4;border-radius:14px">'+
+       '<b>'+esc(m.workshopItem||'قطعة')+'</b>'+
+       '<div style="margin-top:8px">مطابقة الكتالوج: <strong>'+esc(m.productName||'-')+'</strong></div>'+
+       '<div>Product ID: '+esc(m.productId)+'</div>'+
+       '<div>درجة المطابقة: '+esc(m.matchScore??0)+'%</div>'+
+       '<div>عدد النتائج المتوافقة: '+esc(m.countArticles??0)+'</div>'+
+       articleHtml+
+       '</div>';
+   }).join('');
 });
- 
-
 </script>
-
 <script src="/vin-ui.js"></script>
 <script src="/parts-match.js"></script>
-
 </body>
 </html>
