@@ -107,4 +107,5 @@ function advanced(){show('advanced')} function messageWorkshop(){show('msg')}
 async function copyMsg(){try{await navigator.clipboard.writeText(document.getElementById('message').innerText);alert('تم نسخ الرسالة')}catch(e){alert('حدد النص وانسخه يدويًا')}}
 document.getElementById('file').addEventListener('change',e=>{if(e.target.files[0])document.getElementById('fileText').textContent='تم اختيار: '+e.target.files[0].name})
 fetch('/api/vehicles').then(r=>{if(!r.ok)throw new Error('API '+r.status);return r.json()}).then(d=>{const m=document.getElementById('make');m.innerHTML='<option value="">اختر الشركة</option>';(d.manufacturers||[]).forEach(x=>m.add(new Option(x.manufacturerName,x.manufacturerId)));}).catch(e=>{console.error(e);document.getElementById('make').innerHTML='<option value="">تعذر تحميل الشركات</option>';});
+ </script>
 <script src="/vin-ui.js"></script>
