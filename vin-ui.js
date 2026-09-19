@@ -1,85 +1,73 @@
-async function checkVin() {
-  const vinInput = document.getElementById('vin');
-  if (!vinInput) return;
+(function () {
 
-  const vin = (vinInput.value || '').trim().toUpperCase();
+  let vinRequest = null;
+  let lastVin = '';
 
-  if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) {
-    return;
-  }
+  async function checkVin(force = false) {
 
-  try {
-    const response = await fetch(
-      '/api/vin?vin=' + encodeURIComponent(vin)
-    );
+    const vinInput = document.getElementById('vin');
 
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        result?.message ||
-        result?.error ||
-        'VIN lookup failed'
-      );
+    if (!vinInput) {
+      return null;
     }
 
-    const manufacturer =
-      result?.data?.matchingManufacturers?.array?.[0];
+    const vin = String(vinInput.value || '')
+      .trim()
+      .toUpperCase();
 
-    const model =
-      result?.data?.matchingModels?.array?.[0];
-
-    const vehicle =
-      result?.data?.matchingVehicles?.array?.[0];
-
-    if (!vehicle) {
-      alert('تم فحص رقم الهيكل، ولكن لم يتم العثور على سيارة مطابقة.');
-      return;
+    // VIN يجب أن يكون 17 خانة
+    if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) {
+      return null;
     }
 
-    window.wafferVehicleId = vehicle.vehicleId;
-    window.wafferModelId = vehicle.modelId;
-    window.wafferManufacturerId = vehicle.manuId;
-
-    const makeSelect = document.getElementById('make');
-    const modelInput = document.getElementById('model');
-
-    if (makeSelect && manufacturer) {
-      const matchingOption = Array.from(makeSelect.options).find(
-        option =>
-          String(option.value) === String(manufacturer.manuId)
-      );
-
-      if (matchingOption) {
-        makeSelect.value = matchingOption.value;
-      }
+    // إذا تم التعرف على نفس VIN مسبقًا
+    if (
+      !force &&
+      vin === lastVin &&
+      window.wafferVehicleId
+    ) {
+      return {
+        vehicleId: window.wafferVehicleId,
+        modelId: window.wafferModelId,
+        manufacturerId: window.wafferManufacturerId
+      };
     }
 
-    if (modelInput && model) {
-      modelInput.value = model.modelName || '';
+    // منع تكرار نفس الطلب أثناء تنفيذه
+    if (vinRequest) {
+      return vinRequest;
     }
 
-    alert(
-      'تم التعرف على السيارة بنجاح ✅\n\n' +
-      'الشركة: ' + (manufacturer?.manuName || '-') + '\n' +
-      'الموديل: ' + (model?.modelName || '-') + '\n' +
-      'المحرك: ' + (vehicle.vehicleTypeDescription || '-') + '\n' +
-      'Vehicle ID: ' + vehicle.vehicleId
-    );
+    vinRequest = (async function () {
 
-  } catch (error) {
-    console.error('VIN lookup error:', error);
+      try {
 
-    alert(
-      'تعذر التحقق من رقم الهيكل.\n' +
-      (error?.message || '')
-    );
-  }
-}
+        console.log('Waffer: checking VIN', vin);
 
-const vinField = document.getElementById('vin');
+        const response = await fetch(
+          '/api/vin?vin=' +
+          encodeURIComponent(vin)
+        );
 
-if (vinField) {
-  vinField.addEventListener('change', checkVin);
-  vinField.addEventListener('blur', checkVin);
-}
+        let result;
+
+        try {
+          result = await response.json();
+        } catch (e) {
+          throw new Error(
+            'استجابة VIN غير صالحة'
+          );
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            result?.message ||
+            result?.error ||
+            'VIN lookup failed'
+          );
+        }
+
+        const manufacturer =
+          result?.data
+            ?.matchingManufacturers
+            ?.array?.[
