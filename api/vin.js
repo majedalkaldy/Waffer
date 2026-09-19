@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     }
 
     const response = await fetch(
-      `https://auto-parts-catalog.apiprofile.com/api/v2/vin/tec-doc-vin-check/${encodeURIComponent(vin)}`,
+      `https://auto-parts-catalog.apiprofile.com/api/v2/vin/tecdoc-vin-check/${encodeURIComponent(vin)}`,
       {
         method: "GET",
         headers: {
