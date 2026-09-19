@@ -107,7 +107,136 @@ function advanced(){show('advanced')} function messageWorkshop(){show('msg')}
 async function copyMsg(){try{await navigator.clipboard.writeText(document.getElementById('message').innerText);alert('تم نسخ الرسالة')}catch(e){alert('حدد النص وانسخه يدويًا')}}
 document.getElementById('file').addEventListener('change',e=>{if(e.target.files[0])document.getElementById('fileText').textContent='تم اختيار: '+e.target.files[0].name})
 fetch('/api/vehicles').then(r=>{if(!r.ok)throw new Error('API '+r.status);return r.json()}).then(d=>{const m=document.getElementById('make');m.innerHTML='<option value="">اختر الشركة</option>';(d.manufacturers||[]).forEach(x=>m.add(new Option(x.manufacturerName,x.manufacturerId)));}).catch(e=>{console.error(e);document.getElementById('make').innerHTML='<option value="">تعذر تحميل الشركات</option>';});
- </script>
+ window.addEventListener('wafferPartsMatched', function (event) {
+  const matches = event.detail || [];
+
+  if (!matches.length) return;
+
+  const items = Array.isArray(analysis?.items) ? analysis.items : [];
+
+  items.forEach((item, index) => {
+    const m = matches[index];
+
+    if (!m || !m.productId) return;
+
+    // إضافة بيانات المطابقة إلى العنصر نفسه
+    item.catalogMatch = {
+      productId: m.productId,
+      productName: m.productName,
+      matchScore: m.matchScore,
+      countArticles: m.countArticles,
+      articles: m.articles || []
+    };
+  });
+
+  // إنشاء صندوق نتائج الكتالوج
+  let box = document.getElementById('catalogMatches');
+
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'catalogMatches';
+    box.className = 'card';
+
+    const itemsTable = document.getElementById('itemsBody');
+
+    if (itemsTable) {
+      const parentCard = itemsTable.closest('.card');
+
+      if (parentCard) {
+        parentCard.insertAdjacentElement('afterend', box);
+      }
+    }
+  }
+
+  if (!box) return;
+
+  const matched = matches.filter(
+    m => m && m.productId
+  );
+
+  if (!matched.length) {
+    box.innerHTML =
+      '<h2>مطابقة كتالوج القطع</h2>' +
+      '<div class="note">لم يتم العثور على مطابقة مؤكدة في كتالوج السيارة.</div>';
+
+    return;
+  }
+
+  box.innerHTML =
+    '<h2>🔎 مطابقة كتالوج القطع</h2>' +
+
+    matched.map(m => {
+
+      const articles = Array.isArray(m.articles)
+        ? m.articles.slice(0, 5)
+        : [];
+
+      const articleHtml = articles.length
+        ? articles.map(a => {
+
+            const image = a.image
+              ? '<img src="' + esc(a.image) + '" ' +
+                'style="width:70px;height:70px;object-fit:contain;border-radius:10px;margin-top:8px" ' +
+                'loading="lazy">'
+              : '';
+
+            return (
+              '<div style="padding:10px 0;border-top:1px solid #eee">' +
+
+                '<b>' +
+                  esc(a.articleNo || 'رقم غير متوفر') +
+                '</b>' +
+
+                '<div>' +
+                  esc(a.supplierName || 'المصنع غير متوفر') +
+                '</div>' +
+
+                image +
+
+              '</div>'
+            );
+          }).join('')
+        : '<div class="note">تم تحديد نوع القطعة، لكن لم تُحمّل أرقام بديلة.</div>';
+
+      return (
+        '<div style="margin:16px 0;padding:14px;border:1px solid #e1e7e4;border-radius:14px">' +
+
+          '<b>' +
+            esc(m.workshopItem || 'قطعة') +
+          '</b>' +
+
+          '<div style="margin-top:8px">' +
+            'مطابقة الكتالوج: ' +
+            '<strong>' +
+              esc(m.productName || '-') +
+            '</strong>' +
+          '</div>' +
+
+          '<div>' +
+            'Product ID: ' +
+            esc(m.productId) +
+          '</div>' +
+
+          '<div>' +
+            'درجة المطابقة: ' +
+            esc(m.matchScore) +
+            '%' +
+          '</div>' +
+
+          '<div>' +
+            'عدد النتائج المتوافقة: ' +
+            esc(m.countArticles) +
+          '</div>' +
+
+          articleHtml +
+
+        '</div>'
+      );
+    }).join('');
+});
+ 
+
+</script>
 
 <script src="/vin-ui.js"></script>
 <script src="/parts-match.js"></script>
