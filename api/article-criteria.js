@@ -8,11 +8,12 @@ export default async function handler(req, res) {
       });
     }
 
-    const apiKey = process.env.APIPROFILE_KEY;
+    // نفس اسم المفتاح المستخدم في بقية API مشروع وفر
+    const apiKey = process.env.AUTOPARTS_API_KEY;
 
     if (!apiKey) {
       return res.status(500).json({
-        error: 'APIPROFILE_KEY is not configured'
+        error: 'AUTOPARTS_API_KEY is not configured'
       });
     }
 
@@ -40,7 +41,7 @@ export default async function handler(req, res) {
 
     try {
       data = JSON.parse(text);
-    } catch {
+    } catch (error) {
       return res.status(502).json({
         error: 'Invalid response from parts catalog',
         status: response.status
