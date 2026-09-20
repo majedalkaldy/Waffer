@@ -20,8 +20,8 @@
     },
     {
       words: [
-        'فحمة فرامل', 'فحمات فرامل', 'تيل فرامل',
-        'brake pad'
+        'فحمة فرامل', 'فحمات فرامل',
+        'تيل فرامل', 'brake pad'
       ],
       product: 'brake pad',
       type: 'brake_pad'
@@ -46,7 +46,8 @@
     },
     {
       words: [
-        'فلتر وقود', 'فلتر بنزين', 'fuel filter'
+        'فلتر وقود', 'فلتر بنزين',
+        'fuel filter'
       ],
       product: 'fuel filter',
       type: 'fuel_filter'
@@ -61,7 +62,8 @@
     },
     {
       words: [
-        'مساعد', 'مساعدات', 'shock absorber'
+        'مساعد', 'مساعدات',
+        'shock absorber'
       ],
       product: 'shock absorber',
       type: 'shock_absorber'
@@ -76,7 +78,8 @@
     },
     {
       words: [
-        'طرمبة ماء', 'مضخة ماء', 'water pump'
+        'طرمبة ماء', 'مضخة ماء',
+        'water pump'
       ],
       product: 'water pump',
       type: 'water_pump'
@@ -98,14 +101,16 @@
     },
     {
       words: [
-        'كلتش', 'ديسك كلتش', 'clutch disc'
+        'كلتش', 'ديسك كلتش',
+        'clutch disc'
       ],
       product: 'clutch disc',
       type: 'clutch_disc'
     },
     {
       words: [
-        'سائل فرامل', 'زيت فرامل', 'brake fluid'
+        'سائل فرامل', 'زيت فرامل',
+        'brake fluid'
       ],
       product: 'brake fluid',
       type: 'brake_fluid'
@@ -131,6 +136,44 @@
     };
   }
 
+  function detectAxle(name) {
+    const n = norm(name);
+
+    const frontWords = [
+      'front',
+      'front axle',
+      'امامي',
+      'أمامي',
+      'امامية',
+      'أمامية'
+    ];
+
+    const rearWords = [
+      'rear',
+      'rear axle',
+      'خلفي',
+      'خلفية'
+    ];
+
+    if (
+      frontWords.some(function (word) {
+        return n.includes(norm(word));
+      })
+    ) {
+      return 'front';
+    }
+
+    if (
+      rearWords.some(function (word) {
+        return n.includes(norm(word));
+      })
+    ) {
+      return 'rear';
+    }
+
+    return null;
+  }
+
   function scoreText(a, b) {
     a = norm(a);
     b = norm(b);
@@ -139,21 +182,35 @@
 
     if (a === b) return 100;
 
-    if (b.includes(a) || a.includes(b)) {
+    if (
+      b.includes(a) ||
+      a.includes(b)
+    ) {
       return 92;
     }
 
-    const aa = a.split(' ').filter(Boolean);
-    const bb = b.split(' ').filter(Boolean);
+    const aa =
+      a.split(' ').filter(Boolean);
+
+    const bb =
+      b.split(' ').filter(Boolean);
 
     let common = 0;
 
     aa.forEach(function (word) {
-      if (bb.includes(word)) common++;
+      if (bb.includes(word)) {
+        common++;
+      }
     });
 
     return Math.round(
-      (common / Math.max(aa.length, bb.length)) * 100
+      (
+        common /
+        Math.max(
+          aa.length,
+          bb.length
+        )
+      ) * 100
     );
   }
 
@@ -170,17 +227,24 @@
       'brake pad wear'
     ];
 
-    const isAccessory = accessoryWords.some(function (x) {
-      return p.includes(x);
-    });
+    const isAccessory =
+      accessoryWords.some(
+        function (word) {
+          return p.includes(word);
+        }
+      );
 
-    // عند طلب الفحمة نفسها لا نسمح لطقم الملحقات بالفوز
-    if (type === 'brake_pad' && isAccessory) {
+    if (
+      type === 'brake_pad' &&
+      isAccessory
+    ) {
       return 60;
     }
 
-    // وعند طلب قرص الفرامل لا نريد ملحقاته
-    if (type === 'brake_disc' && isAccessory) {
+    if (
+      type === 'brake_disc' &&
+      isAccessory
+    ) {
       return 60;
     }
 
@@ -192,8 +256,7 @@
 
     if (
       type === 'brake_disc' &&
-      (p === 'brake disc' ||
-       p.includes('brake disc'))
+      p.includes('brake disc')
     ) {
       return 20;
     }
@@ -226,55 +289,78 @@
     return 0;
   }
 
-  function bestProduct(itemName, products) {
-    const wanted = classify(itemName);
+  function bestProduct(
+    itemName,
+    products
+  ) {
+    const wanted =
+      classify(itemName);
 
     let best = null;
     let bestScore = -1;
 
-    products.forEach(function (product) {
-      let s = scoreText(
-        wanted.product,
-        product.productName
-      );
+    products.forEach(
+      function (product) {
 
-      s += bonus(
-        wanted.type,
-        product.productName
-      );
+        let s = scoreText(
+          wanted.product,
+          product.productName
+        );
 
-      s -= penalty(
-        wanted.type,
-        product.productName
-      );
+        s += bonus(
+          wanted.type,
+          product.productName
+        );
 
-      s = Math.max(0, Math.min(100, s));
+        s -= penalty(
+          wanted.type,
+          product.productName
+        );
 
-      if (s > bestScore) {
-        bestScore = s;
-        best = product;
+        s = Math.max(
+          0,
+          Math.min(100, s)
+        );
+
+        if (s > bestScore) {
+          bestScore = s;
+          best = product;
+        }
       }
-    });
+    );
 
-    if (!best || bestScore < 55) {
+    if (
+      !best ||
+      bestScore < 55
+    ) {
       return null;
     }
 
     return {
-      productId: best.productId,
-      productName: best.productName,
-      matchScore: bestScore,
-      requestedType: wanted.type
+      productId:
+        best.productId,
+
+      productName:
+        best.productName,
+
+      matchScore:
+        bestScore,
+
+      requestedType:
+        wanted.type
     };
   }
 
-  async function loadProducts(vehicleId) {
+  async function loadProducts(
+    vehicleId
+  ) {
     const response = await fetch(
       '/api/products?vehicleId=' +
       encodeURIComponent(vehicleId)
     );
 
-    const data = await response.json();
+    const data =
+      await response.json();
 
     if (!response.ok) {
       throw new Error(
@@ -284,12 +370,17 @@
       );
     }
 
-    return Array.isArray(data.products)
+    return Array.isArray(
+      data.products
+    )
       ? data.products
       : [];
   }
 
-  async function loadArticles(vehicleId, productId) {
+  async function loadArticles(
+    vehicleId,
+    productId
+  ) {
     try {
       const response = await fetch(
         '/api/articles?vehicleId=' +
@@ -298,11 +389,16 @@
         encodeURIComponent(productId)
       );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
-      if (!response.ok) return [];
+      if (!response.ok) {
+        return [];
+      }
 
-      return Array.isArray(data.articles)
+      return Array.isArray(
+        data.articles
+      )
         ? data.articles
         : [];
 
@@ -316,23 +412,262 @@
     }
   }
 
-  async function matchWafferParts(analysisArg) {
+  async function loadArticleCriteria(
+    articleId
+  ) {
+    try {
+      const response = await fetch(
+        '/api/article-criteria?articleId=' +
+        encodeURIComponent(articleId)
+      );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        return [];
+      }
+
+      /*
+        endpoint يعيد:
+        {
+          articleId,
+          criteria: [...]
+        }
+
+        وقد تكون criteria نفسها
+        مصفوفة مباشرة أو داخل خاصية أخرى.
+      */
+
+      if (
+        Array.isArray(data.criteria)
+      ) {
+        return data.criteria;
+      }
+
+      if (
+        Array.isArray(
+          data.criteria?.criteria
+        )
+      ) {
+        return data.criteria.criteria;
+      }
+
+      if (
+        Array.isArray(
+          data.criteria?.array
+        )
+      ) {
+        return data.criteria.array;
+      }
+
+      return [];
+
+    } catch (error) {
+      console.error(
+        'Article criteria error:',
+        articleId,
+        error
+      );
+
+      return [];
+    }
+  }
+
+  function getFittingPosition(
+    criteria
+  ) {
+    if (!Array.isArray(criteria)) {
+      return null;
+    }
+
+    for (const criterion of criteria) {
+      const name = norm(
+        criterion.criteriaName ||
+        criterion.name ||
+        ''
+      );
+
+      const value = String(
+        criterion.criteriaValue ||
+        criterion.value ||
+        ''
+      ).trim();
+
+      if (
+        name === 'fitting position' ||
+        name.includes(
+          'fitting position'
+        )
+      ) {
+        return value;
+      }
+    }
+
+    return null;
+  }
+
+  function axleMatches(
+    requestedAxle,
+    fittingPosition
+  ) {
+    if (!requestedAxle) {
+      return true;
+    }
+
+    const position =
+      norm(fittingPosition);
+
+    if (!position) {
+      return false;
+    }
+
+    if (
+      requestedAxle === 'front'
+    ) {
+      return (
+        position.includes(
+          'front axle'
+        ) ||
+        position === 'front'
+      );
+    }
+
+    if (
+      requestedAxle === 'rear'
+    ) {
+      return (
+        position.includes(
+          'rear axle'
+        ) ||
+        position === 'rear'
+      );
+    }
+
+    return false;
+  }
+
+  async function filterByAxle(
+    articles,
+    requestedAxle
+  ) {
+    /*
+      إذا لم يحدد عرض الورشة
+      Front أو Rear فلا نفلتر.
+    */
+    if (!requestedAxle) {
+      return {
+        articles:
+          articles.slice(0, 20),
+
+        checkedCount: 0,
+
+        confirmedCount: 0
+      };
+    }
+
+    const confirmed = [];
+
+    let checkedCount = 0;
+
+    /*
+      لا نفحص مئات القطع.
+      نتوقف بعد 5 نتائج مؤكدة
+      أو بعد فحص 40 Article.
+    */
+    const maxChecks =
+      Math.min(
+        articles.length,
+        40
+      );
+
+    for (
+      let i = 0;
+      i < maxChecks;
+      i++
+    ) {
+      const article =
+        articles[i];
+
+      if (!article?.articleId) {
+        continue;
+      }
+
+      checkedCount++;
+
+      const criteria =
+        await loadArticleCriteria(
+          article.articleId
+        );
+
+      const fittingPosition =
+        getFittingPosition(
+          criteria
+        );
+
+      if (
+        axleMatches(
+          requestedAxle,
+          fittingPosition
+        )
+      ) {
+        confirmed.push({
+          ...article,
+
+          fittingPosition:
+            fittingPosition,
+
+          axleVerified:
+            true
+        });
+      }
+
+      if (
+        confirmed.length >= 5
+      ) {
+        break;
+      }
+    }
+
+    return {
+      articles: confirmed,
+
+      checkedCount:
+        checkedCount,
+
+      confirmedCount:
+        confirmed.length
+    };
+  }
+
+  async function matchWafferParts(
+    analysisArg
+  ) {
     const analysis =
-      analysisArg || window.analysis;
+      analysisArg ||
+      window.analysis;
 
     const vehicleId =
       window.wafferVehicleId;
 
     const items =
-      Array.isArray(analysis?.items)
+      Array.isArray(
+        analysis?.items
+      )
         ? analysis.items
         : [];
 
-    if (!analysis || !vehicleId || !items.length) {
+    if (
+      !analysis ||
+      !vehicleId ||
+      !items.length
+    ) {
       window.dispatchEvent(
         new CustomEvent(
           'wafferPartsMatched',
-          { detail: [] }
+          {
+            detail: []
+          }
         )
       );
 
@@ -341,7 +676,9 @@
 
     try {
       const products =
-        await loadProducts(vehicleId);
+        await loadProducts(
+          vehicleId
+        );
 
       const matches = [];
 
@@ -353,29 +690,95 @@
           '';
 
         const product =
-          bestProduct(itemName, products);
+          bestProduct(
+            itemName,
+            products
+          );
 
         if (!product) {
           matches.push({
-            workshopItem: itemName,
-            productId: null,
-            productName: null,
-            matchScore: 0,
-            countArticles: 0,
-            articles: []
+            workshopItem:
+              itemName,
+
+            productId:
+              null,
+
+            productName:
+              null,
+
+            matchScore:
+              0,
+
+            requestedAxle:
+              detectAxle(
+                itemName
+              ),
+
+            countArticles:
+              0,
+
+            articles:
+              []
           });
 
           continue;
         }
 
-        const articles =
+        const allArticles =
           await loadArticles(
             vehicleId,
             product.productId
           );
 
+        const requestedAxle =
+          (
+            product.requestedType ===
+              'brake_pad' ||
+            product.requestedType ===
+              'brake_disc'
+          )
+            ? detectAxle(
+                itemName
+              )
+            : null;
+
+        let finalArticles =
+          allArticles.slice(
+            0,
+            20
+          );
+
+        let axleChecked =
+          false;
+
+        let checkedCount =
+          0;
+
+        let confirmedCount =
+          0;
+
+        if (requestedAxle) {
+          axleChecked = true;
+
+          const filtered =
+            await filterByAxle(
+              allArticles,
+              requestedAxle
+            );
+
+          finalArticles =
+            filtered.articles;
+
+          checkedCount =
+            filtered.checkedCount;
+
+          confirmedCount =
+            filtered.confirmedCount;
+        }
+
         matches.push({
-          workshopItem: itemName,
+          workshopItem:
+            itemName,
 
           productId:
             product.productId,
@@ -389,20 +792,41 @@
           requestedType:
             product.requestedType,
 
+          requestedAxle:
+            requestedAxle,
+
+          axleChecked:
+            axleChecked,
+
+          criteriaChecked:
+            checkedCount,
+
+          confirmedByAxle:
+            confirmedCount,
+
+          /*
+            العدد الأصلي من Product
+            لا نعرضه على أنه كله
+            مؤكد للمحور.
+          */
           countArticles:
-            articles.length,
+            allArticles.length,
 
           articles:
-            articles.slice(0, 20)
+            finalArticles
         });
       }
 
-      window.wafferPartMatches = matches;
+      window.wafferPartMatches =
+        matches;
 
       window.dispatchEvent(
         new CustomEvent(
           'wafferPartsMatched',
-          { detail: matches }
+          {
+            detail:
+              matches
+          }
         )
       );
 
@@ -422,7 +846,9 @@
       window.dispatchEvent(
         new CustomEvent(
           'wafferPartsMatched',
-          { detail: [] }
+          {
+            detail: []
+          }
         )
       );
 
