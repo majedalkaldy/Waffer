@@ -64,6 +64,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:focus,input:focus,sele
  <div class="card"><h3>درجة الثقة الكلية</h3><div class="total"><b id="rOverall">—</b><small>تعكس قوة الأدلة المتاحة، وليست تقييمًا للورشة</small></div></div>
  <div class="card"><h3>أبرز ما وجدناه</h3><div id="rAlerts"></div>
   <div class="lock">🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون مطابقة القطعة ومصدر سعر موثوق.</div>
+  <div id="catalogSummary" class="lock">🔎 حالة مطابقة الكتالوج: بانتظار التحليل.</div>
   <button onclick="advanced()">عرض تفاصيل البنود</button><button class="secondary" onclick="messageWorkshop()">أنشئ رسالة للورشة</button>
  </div>
 </section>
@@ -182,9 +183,15 @@ window.addEventListener('wafferPartsMatched', function(event){
  });
 
  const box=document.getElementById('catalogMatches');
+ const summary=document.getElementById('catalogSummary');
  if(!box)return;
 
  const matched=matches.filter(m=>m && m.productId);
+ if(summary){
+   summary.textContent=matched.length
+     ? '✅ تمت مطابقة '+matched.length+' من بنود العرض مع كتالوج السيارة.'
+     : '⚠️ اكتمل فحص الكتالوج ولم تظهر مطابقة مناسبة.';
+ }
 
  if(!matched.length){
    box.innerHTML='<h3>🔎 مطابقة كتالوج القطع</h3>'+
