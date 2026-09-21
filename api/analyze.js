@@ -8,7 +8,11 @@ export default async function handler(req, res) {
     const base64 = fileData.includes(',') ? fileData.split(',')[1] : fileData;
     if (Buffer.byteLength(base64, 'base64') > 4 * 1024 * 1024) return res.status(413).json({ error: 'حجم الملف أكبر من 4MB. صغّر الملف ثم حاول مجددًا.' });
 
-    const prompt = `أنت محرك تحليل مستقل لعروض صيانة السيارات في السعودية باسم «وفّر». السيارة: الشركة ${vehicle.make || 'غير محدد'}، الموديل ${vehicle.model || 'غير محدد'}، السنة ${vehicle.year || 'غير محدد'}، VIN ${vehicle.vin || 'غير متوفر'}.
+    const market = String(vehicle.market || 'SA').toUpperCase();
+    const locale = String(vehicle.locale || 'ar-SA');
+    const currency = String(vehicle.currency || 'SAR').toUpperCase();
+
+    const prompt = `أنت محرك تحليل مستقل لعروض صيانة السيارات باسم «وفّر». السوق الحالي ${market}، اللغة/المنطقة ${locale}، العملة ${currency}. السيارة: الشركة ${vehicle.make || 'غير محدد'}، الموديل ${vehicle.model || 'غير محدد'}، السنة ${vehicle.year || 'غير محدد'}، VIN ${vehicle.vin || 'غير متوفر'}.
 
 حلّل المستند وفق التسلسل: Identity → Compatibility → Price → Conflict → Confidence.
 أعد JSON فقط دون markdown بهذه البنية:
