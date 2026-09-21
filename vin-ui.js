@@ -308,17 +308,24 @@
             manufacturer
           );
 
-        if (makeOption) {
-
-          makeSelect.value =
-            makeOption.value;
-
-          makeSelect.dispatchEvent(
-            new Event(
-              'change',
-              { bubbles: true }
-            )
-          );
+        if (makeSelect && manufacturer) {
+          let option = makeOption;
+          if (!option) {
+            const optionValue = String(
+              pick(manufacturer, ['manuId','manufacturerId','id']) ?? ''
+            );
+            const optionText = String(
+              pick(manufacturer, ['manuName','manufacturerName','name']) ?? 'الشركة المحددة من VIN'
+            );
+            if (optionValue) {
+              option = new Option(optionText, optionValue);
+              makeSelect.add(option);
+            }
+          }
+          if (option) {
+            makeSelect.value = option.value;
+            makeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+          }
         }
 
         // اسم الموديل
