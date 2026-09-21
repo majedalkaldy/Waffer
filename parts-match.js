@@ -275,10 +275,23 @@
     };
   }
 
+  const catalogContext = {
+    market: 'SA',
+    langId: 4,
+    countryFilterId: 63
+  };
+
+  function catalogQuery() {
+    return '&market=' + encodeURIComponent(catalogContext.market) +
+      '&langId=' + encodeURIComponent(catalogContext.langId) +
+      '&countryFilterId=' + encodeURIComponent(catalogContext.countryFilterId);
+  }
+
   async function loadProducts(vehicleId) {
     const response = await fetch(
       '/api/products?vehicleId=' +
-      encodeURIComponent(vehicleId)
+      encodeURIComponent(vehicleId) +
+      catalogQuery()
     );
 
     const data = await response.json();
@@ -302,7 +315,8 @@
         '/api/articles?vehicleId=' +
         encodeURIComponent(vehicleId) +
         '&productId=' +
-        encodeURIComponent(productId)
+        encodeURIComponent(productId) +
+        catalogQuery()
       );
 
       const data = await response.json();
@@ -326,7 +340,7 @@
   async function loadArticleCriteria(articleId) {
     if (!articleId) return [];
     try {
-      const response = await fetch('/api/article-criteria?articleId=' + encodeURIComponent(articleId));
+      const response = await fetch('/api/article-criteria?articleId=' + encodeURIComponent(articleId) + catalogQuery());
       if (!response.ok) return [];
       const data = await response.json();
       if (Array.isArray(data.criteria)) return data.criteria;
