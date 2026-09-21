@@ -1,1 +1,27 @@
-export default async function handler(req,res){try{const k=process.env.AUTOPARTS_API_KEY,v=String(req.query.vehicleId||"").trim();if(!k)return res.status(500).json({error:"API key missing"});if(!/^\d+$/.test(v))return res.status(400).json({error:"Invalid vehicleId"});const u=`https://auto-parts-catalog.apiprofile.com/api/v2/category/type-id/1/list-products-names?vehicleId=${encodeURIComponent(v)}&langId=4`;const r=await fetch(u,{headers:{Accept:"application/json","x-apiprofile-key":k}});const d=await r.json();if(!r.ok)return res.status(r.status).json(d);return res.status(200).json({vehicleId:Number(v),count:Array.isArray(d)?d.length:0,products:d});}catch(e){console.error(e);return res.status(500).json({error:"Failed to load vehicle products"});}}
+const DEFAULTS = { market: 'SA', langId: 4 };
+
+export default async function handler(req, res) {
+  try {
+    const apiKey = process.env.AUTOPARTS_API_KEY;
+    const vehicleId = String(req.query.vehicleId || '').trim();
+    const market = String(req.query.market || DEFAULTS.market).toUpperCase();
+    const langId = Number(req.query.langId || DEFAULTS.langId);
+
+    if (!apiKey) return res.status(500).json({ error: 'API key missing' });
+    if (!/^\d+$/.test(vehicleId)) return res.status(400).json({ error: 'Invalid vehicleId' });
+
+    const url = 'https://auto-parts-catalog.apiprofile.com/api/v2/category/type-id/1/list-products-names' +
+      '?vehicleId=' + encodeURIComponent(vehicleId) +
+      '&langId=' + encodeURIComponent(langId);
+
+    const response = await fetch(url, { headers: { Accept: 'application/json', 'x-apiprofile-key': apiKey } });
+    const data = await response.json();
+    if (!response.ok) return res.status(response.status).json(data);
+
+    const products = Array.isArray(data) ? data : [];
+    return res.status(200).json({ market, langId, vehicleId: Number(vehicleId), count: products.length, products });
+  } catch (error) {
+    console.error('Vehicle products error:', error);
+    return res.status(500).json({ error: 'Failed to load vehicle products' });
+  }
+}
