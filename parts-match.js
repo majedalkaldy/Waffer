@@ -131,6 +131,13 @@
     };
   }
 
+  function detectRequestedAxle(name) {
+    const n = norm(name);
+    if (['front','front axle','امامي','أمامي','امامية','أمامية'].some(w => n.includes(norm(w)))) return 'front';
+    if (['rear','rear axle','خلفي','خلفية'].some(w => n.includes(norm(w)))) return 'rear';
+    return null;
+  }
+
   function scoreText(a, b) {
     a = norm(a);
     b = norm(b);
@@ -316,6 +323,49 @@
     }
   }
 
+  async function loadArticleCriteria(articleId) {
+    if (!articleId) return [];
+    try {
+      const response = await fetch('/api/article-criteria?articleId=' + encodeURIComponent(articleId));
+      if (!response.ok) return [];
+      const data = await response.json();
+      if (Array.isArray(data.criteria)) return data.criteria;
+      if (Array.isArray(data.criteria?.array)) return data.criteria.array;
+      return [];
+    } catch (error) {
+      console.error('Article criteria error:', articleId, error);
+      return [];
+    }
+  }
+
+  function criteriaAxle(criteria) {
+    for (const row of Array.isArray(criteria) ? criteria : []) {
+      const name = norm(row?.criteriaName || row?.name || '');
+      const value = norm(row?.criteriaValue || row?.value || '');
+      if (!name.includes('fitting position')) continue;
+      if (value.includes('front axle') || value === 'front') return 'front';
+      if (value.includes('rear axle') || value === 'rear') return 'rear';
+    }
+    return null;
+  }
+
+  async function filterByAxle(articles, requestedAxle) {
+    if (!requestedAxle || !Array.isArray(articles) || !articles.length) {
+      return { articles: Array.isArray(articles) ? articles.slice(0,20) : [], checked: 0, verified: 0 };
+    }
+    // Limit and parallelize criteria checks to keep the UI responsive.
+    const candidates = articles.slice(0, 10);
+    const checked = await Promise.all(candidates.map(async article => {
+      const criteria = await loadArticleCriteria(article.articleId || article.id);
+      const axle = criteriaAxle(criteria);
+      return { article, axle };
+    }));
+    const verified = checked
+      .filter(x => x.axle === requestedAxle)
+      .map(x => ({ ...x.article, fittingPosition: x.axle === 'front' ? 'Front Axle' : 'Rear Axle', axleVerified: true }));
+    return { articles: verified.slice(0,5), checked: checked.length, verified: verified.length };
+  }
+
   async function matchWafferParts(analysisArg) {
     const analysis =
       analysisArg || window.analysis;
@@ -368,32 +418,32 @@
           continue;
         }
 
-        const articles =
+        const allArticles =
           await loadArticles(
             vehicleId,
             product.productId
           );
 
+        const requestedAxle =
+          (product.requestedType === 'brake_pad' || product.requestedType === 'brake_disc')
+            ? detectRequestedAxle(itemName)
+            : null;
+
+        const filtered =
+          await filterByAxle(allArticles, requestedAxle);
+
         matches.push({
           workshopItem: itemName,
-
-          productId:
-            product.productId,
-
-          productName:
-            product.productName,
-
-          matchScore:
-            product.matchScore,
-
-          requestedType:
-            product.requestedType,
-
-          countArticles:
-            articles.length,
-
-          articles:
-            articles.slice(0, 20)
+          productId: product.productId,
+          productName: product.productName,
+          matchScore: product.matchScore,
+          requestedType: product.requestedType,
+          requestedAxle: requestedAxle,
+          totalCatalogArticles: allArticles.length,
+          criteriaChecked: filtered.checked,
+          verifiedByAxle: filtered.verified,
+          countArticles: requestedAxle ? filtered.verified : allArticles.length,
+          articles: requestedAxle ? filtered.articles : allArticles.slice(0,20)
         });
       }
 
