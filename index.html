@@ -2,838 +2,241 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
 <title>وفّر — افحص عرض صيانة سيارتك</title>
-
 <style>
-:root{
-  --g:#075b43;
-  --g2:#0b7658;
-  --bg:#f5f8f7;
-  --card:#fff;
-  --text:#14201d;
-  --muted:#6b7773;
-  --line:#dce6e2;
-  --warn:#a85b00;
-  --warnbg:#fff5df;
-  --red:#b42318;
-  --redbg:#fff0ee;
-}
-
-*{box-sizing:border-box}
-
-body{
-  margin:0;
-  background:var(--bg);
-  font-family:Tahoma,Arial,sans-serif;
-  color:var(--text);
-}
-
-.app{
-  max-width:520px;
-  margin:auto;
-  min-height:100vh;
-  background:#fbfdfc;
-  padding:20px 18px 32px;
-}
-
-.brand{text-align:center;margin:8px 0 22px}
-.logo{
-  font-size:48px;
-  font-weight:900;
-  color:var(--g);
-  line-height:1;
-}
-.tag{color:var(--muted);margin-top:8px}
-
-h1{
-  font-size:27px;
-  line-height:1.5;
-  margin:10px 0;
-  text-align:center;
-}
-
-.lead{
-  text-align:center;
-  color:var(--muted);
-  line-height:1.8;
-}
-
-.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:20px;
-  padding:18px;
-  margin:14px 0;
-  box-shadow:0 7px 25px rgba(12,70,54,.06);
-}
-
-/* منطقة رفع الملف */
-.upload{
-  border:2px dashed #a8c3b9;
-  text-align:center;
-  padding:0;
-  overflow:hidden;
-}
-
-.upload-label{
-  display:block;
-  cursor:pointer;
-  padding:30px 16px;
-  margin:0;
-  font-weight:normal;
-}
-
-.upload-label strong{
-  display:block;
-  font-size:18px;
-  margin:10px;
-}
-
-.upload-label small{
-  color:var(--muted);
-}
-
-#file{
-  position:absolute;
-  width:1px;
-  height:1px;
-  opacity:0;
-  overflow:hidden;
-  pointer-events:none;
-}
-
-input,select{
-  width:100%;
-  border:1px solid #cad9d4;
-  border-radius:13px;
-  padding:14px;
-  background:#fff;
-  font-size:16px;
-  margin-top:7px;
-}
-
-label{
-  display:block;
-  margin:12px 0 4px;
-  font-weight:700;
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-
-button{
-  width:100%;
-  border:0;
-  border-radius:14px;
-  padding:15px;
-  font-size:17px;
-  font-weight:800;
-  cursor:pointer;
-  background:var(--g);
-  color:white;
-  margin-top:14px;
-}
-
-button.secondary{
-  background:#e8f3ef;
-  color:var(--g);
-}
-
-button:disabled{
-  opacity:.55;
-  cursor:not-allowed;
-}
-
-button:focus,
-input:focus,
-select:focus,
-.upload-label:focus{
-  outline:3px solid #84c9b2;
-  outline-offset:2px;
-}
-
-.privacy{
-  text-align:center;
-  color:var(--muted);
-  font-size:12px;
-  margin:12px;
-}
-
-.hidden{display:none!important}
-
-.steps{
-  list-style:none;
-  padding:0;
-  margin:20px 0;
-}
-
-.steps li{
-  padding:13px;
-  border-bottom:1px solid var(--line);
-}
-
-.check{
-  color:var(--g);
-  font-weight:bold;
-}
-
-.total{
-  text-align:center;
-  background:#eaf6f1;
-  border-radius:16px;
-  padding:18px;
-}
-
-.total b{
-  font-size:34px;
-  color:var(--g);
-  display:block;
-}
-
-.status{
-  background:var(--warnbg);
-  color:var(--warn);
-  border-radius:15px;
-  padding:14px;
-  text-align:center;
-  font-weight:800;
-  margin-top:12px;
-}
-
-.scores{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-
-.score{text-align:center}
-
-.score b{
-  font-size:30px;
-  display:block;
-}
-
-.alert{
-  background:var(--redbg);
-  border-radius:14px;
-  padding:13px;
-  margin:9px 0;
-  color:#7d1e17;
-}
-
-.lock{
-  background:#f0f4f3;
-  border-radius:14px;
-  padding:14px;
-  margin:12px 0;
-  line-height:1.8;
-}
-
-.top{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:12px;
-}
-
-.top h2{margin:0}
-
-.pill{
-  font-size:12px;
-  padding:6px 9px;
-  background:#e9f5f1;
-  color:var(--g);
-  border-radius:999px;
-}
-
-.table-wrap{
-  width:100%;
-  overflow-x:auto;
-  -webkit-overflow-scrolling:touch;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:13px;
-  min-width:650px;
-}
-
-th,td{
-  padding:10px 5px;
-  border-bottom:1px solid var(--line);
-  text-align:right;
-}
-
-.note{
-  font-size:12px;
-  color:var(--muted);
-  line-height:1.7;
-}
-
-.nav{
-  display:flex;
-  gap:8px;
-  margin-top:16px;
-}
-
-.nav button{margin:0}
-
-.price{
-  font-size:28px;
-  font-weight:900;
-  color:var(--g);
-  text-align:center;
-}
-
-.vehicle-info{
-  background:#eaf6f1;
-  border-radius:13px;
-  padding:12px;
-  margin-top:12px;
-  line-height:1.8;
-}
-
-.error-box{
-  background:var(--redbg);
-  color:#7d1e17;
-  border-radius:13px;
-  padding:12px;
-  margin-top:12px;
-}
-
-@media(max-width:420px){
-  .grid{grid-template-columns:1fr}
-  .scores{grid-template-columns:1fr 1fr}
-}
+:root{--g:#075b43;--g2:#0b7658;--bg:#f5f8f7;--card:#fff;--text:#14201d;--muted:#6b7773;--line:#dce6e2;--warn:#a85b00;--warnbg:#fff5df;--red:#b42318;--redbg:#fff0ee}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:Tahoma,Arial,sans-serif;color:var(--text)}
+.app{max-width:520px;margin:auto;min-height:100vh;background:#fbfdfc;padding:20px 18px 32px}
+.brand{text-align:center;margin:8px 0 22px}.logo{font-size:48px;font-weight:900;color:var(--g);line-height:1}.tag{color:var(--muted);margin-top:8px}
+h1{font-size:27px;line-height:1.5;margin:10px 0;text-align:center} .lead{text-align:center;color:var(--muted);line-height:1.8}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin:14px 0;box-shadow:0 7px 25px rgba(12,70,54,.06)}
+.upload{border:2px dashed #a8c3b9;text-align:center;cursor:pointer;padding:30px 16px}.upload strong{display:block;font-size:18px;margin:10px}.upload small{color:var(--muted)}
+input,select{width:100%;border:1px solid #cad9d4;border-radius:13px;padding:14px;background:#fff;font-size:16px;margin-top:7px}
+label{display:block;margin:12px 0 4px;font-weight:700}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{width:100%;border:0;border-radius:14px;padding:15px;font-size:17px;font-weight:800;cursor:pointer;background:var(--g);color:white;margin-top:14px}
+button.secondary{background:#e8f3ef;color:var(--g)}button:focus,input:focus,select:focus{outline:3px solid #84c9b2;outline-offset:2px}
+.privacy{text-align:center;color:var(--muted);font-size:12px;margin:12px}
+.hidden{display:none!important}.steps{list-style:none;padding:0;margin:20px 0}.steps li{padding:13px;border-bottom:1px solid var(--line)}.check{color:var(--g);font-weight:bold}
+.total{text-align:center;background:#eaf6f1;border-radius:16px;padding:18px}.total b{font-size:34px;color:var(--g);display:block}
+.status{background:var(--warnbg);color:var(--warn);border-radius:15px;padding:14px;text-align:center;font-weight:800;margin-top:12px}
+.scores{display:grid;grid-template-columns:1fr 1fr;gap:10px}.score{text-align:center}.score b{font-size:30px;display:block}.bad{color:var(--red)}
+.alert{background:var(--redbg);border-radius:14px;padding:13px;margin:9px 0;color:#7d1e17}.lock{background:#f0f4f3;border-radius:14px;padding:14px;margin:12px 0}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.top h2{margin:0}.pill{font-size:12px;padding:6px 9px;background:#e9f5f1;color:var(--g);border-radius:999px}
+.table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}table{width:100%;border-collapse:collapse;font-size:13px;min-width:650px}th,td{padding:10px 5px;border-bottom:1px solid var(--line);text-align:right}.note{font-size:12px;color:var(--muted);line-height:1.7}
+.nav{display:flex;gap:8px;margin-top:16px}.nav button{margin:0}.price{font-size:28px;font-weight:900;color:var(--g);text-align:center}
 </style>
 </head>
-
-<body>
-
-<main class="app">
-
+<body><main class="app">
 <section id="home">
-
-  <div class="brand">
-    <div class="logo">وفّر</div>
-    <div class="tag">افحص عرض صيانة سيارتك قبل أن تدفع</div>
-  </div>
-
-  <h1>هل عرض الورشة واضح ومعقول؟</h1>
-
-  <p class="lead">
-    ارفع صورة أو PDF لعرض الصيانة.
-    سيقرأ «وفّر» البنود والأسعار ويحدد المعلومات الناقصة
-    ونقاط التحقق قبل الموافقة.
-  </p>
-
-  <div class="card upload">
-
-    <label for="file"
-           class="upload-label"
-           tabindex="0"
-           id="uploadLabel">
-
-      <div style="font-size:38px">📄</div>
-
-      <strong id="fileText">
-        ارفع صورة العرض أو ملف PDF
-      </strong>
-
-      <small>
-        JPG, PNG, WEBP, PDF
-      </small>
-
-    </label>
-
-    <input
-      id="file"
-      type="file"
-      accept="image/jpeg,image/png,image/webp,application/pdf,.jpg,.jpeg,.png,.webp,.pdf"
-    >
-
-  </div>
-
-  <div class="card">
-
-    <div class="grid">
-
-      <div>
-        <label for="make">الشركة</label>
-
-        <select id="make">
-          <option value="">جار تحميل الشركات...</option>
-        </select>
-      </div>
-
-      <div>
-        <label for="model">الموديل</label>
-
-        <input
-          id="model"
-          value="Expedition"
-          dir="ltr"
-        >
-      </div>
-
-    </div>
-
-    <label for="year">سنة الصنع</label>
-
-    <input
-      id="year"
-      type="number"
-      value="2013"
-      inputmode="numeric"
-    >
-
-    <label for="vin">
-      رقم الهيكل VIN
-      <span style="font-weight:normal;color:#6b7773">
-        (اختياري)
-      </span>
-    </label>
-
-    <input
-      id="vin"
-      placeholder="يرفع دقة مطابقة القطع"
-      dir="ltr"
-      maxlength="17"
-      autocomplete="off"
-      autocapitalize="characters"
-    >
-
-    <div id="vehicleInfo"
-         class="vehicle-info hidden">
-    </div>
-
-    <div id="homeError"
-         class="error-box hidden">
-    </div>
-
-    <button id="analyzeButton" type="button">
-      حلّل عرضي مجانًا ✨
-    </button>
-
-    <div class="privacy">
-      🔒 يُرسل الملف إلى الخادم الآمن للتحليل،
-      ولا يظهر مفتاح API للزائر.
-    </div>
-
-  </div>
-
+ <div class="brand"><div class="logo">وفّر</div><div class="tag">افحص عرض صيانة سيارتك قبل أن تدفع</div></div>
+ <h1>هل عرض الورشة واضح ومعقول؟</h1>
+ <p class="lead">ارفع صورة أو PDF لعرض الصيانة. سيقرأ «وفّر» البنود والأسعار ويحدد المعلومات الناقصة ونقاط التحقق قبل الموافقة.</p>
+ <label class="card upload" for="file" role="button" tabindex="0">
+  <div style="font-size:38px">📄</div><strong id="fileText">ارفع صورة العرض أو ملف PDF</strong><small>JPG, PNG, WEBP, PDF</small>
+  <input id="file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.jpg,.jpeg,.png,.webp,.pdf" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden">
+ </label>
+ <div class="card">
+  <div class="grid"><div><label>الشركة</label><select id="make"><option>Ford — فورد</option><option>Toyota — تويوتا</option><option>أخرى</option></select></div>
+  <div><label>الموديل</label><input id="model" value="Expedition" dir="ltr"></div></div>
+  <label>سنة الصنع</label><input id="year" type="number" value="2013" inputmode="numeric">
+  <label>رقم الهيكل VIN <span style="font-weight:normal;color:#6b7773">(اختياري)</span></label><input id="vin" placeholder="يرفع دقة مطابقة القطع" dir="ltr">
+  <button onclick="start()">حلّل عرضي مجانًا ✨</button>
+  <div class="privacy">🔒 يُرسل الملف إلى الخادم الآمن للتحليل، ولا يظهر مفتاح API للزائر.</div>
+ </div>
 </section>
-
 
 <section id="loading" class="hidden">
-
-  <div class="brand">
-    <div class="logo">وفّر</div>
-  </div>
-
-  <h1>جارٍ تحليل عرضك</h1>
-
-  <div class="card">
-
-    <ul class="steps">
-
-      <li>
-        <span class="check">✓</span>
-        قراءة عرض السعر
-      </li>
-
-      <li>
-        <span class="check">✓</span>
-        استخراج القطع والأسعار
-      </li>
-
-      <li>
-        <span class="check">✓</span>
-        فحص اكتمال المعلومات
-      </li>
-
-      <li>
-        <span class="check">✓</span>
-        البحث عن البنود المحتمل تداخلها
-      </li>
-
-      <li>
-        <span class="check">✓</span>
-        تحديد ما يمكن مقارنته
-      </li>
-
-    </ul>
-
-  </div>
-
+ <div class="brand"><div class="logo">وفّر</div></div><h1>جارٍ تحليل عرضك</h1>
+ <div class="card"><ul class="steps">
+  <li><span class="check">✓</span> قراءة عرض السعر</li><li><span class="check">✓</span> استخراج القطع والأسعار</li>
+  <li><span class="check">✓</span> فحص اكتمال المعلومات</li><li><span class="check">✓</span> البحث عن البنود المحتمل تداخلها</li>
+  <li><span class="check">✓</span> تحديد ما يمكن مقارنته</li></ul></div>
 </section>
-
 
 <section id="result" class="hidden">
-
-  <div class="top">
-    <span class="pill">فحص AI</span>
-    <h2>نتيجة التحليل</h2>
-  </div>
-
-  <div class="card">
-
-    <div class="total">
-      إجمالي العرض الظاهر
-      <b id="rTotal">—</b>
-    </div>
-
-    <div class="status" id="rStatus">
-      —
-    </div>
-
-  </div>
-
-  <div class="scores">
-
-    <div class="card score">
-      شفافية العرض
-      <b id="rTransparency">—</b>
-      <small>اكتمال ووضوح البيانات</small>
-    </div>
-
-    <div class="card score">
-      ثقة هوية القطع
-      <b id="rIdentity">—</b>
-      <small>رقم القطعة والمصنع والوصف</small>
-    </div>
-
-    <div class="card score">
-      ثقة التوافق
-      <b id="rCompatibility">—</b>
-      <small>إمكان التحقق للسيارة المحددة</small>
-    </div>
-
-    <div class="card score">
-      ثقة المقارنة السعرية
-      <b id="rPrice">—</b>
-      <small>قابلية المقارنة دون تخمين</small>
-    </div>
-
-  </div>
-
-  <div class="card">
-
-    <h3>درجة الثقة الكلية</h3>
-
-    <div class="total">
-
-      <b id="rOverall">—</b>
-
-      <small>
-        تعكس قوة الأدلة المتاحة،
-        وليست تقييمًا للورشة
-      </small>
-
-    </div>
-
-  </div>
-
-  <div class="card">
-
-    <h3>أبرز ما وجدناه</h3>
-
-    <div id="rAlerts"></div>
-
-    <div class="lock">
-      🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون
-      مطابقة القطعة ومصدر سعر موثوق.
-    </div>
-
-    <div id="catalogSummary" class="lock">
-      🔎 حالة مطابقة الكتالوج:
-      بانتظار التحليل.
-    </div>
-
-    <button id="detailsButton" type="button">
-      عرض تفاصيل البنود
-    </button>
-
-    <button
-      id="messageButton"
-      class="secondary"
-      type="button">
-      أنشئ رسالة للورشة
-    </button>
-
-  </div>
-
+ <div class="top"><span class="pill">فحص AI</span><h2>نتيجة التحليل</h2></div>
+ <div class="card"><div class="total">إجمالي العرض الظاهر<b id="rTotal">—</b></div><div class="status" id="rStatus">—</div></div>
+ <div class="scores"><div class="card score">شفافية العرض<b id="rTransparency">—</b><small>اكتمال ووضوح البيانات</small></div>
+ <div class="card score">ثقة هوية القطع<b id="rIdentity">—</b><small>رقم القطعة والمصنع والوصف</small></div>
+ <div class="card score">ثقة التوافق<b id="rCompatibility">—</b><small>إمكان التحقق للسيارة المحددة</small></div>
+ <div class="card score">ثقة المقارنة السعرية<b id="rPrice">—</b><small>قابلية المقارنة دون تخمين</small></div></div>
+ <div class="card"><h3>درجة الثقة الكلية</h3><div class="total"><b id="rOverall">—</b><small>تعكس قوة الأدلة المتاحة، وليست تقييمًا للورشة</small></div></div>
+ <div class="card"><h3>أبرز ما وجدناه</h3><div id="rAlerts"></div>
+  <div class="lock">🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون مطابقة القطعة ومصدر سعر موثوق.</div>
+  <div id="catalogSummary" class="lock">🔎 حالة مطابقة الكتالوج: بانتظار التحليل.</div>
+  <button onclick="advanced()">عرض تفاصيل البنود</button><button class="secondary" onclick="messageWorkshop()">أنشئ رسالة للورشة</button>
+ </div>
 </section>
-
 
 <section id="advanced" class="hidden">
-
-  <div class="top">
-    <span class="pill">نموذج تجريبي</span>
-    <h2>التحليل المتقدم</h2>
-  </div>
-
-  <div class="card">
-
-    <h3>تفاصيل القطع المقروءة</h3>
-
-    <div class="table-wrap">
-
-      <table>
-
-        <thead>
-          <tr>
-            <th>البند</th>
-            <th>رقم القطعة</th>
-            <th>السعر</th>
-            <th>الهوية</th>
-            <th>التوافق</th>
-            <th>السعر</th>
-            <th>التداخل</th>
-          </tr>
-        </thead>
-
-        <tbody id="itemsBody"></tbody>
-
-      </table>
-
-    </div>
-
-    <p class="note">
-      البيانات مستخرجة من العرض المرفوع.
-      الحكم مبدئي ولا يمثل مقارنة سعرية نهائية
-      قبل التحقق من هوية القطعة ومصدر السعر.
-    </p>
-
-  </div>
-
-
-  <div id="catalogMatches" class="card">
-
-    <h3>🔎 مطابقة كتالوج القطع</h3>
-
-    <div class="note">
-      سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.
-    </div>
-
-  </div>
-
-
-  <div class="card">
-
-    <h3>قبل أن تدفع</h3>
-
-    <div id="nextActions"></div>
-
-  </div>
-
-
-  <div class="card">
-
-    <div class="price">
-      التوفير المؤكد: غير محسوب
-    </div>
-
-    <p class="lead">
-      لا يحسب «وفّر» التوفير قبل مطابقة
-      هوية القطعة بمصدر سعر موثوق.
-    </p>
-
-    <button
-      id="advancedMessageButton"
-      type="button">
-      أنشئ رسالة استكمال للورشة
-    </button>
-
-  </div>
-
-
-  <div class="nav">
-
-    <button
-      id="backResultButton"
-      class="secondary"
-      type="button">
-      رجوع
-    </button>
-
-    <button
-      id="newAnalysisButton"
-      type="button">
-      تحليل عرض آخر
-    </button>
-
-  </div>
-
+ <div class="top"><span class="pill">نموذج تجريبي</span><h2>التحليل المتقدم</h2></div>
+ <div class="card"><h3>تفاصيل القطع المقروءة</h3>
+ <div class="table-wrap"><table><thead><tr><th>البند</th><th>رقم القطعة</th><th>السعر</th><th>الهوية</th><th>التوافق</th><th>السعر</th><th>التداخل</th></tr></thead>
+ <tbody id="itemsBody"></tbody></table></div>
+ <p class="note">البيانات مستخرجة من العرض المرفوع. الحكم مبدئي ولا يمثل مقارنة سعرية نهائية قبل التحقق من هوية القطعة ومصدر السعر.</p></div>
+ <div id="catalogMatches" class="card">
+  <h3>🔎 مطابقة كتالوج القطع</h3>
+  <div class="note">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>
+ </div>
+ <div class="card"><h3>قبل أن تدفع</h3><div id="nextActions"></div></div>
+ <div class="card"><div class="price">التوفير المؤكد: غير محسوب</div><p class="lead">لا يحسب «وفّر» التوفير قبل مطابقة هوية القطعة بمصدر سعر موثوق.</p>
+ <button onclick="messageWorkshop()">أنشئ رسالة استكمال للورشة</button></div>
+ <div class="nav"><button class="secondary" onclick="show('result')">رجوع</button><button onclick="show('home')">تحليل عرض آخر</button></div>
 </section>
-
 
 <section id="msg" class="hidden">
-
-  <div class="top">
-    <span class="pill">جاهزة للنسخ</span>
-    <h2>رسالة للورشة</h2>
-  </div>
-
-  <div class="card">
-
-    <p id="message" style="line-height:2">
-      السلام عليكم، أرجو تزويدي بتفاصيل القطع
-      وأرقامها والشركة المصنعة والكمية وأجرة العمل
-      والضريبة والضمان قبل اعتماد العرض. وشكرًا.
-    </p>
-
-    <button id="copyButton" type="button">
-      نسخ الرسالة
-    </button>
-
-    <button
-      id="messageBackButton"
-      class="secondary"
-      type="button">
-      العودة للنتيجة
-    </button>
-
-  </div>
-
+ <div class="top"><span class="pill">جاهزة للنسخ</span><h2>رسالة للورشة</h2></div>
+ <div class="card"><p id="message" style="line-height:2">السلام عليكم، قبل اعتماد العرض أحتاج فضلاً كشفًا مفصلًا يوضح اسم ورقم كل قطعة، الشركة المصنعة، وهل هي أصلية Ford/Motorcraft أو بديلة، والكمية وسعر القطعة وأجرة التركيب والضريبة والضمان. كذلك أرجو توضيح ما إذا كان السعر يشمل ضبط الزوايا بعد أعمال التعليق والدركسون. وشكرًا.</p>
+ <button onclick="copyMsg()">نسخ الرسالة</button><button class="secondary" onclick="show('result')">العودة للنتيجة</button></div>
 </section>
-
 </main>
-
-
 <script>
+const ids=['home','loading','result','advanced','msg']; let analysis=null;
+function show(id){ids.forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));scrollTo(0,0)}
+function fileToDataURL(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)})}
+async function start(){
+ const file=document.getElementById('file').files[0];
+ if(!file){alert('اختر صورة أو PDF أولًا');return}
+ if(file.size>4*1024*1024){alert('الحد الحالي 4MB. صغّر الملف ثم حاول مجددًا.');return}
 
-'use strict';
+ const vin=String(document.getElementById('vin').value||'').trim().toUpperCase();
+ show('loading');
 
-const ids = [
-  'home',
-  'loading',
-  'result',
-  'advanced',
-  'msg'
-];
+ try{
+   if(vin){
+     if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)){
+       throw new Error('رقم الهيكل VIN يجب أن يتكون من 17 خانة صحيحة');
+     }
+     if(typeof window.ensureWafferVehicle!=='function'){
+       throw new Error('وحدة التحقق من VIN لم يتم تحميلها');
+     }
+     const vehicleData=await window.ensureWafferVehicle();
+     if(!vehicleData || !vehicleData.vehicleId){
+       throw new Error('تعذر تحديد Vehicle ID من رقم الهيكل');
+     }
+   }
 
-let analysis = null;
+   const fileData=await fileToDataURL(file);
+   const resp=await fetch('/api/analyze',{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({
+       fileData,
+       fileName:file.name,
+       mimeType:file.type,
+       vehicle:{
+         make:document.getElementById('make').value,
+         model:document.getElementById('model').value,
+         year:document.getElementById('year').value,
+         vin
+       }
+     })
+   });
 
+   const d=await resp.json();
+   if(!resp.ok)throw new Error(d.error||d.message||'تعذر التحليل');
 
-/* ==============================
-   التنقل
-============================== */
+   analysis=d;
+   window.analysis=d;
+   render();
+   show('result');
 
-function show(id){
-
-  ids.forEach(function(x){
-
-    const element =
-      document.getElementById(x);
-
-    if(element){
-      element.classList.toggle(
-        'hidden',
-        x !== id
-      );
-    }
-
-  });
-
-  window.scrollTo(0,0);
+   const catalogSummary=document.getElementById('catalogSummary');
+   if(window.wafferVehicleId && typeof window.matchWafferParts==='function'){
+     if(catalogSummary)catalogSummary.textContent='🔎 جارٍ مطابقة البنود مع كتالوج السيارة...';
+     try{
+       await window.matchWafferParts(analysis);
+     }catch(matchError){
+       console.error('Parts matching error:',matchError);
+       if(catalogSummary)catalogSummary.textContent='⚠️ تعذر إكمال مطابقة الكتالوج.';
+     }
+   }else if(catalogSummary){
+     catalogSummary.textContent=vin
+       ? '⚠️ تعذر تحديد السيارة للكتالوج.'
+       : 'ℹ️ أدخل VIN لتفعيل مطابقة القطع مع السيارة.';
+   }
+ }catch(e){
+   show('home');
+   alert('تعذر التحليل: '+(e.message||e));
+ }
 }
-
-
-/* ==============================
-   حماية النصوص
-============================== */
-
-function esc(value){
-
-  return String(value ?? '')
-    .replace(
-      /[&<>"']/g,
-      function(c){
-
-        return {
-          '&':'&amp;',
-          '<':'&lt;',
-          '>':'&gt;',
-          '"':'&quot;',
-          "'":'&#39;'
-        }[c];
-
-      }
-    );
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){
+ document.getElementById('rTotal').textContent=analysis.total||'غير واضح'; document.getElementById('rStatus').textContent='⚠️ '+(analysis.status||'يحتاج مراجعة'); document.getElementById('rTransparency').textContent=(analysis.transparency??'—')+'/100'; document.getElementById('rIdentity').textContent=(analysis.identityConfidence??'—')+'/100'; document.getElementById('rCompatibility').textContent=(analysis.compatibilityConfidence??'—')+'/100'; document.getElementById('rPrice').textContent=(analysis.priceConfidence??'—')+'/100'; document.getElementById('rOverall').textContent=(analysis.overallConfidence??'—')+'/100';
+ const alerts=[...(analysis.missing||[]).map(x=>'📋 '+x),...(analysis.conflicts||[]).map(x=>'⚙️ '+x)]; document.getElementById('rAlerts').innerHTML=(alerts.length?alerts:['لم تظهر ملاحظات رئيسية.']).map(x=>'<div class="alert">'+esc(x)+'</div>').join('');
+ document.getElementById('itemsBody').innerHTML=(analysis.items||[]).map(i=>`<tr><td>${esc(i.name)}</td><td>${esc(i.partNumber||'غير ظاهر')}</td><td>${esc(i.price)}</td><td>${esc(i.identityConfidence)}%</td><td>${esc(i.compatibility)}</td><td>${esc(i.priceAssessment)}</td><td>${esc(i.conflict)}</td></tr>`).join('')||'<tr><td colspan="7">لم تُستخرج بنود واضحة.</td></tr>'; document.getElementById('nextActions').innerHTML=(analysis.nextActions||[]).map((x,n)=>'<div class="alert">'+(n+1)+'. '+esc(x)+'</div>').join('')||'<div class="note">لا توجد خطوات إضافية مستخرجة.</div>'; 
+ document.getElementById('message').textContent=analysis.workshopMessage||'السلام عليكم، أرجو تزويدي بتفاصيل القطع وأرقامها والشركة المصنعة والكمية وأجرة العمل والضريبة والضمان قبل اعتماد العرض. وشكرًا.';
 }
+function advanced(){show('advanced')} function messageWorkshop(){show('msg')}
+async function copyMsg(){try{await navigator.clipboard.writeText(document.getElementById('message').innerText);alert('تم نسخ الرسالة')}catch(e){alert('حدد النص وانسخه يدويًا')}}
+const fileInput=document.getElementById('file');
+fileInput.addEventListener('click',()=>{fileInput.value='';});
+fileInput.addEventListener('change',e=>{
+ const f=e.target.files&&e.target.files[0];
+ document.getElementById('fileText').textContent=f?'تم اختيار: '+f.name:'ارفع صورة العرض أو ملف PDF';
+});
+fetch('/api/vehicles').then(r=>{if(!r.ok)throw new Error('API '+r.status);return r.json()}).then(d=>{const m=document.getElementById('make');m.innerHTML='<option value="">اختر الشركة</option>';(d.manufacturers||[]).forEach(x=>m.add(new Option(x.manufacturerName,x.manufacturerId)));}).catch(e=>{console.error(e);document.getElementById('make').innerHTML='<option value="">تعذر تحميل الشركات</option>';});
+window.addEventListener('wafferPartsMatched', function(event){
+ const matches=Array.isArray(event.detail)?event.detail:[];
+ const items=Array.isArray(analysis?.items)?analysis.items:[];
 
+ items.forEach((item,index)=>{
+   const m=matches[index];
+   if(m && m.productId){
+     item.catalogMatch={
+       productId:m.productId,
+       productName:m.productName,
+       matchScore:m.matchScore,
+       countArticles:m.countArticles,
+       articles:Array.isArray(m.articles)?m.articles:[]
+     };
+   }
+ });
 
-/* ==============================
-   تحويل الملف
-============================== */
+ const box=document.getElementById('catalogMatches');
+ const summary=document.getElementById('catalogSummary');
+ if(!box)return;
 
-function fileToDataURL(file){
+ const matched=matches.filter(m=>m && m.productId);
+ if(summary){
+   summary.textContent=matched.length
+     ? '✅ تمت مطابقة '+matched.length+' من بنود العرض مع كتالوج السيارة.'
+     : '⚠️ اكتمل فحص الكتالوج ولم تظهر مطابقة مناسبة.';
+ }
 
-  return new Promise(function(resolve,reject){
+ if(!matched.length){
+   box.innerHTML='<h3>🔎 مطابقة كتالوج القطع</h3>'+
+     '<div class="note">تم فحص الكتالوج، لكن لم يتم العثور على مطابقة مناسبة للبنود المستخرجة.</div>';
+   return;
+ }
 
-    const reader =
-      new FileReader();
+ box.innerHTML='<h3>🔎 مطابقة كتالوج القطع</h3>'+
+   '<p class="note">تمت مقارنة بنود عرض الورشة بكتالوج القطع المتوافقة مع السيارة.</p>'+
+   matched.map(m=>{
+     const articles=Array.isArray(m.articles)?m.articles.slice(0,5):[];
+     const articleHtml=articles.length?articles.map(a=>{
+       const image=a.image||a.s3image||'';
+       return '<div style="margin-top:10px;padding:10px;background:#eef8f4;border-radius:10px">'+
+         '<div>رقم القطعة: <strong>'+esc(a.articleNo||'غير متوفر')+'</strong></div>'+
+         '<div>المصنع: <strong>'+esc(a.supplierName||'غير متوفر')+'</strong></div>'+
+         '<div>الوصف: '+esc(a.articleProductName||'')+'</div>'+
+         (image?'<img src="'+esc(image)+'" alt="" loading="lazy" style="width:70px;height:70px;object-fit:contain;border-radius:10px;margin-top:8px;background:#fff">':'')+
+         '</div>';
+     }).join(''):'<div class="note">تم تحديد نوع القطعة، لكن لم تُحمّل أرقام بديلة.</div>';
 
-    reader.onload =
-      function(){
-        resolve(reader.result);
-      };
-
-    reader.onerror =
-      function(){
-        reject(
-          new Error(
-            'تعذر قراءة الملف المختار'
-          )
-        );
-      };
-
-    reader.readAsDataURL(file);
-
-  });
-
-}
-
-
-/* ==============================
-   اختيار الصورة / PDF
-============================== */
-
-const fileInput =
-  document.getElementById('file');
-
-const fileText =
-  document.getElementById('fileText');
-
-const uploadLabel =
-  document.getElementById('uploadLabel');
-
-
-fileInput.addEventListener(
-  'change',
-  function(){
-
-    const file =
-      fileInput.files &&
-      fileInput.files[0];
-
-    if(!file){
-      fileText.textContent =
-        'ارفع صورة العرض أو ملف PDF';
-      return;
-    }
-
-    fileText.textContent =
-      'تم اختيار: ' + file.name;
-
-  }
-);
-
-
-upload
+     return '<div style="margin:16px 0;padding:14px;border:1px solid #e1e7e4;border-radius:14px">'+
+       '<b>'+esc(m.workshopItem||'قطعة')+'</b>'+
+       '<div style="margin-top:8px">مطابقة الكتالوج: <strong>'+esc(m.productName||'-')+'</strong></div>'+
+       '<div>Product ID: '+esc(m.productId)+'</div>'+
+       '<div>درجة المطابقة: '+esc(m.matchScore??0)+'%</div>'+
+       '<div>عدد النتائج المتوافقة: '+esc(m.countArticles??0)+'</div>'+
+       articleHtml+
+       '</div>';
+   }).join('');
+});
+</script>
+<script src="/vin-ui.js"></script>
+<script src="/parts-match.js"></script>
+</body>
+</html>
