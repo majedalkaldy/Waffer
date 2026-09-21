@@ -32,10 +32,10 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:focus,input:focus,sele
  <div class="brand"><div class="logo">وفّر</div><div class="tag">افحص عرض صيانة سيارتك قبل أن تدفع</div></div>
  <h1>هل عرض الورشة واضح ومعقول؟</h1>
  <p class="lead">ارفع صورة أو PDF لعرض الصيانة. سيقرأ «وفّر» البنود والأسعار ويحدد المعلومات الناقصة ونقاط التحقق قبل الموافقة.</p>
- <label class="card upload" for="file" role="button" tabindex="0">
+ <div class="card upload" id="uploadBox" role="button" tabindex="0" aria-controls="file">
   <div style="font-size:38px">📄</div><strong id="fileText">ارفع صورة العرض أو ملف PDF</strong><small>JPG, PNG, WEBP, PDF</small>
-  <input id="file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.jpg,.jpeg,.png,.webp,.pdf" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden">
- </label>
+  <input id="file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.jpg,.jpeg,.png,.webp,.pdf" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+ </div>
  <div class="card">
   <div class="grid"><div><label>الشركة</label><select id="make"><option>Ford — فورد</option><option>Toyota — تويوتا</option><option>أخرى</option></select></div>
   <div><label>الموديل</label><input id="model" value="Expedition" dir="ltr"></div></div>
@@ -171,7 +171,27 @@ function render(){
 function advanced(){show('advanced')} function messageWorkshop(){show('msg')}
 async function copyMsg(){try{await navigator.clipboard.writeText(document.getElementById('message').innerText);alert('تم نسخ الرسالة')}catch(e){alert('حدد النص وانسخه يدويًا')}}
 const fileInput=document.getElementById('file');
-fileInput.addEventListener('click',()=>{fileInput.value='';});
+const uploadBox=document.getElementById('uploadBox');
+
+function openFilePicker(){
+  try{
+    if(typeof fileInput.showPicker==='function'){
+      fileInput.showPicker();
+    }else{
+      fileInput.click();
+    }
+  }catch(e){
+    fileInput.click();
+  }
+}
+
+uploadBox.addEventListener('click',openFilePicker);
+uploadBox.addEventListener('keydown',e=>{
+  if(e.key==='Enter'||e.key===' '){
+    e.preventDefault();
+    openFilePicker();
+  }
+});
 fileInput.addEventListener('change',e=>{
  const f=e.target.files&&e.target.files[0];
  document.getElementById('fileText').textContent=f?'تم اختيار: '+f.name:'ارفع صورة العرض أو ملف PDF';
