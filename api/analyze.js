@@ -1,3 +1,5 @@
+import { getMarketConfig } from '../lib/market-config.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -30,9 +32,10 @@ export default async function handler(req, res) {
     if (!fileBytes) return res.status(400).json({ error: 'الملف فارغ.' });
     if (fileBytes > 4 * 1024 * 1024) return res.status(413).json({ error: 'حجم الملف أكبر من 4MB. صغّر الملف ثم حاول مجددًا.' });
 
-    const market = String(vehicle.market || 'SA').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) || 'SA';
-    const locale = String(vehicle.locale || 'ar-SA').replace(/[^A-Za-z-]/g, '').slice(0, 16) || 'ar-SA';
-    const currency = String(vehicle.currency || 'SAR').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) || 'SAR';
+    const marketConfig = getMarketConfig(vehicle);
+    const market = marketConfig.market;
+    const locale = marketConfig.locale;
+    const currency = marketConfig.currency;
 
     const safeVehicle = {
       make: String(vehicle.make || 'غير محدد').replace(/[\r\n]/g, ' ').slice(0, 120),
