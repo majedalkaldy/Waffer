@@ -4,6 +4,22 @@
   let vinRequest = null;
   let lastVin = '';
 
+  function clearResolvedVehicleState() {
+    lastVin = '';
+    window.wafferVehicleId = '';
+    window.wafferModelId = '';
+    window.wafferManufacturerId = '';
+    window.wafferVehicle = null;
+
+    const vehicleInfo = document.getElementById('vehicleInfo');
+    if (vehicleInfo) {
+      vehicleInfo.textContent = '';
+      vehicleInfo.classList.add('hidden');
+    }
+
+    window.dispatchEvent(new CustomEvent('wafferVinCleared'));
+  }
+
   function firstArray(obj, paths) {
     for (const path of paths) {
       let value = obj;
@@ -143,6 +159,15 @@
             result?.error ||
             'تعذر التحقق من رقم الهيكل'
           );
+        }
+
+        const currentVin = String(document.getElementById('vin')?.value || '')
+          .trim()
+          .toUpperCase();
+
+        // إذا تغير VIN أثناء الطلب لا نسمح لرد قديم بتحديث السيارة الحالية.
+        if (currentVin !== vin) {
+          return null;
         }
 
         // الشركات المطابقة
@@ -488,6 +513,19 @@
 
     vinField.dataset.wafferVinBound =
       '1';
+
+    vinField.addEventListener(
+      'input',
+      function () {
+        const current = String(vinField.value || '')
+          .trim()
+          .toUpperCase();
+
+        if (current !== lastVin) {
+          clearResolvedVehicleState();
+        }
+      }
+    );
 
     // عند تغيير VIN
     vinField.addEventListener(
