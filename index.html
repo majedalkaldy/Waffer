@@ -20,7 +20,7 @@ label{display:block;margin:12px 0 4px;font-weight:700}.grid{display:grid;grid-te
 button{width:100%;border:0;border-radius:14px;padding:15px;font-size:17px;font-weight:800;cursor:pointer;background:var(--g);color:white;margin-top:14px;min-height:48px}
 button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cursor:not-allowed}button:focus,input:focus,select:focus{outline:3px solid #84c9b2;outline-offset:2px}
 .privacy{text-align:center;color:var(--muted);font-size:12px;margin:12px}
-.hidden{display:none!important}.steps{list-style:none;padding:0;margin:20px 0}.steps li{padding:13px;border-bottom:1px solid var(--line)}.check{color:var(--g);font-weight:bold}
+.hidden{display:none!important}.diagnostic{display:none!important}body.debug-mode .diagnostic{display:block!important}.steps{list-style:none;padding:0;margin:20px 0}.steps li{padding:13px;border-bottom:1px solid var(--line)}.check{color:var(--g);font-weight:bold}
 .total{text-align:center;background:#eaf6f1;border-radius:16px;padding:18px}.total b{font-size:34px;color:var(--g);display:block}
 .status{background:var(--warnbg);color:var(--warn);border-radius:15px;padding:14px;text-align:center;font-weight:800;margin-top:12px}
 .scores{display:grid;grid-template-columns:1fr 1fr;gap:10px}.score{text-align:center}.score b{font-size:30px;display:block}.bad{color:var(--red)}
@@ -74,7 +74,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
  <div class="card score"><span id="compatibilityLabel">ثقة التوافق</span><b id="rCompatibility">—</b><small>إمكان التحقق للسيارة المحددة</small></div>
  <div class="card score"><span id="priceConfidenceLabel">ثقة المقارنة السعرية</span><b id="rPrice">—</b><small>قابلية المقارنة دون تخمين</small></div></div>
  <div class="card"><h3 id="overallLabel">درجة الثقة الكلية</h3><div class="total"><b id="rOverall">—</b><small>تعكس قوة الأدلة المتاحة، وليست تقييمًا للورشة</small></div><div id="confidenceBreakdown" class="note" style="margin-top:10px"></div></div>
- <div class="card"><h3 id="findingsLabel">أبرز ما وجدناه</h3><div id="rConfidenceNote" class="note" style="margin-bottom:10px">درجات الثقة تقيس قوة الأدلة المتاحة وليست تقييمًا لجودة الورشة.</div><div id="rWarningsSummary" class="lock"></div><div id="rTestMeta" class="note" style="margin:8px 0"></div><div id="rRequestId" class="note" style="margin:4px 0"></div><div id="rEngineMeta" class="note" style="margin:4px 0"></div><div id="rVerificationSummary" class="lock"></div><div id="rMvpGate" class="lock"></div><div id="rReleaseReadiness" class="lock"></div><div id="rDataIntegrity" class="lock"></div><div id="rVersionIntegrity" class="lock"></div><div id="rOverallGate" class="lock"></div><div id="rManualTestPrompt" class="lock"></div><div id="rDocQuality" class="lock"></div><div id="rCatalogCoverage" class="lock">🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.</div><div id="rCatalogGate" class="lock">🔎 فحص الكتالوج: بانتظار المطابقة.</div><div id="rAxleGate" class="lock"></div><div id="rFieldTestSummary" class="lock"></div><div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
+ <div class="card"><h3 id="findingsLabel">أبرز ما وجدناه</h3><div id="rConfidenceNote" class="note" style="margin-bottom:10px">درجات الثقة تقيس قوة الأدلة المتاحة وليست تقييمًا لجودة الورشة.</div><div id="rWarningsSummary" class="lock"></div><div id="rTestMeta" class="note diagnostic" style="margin:8px 0"></div><div id="rRequestId" class="note diagnostic" style="margin:4px 0"></div><div id="rEngineMeta" class="note diagnostic" style="margin:4px 0"></div><div id="rVerificationSummary" class="lock"></div><div id="rMvpGate" class="lock diagnostic"></div><div id="rReleaseReadiness" class="lock diagnostic"></div><div id="rDataIntegrity" class="lock diagnostic"></div><div id="rVersionIntegrity" class="lock diagnostic"></div><div id="rOverallGate" class="lock diagnostic"></div><div id="rManualTestPrompt" class="lock diagnostic"></div><div id="rDocQuality" class="lock"></div><div id="rCatalogCoverage" class="lock">🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.</div><div id="rCatalogGate" class="lock diagnostic">🔎 فحص الكتالوج: بانتظار المطابقة.</div><div id="rAxleGate" class="lock diagnostic"></div><div id="rFieldTestSummary" class="lock diagnostic"></div><div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
   <div class="lock">🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون مطابقة القطعة ومصدر سعر موثوق.</div>
   <div id="catalogSummary" class="lock" role="status" aria-live="polite">🔎 حالة مطابقة الكتالوج: بانتظار التحليل.</div>
   <button id="detailsBtn" onclick="advanced()">عرض تفاصيل البنود</button><button id="workshopBtn" class="secondary" onclick="messageWorkshop()">أنشئ رسالة للورشة</button>
@@ -105,6 +105,8 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 </main>
 <script>
 const ids=['home','loading','result','advanced','msg']; let analysis=null; let analysisTimer=null;
+const debugMode=new URLSearchParams(location.search).get('debug')==='1';
+document.body.classList.toggle('debug-mode',debugMode);
 function show(id){
  ids.forEach(x=>{
    const section=document.getElementById(x);
