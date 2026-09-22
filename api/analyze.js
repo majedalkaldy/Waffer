@@ -153,6 +153,7 @@ export default async function handler(req, res) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), RUNTIME_CONFIG.analysisTimeoutMs);
     let rr;
+    let data;
     try {
       rr = await fetch('https://api.openai.com/v1/responses', {
         method: 'POST',
@@ -160,14 +161,16 @@ export default async function handler(req, res) {
         body: JSON.stringify({ model: 'gpt-5.6-luna', input: [{ role: 'user', content: [{ type: 'input_text', text: prompt }, attachment] }], max_output_tokens: 2500 }),
         signal: controller.signal
       });
+      try {
+        data = await rr.json();
+      } catch {
+        return res.status(502).json({
+          error: 'استجابة خدمة التحليل غير صالحة.',
+          code: 'ANALYSIS_UPSTREAM_INVALID'
+        });
+      }
     } finally {
       clearTimeout(timeout);
-    }
-    let data;
-    try {
-      data = await rr.json();
-    } catch {
-      return res.status(502).json({ error: 'استجابة خدمة التحليل غير صالحة.', code: 'ANALYSIS_UPSTREAM_INVALID' });
     }
     if (!rr.ok) {
       const status = rr.status === 429 ? 429 : rr.status >= 500 ? 502 : 500;
