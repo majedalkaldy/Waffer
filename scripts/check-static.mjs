@@ -112,6 +112,23 @@ if (!failures.length) {
   if (!runtime.includes('maxUploadBytes')) failures.push('Runtime upload limit missing');
 
   try {
+    const { UI_STRINGS } = await import('../lib/i18n.js');
+    const locales = Object.keys(UI_STRINGS);
+    const baseKeys = new Set(Object.keys(UI_STRINGS['ar-SA'] || {}));
+    for (const locale of locales) {
+      const keys = new Set(Object.keys(UI_STRINGS[locale] || {}));
+      for (const key of baseKeys) {
+        if (!keys.has(key)) failures.push(`Missing i18n key "${key}" in ${locale}`);
+      }
+      for (const key of keys) {
+        if (!baseKeys.has(key)) failures.push(`Extra i18n key "${key}" in ${locale}`);
+      }
+    }
+  } catch (error) {
+    failures.push('Localization semantic checks failed: ' + error.message);
+  }
+
+  try {
     const { RUNTIME_CONFIG } = await import('../lib/runtime-config.js');
     const { getMarketConfig } = await import('../lib/market-config.js');
     const sa = getMarketConfig({ market: 'SA' });
