@@ -879,35 +879,58 @@ window.addEventListener('online',()=>{updateNetworkStatus();checkSystemHealth();
 window.addEventListener('offline',updateNetworkStatus);
 updateNetworkStatus();
 
+let healthCheckRun=0;
+let healthCheckController=null;
 async function checkSystemHealth(){
  const el=document.getElementById('systemStatus');
+ const run=++healthCheckRun;
+ healthCheckController?.abort();
+ const controller=new AbortController();
+ healthCheckController=controller;
+ const timer=setTimeout(()=>controller.abort(),6000);
  try{
-   const controller=new AbortController();
-   const timer=setTimeout(()=>controller.abort(),6000);
-   let r;
+   let r,d;
    try{
      r=await fetch('/api/health',{cache:'no-store',signal:controller.signal});
+     d=await r.json();
    }finally{
      clearTimeout(timer);
    }
-   const d=await r.json();
+   if(run!==healthCheckRun)return;
+   const en=window.wafferLocale?.startsWith('en');
    if(d.status==='ready'){
      const ms=Number(d?.latency?.catalogMs);
-     const latencyText=Number.isFinite(ms)?' • الكتالوج '+ms+'ms':'';
+     const latencyText=Number.isFinite(ms)
+       ? (en?' • catalog ':' • الكتالوج ')+ms+'ms'
+       : '';
+     const analysisBasis=d?.verification?.analysis==='configuration_only'
+       ? (en?' • analysis configured':' • التحليل مهيأ')
+       : '';
      const version=d?.version?' • '+d.version:'';
      const commit=d?.deployment?.commit?' • '+d.deployment.commit:'';
-     el.textContent='● الخدمة جاهزة'+latencyText+version+commit;
+     el.textContent=(en?'● Core services ready':'● الخدمات الأساسية جاهزة')+analysisBasis+latencyText+version+commit;
      el.style.color='#075b43';
    }else if(d.status==='degraded'){
-     el.textContent='⚠ التحليل متاح، لكن خدمة الكتالوج محدودة حاليًا';
+     el.textContent=en
+       ? '⚠ Analysis is configured, but catalog service is currently limited'
+       : '⚠ التحليل مهيأ، لكن خدمة الكتالوج محدودة حاليًا';
      el.style.color='#a85b00';
    }else{
-     el.textContent='⚠ بعض خدمات التحليل غير جاهزة';
+     el.textContent=en
+       ? '⚠ Some required services are not ready'
+       : '⚠ بعض الخدمات المطلوبة غير جاهزة';
      el.style.color='#a85b00';
    }
  }catch(e){
-   el.textContent='⚠ تعذر التحقق من حالة الخدمة';
+   if(run!==healthCheckRun)return;
+   const en=window.wafferLocale?.startsWith('en');
+   el.textContent=en
+     ? '⚠ Could not verify service status'
+     : '⚠ تعذر التحقق من حالة الخدمة';
    el.style.color='#a85b00';
+ }finally{
+   clearTimeout(timer);
+   if(healthCheckController===controller)healthCheckController=null;
  }
 }
 checkSystemHealth();
