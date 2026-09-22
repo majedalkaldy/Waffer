@@ -2,6 +2,8 @@
   'use strict';
 
   let vinRequest = null;
+  let vinRequestVin = '';
+  let vinAbortController = null;
   let lastVin = '';
 
   function clearResolvedVehicleState() {
@@ -129,10 +131,18 @@
       };
     }
 
-    // منع الطلبات المتكررة
-    if (vinRequest) {
+    // منع الطلبات المتكررة لنفس VIN وإلغاء الطلب القديم إذا تغير VIN.
+    if (vinRequest && vinRequestVin === vin) {
       return vinRequest;
     }
+
+    if (vinRequest && vinRequestVin !== vin) {
+      vinAbortController?.abort();
+      vinRequest = null;
+    }
+
+    vinRequestVin = vin;
+    vinAbortController = new AbortController();
 
     vinRequest = (async function () {
 
@@ -140,7 +150,8 @@
 
         const response = await fetch(
           '/api/vin?vin=' +
-          encodeURIComponent(vin)
+          encodeURIComponent(vin),
+          { signal: vinAbortController.signal }
         );
 
         let result;
@@ -479,9 +490,21 @@
 
         return detail;
 
+      } catch (error) {
+
+        if (error?.name === 'AbortError') {
+          return null;
+        }
+
+        throw error;
+
       } finally {
 
-        vinRequest = null;
+        if (vinRequestVin === vin) {
+          vinRequest = null;
+          vinRequestVin = '';
+          vinAbortController = null;
+        }
 
       }
 
