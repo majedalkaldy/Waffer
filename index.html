@@ -66,7 +66,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
  <div class="card score">ثقة التوافق<b id="rCompatibility">—</b><small>إمكان التحقق للسيارة المحددة</small></div>
  <div class="card score">ثقة المقارنة السعرية<b id="rPrice">—</b><small>قابلية المقارنة دون تخمين</small></div></div>
  <div class="card"><h3>درجة الثقة الكلية</h3><div class="total"><b id="rOverall">—</b><small>تعكس قوة الأدلة المتاحة، وليست تقييمًا للورشة</small></div></div>
- <div class="card"><h3>أبرز ما وجدناه</h3><div id="rAlerts"></div>
+ <div class="card"><h3>أبرز ما وجدناه</h3><div id="rVehicleEvidence" class="lock"></div><div id="rAlerts"></div>
   <div class="lock">🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون مطابقة القطعة ومصدر سعر موثوق.</div>
   <div id="catalogSummary" class="lock">🔎 حالة مطابقة الكتالوج: بانتظار التحليل.</div>
   <button onclick="advanced()">عرض تفاصيل البنود</button><button class="secondary" onclick="messageWorkshop()">أنشئ رسالة للورشة</button>
@@ -195,6 +195,13 @@ async function start(){
 }
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function render(){
+ const evidence=document.getElementById('rVehicleEvidence');
+ if(evidence){
+   const v=window.wafferVehicle;
+   evidence.textContent=v?.vehicleId
+     ? '🚗 تم التحقق من هوية السيارة عبر VIN: '+[v.manufacturerName,v.modelName,v.vehicleDescription].filter(Boolean).join(' — ')
+     : '🚗 لم يتم التحقق من هوية السيارة عبر VIN؛ نتائج التوافق ستكون محدودة.';
+ }
  document.getElementById('rTotal').textContent=analysis.total||'غير واضح';
  const calc=document.getElementById('rCalculatedTotal');
  if(calc){
