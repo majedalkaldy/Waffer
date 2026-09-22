@@ -32,7 +32,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 </head>
 <body><main class="app" id="appRoot">
 <section id="home">
- <div class="note" style="text-align:center;margin-bottom:6px">السوق التجريبي الحالي: السعودية • العربية • SAR</div>
+ <div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:8px"><span id="marketLabel" class="note">السوق التجريبي الحالي: السعودية • العربية • SAR</span><select id="localeSelect" aria-label="اللغة" style="width:auto;margin:0;padding:7px 9px;font-size:13px"><option value="ar-SA">العربية</option><option value="en-SA">English</option></select></div>
  <div id="systemStatus" class="note" style="text-align:center;margin-bottom:8px">جارٍ التحقق من جاهزية الخدمة...</div>
  <div id="offlineStatus" class="alert hidden" style="text-align:center">لا يوجد اتصال بالإنترنت. يلزم الاتصال لتحليل العرض والتحقق من الكتالوج.</div>
  <div class="brand"><div class="logo">وفّر</div><div class="tag">افحص عرض صيانة سيارتك قبل أن تدفع</div></div>
@@ -156,7 +156,7 @@ async function start(){
          year,
          vin,
          market:'SA',
-         locale:'ar-SA',
+         locale:window.wafferLocale||'ar-SA',
          currency:'SAR'
        }
      })
@@ -544,6 +544,23 @@ window.addEventListener('wafferPartsMatched', function(event){
        '</div>';
    }).join('');
 });
+</script>
+<script type="module">
+import { t } from '/lib/i18n.js';
+
+const localeSelect=document.getElementById('localeSelect');
+function applyLocale(locale){
+ const isAr=locale.startsWith('ar');
+ document.documentElement.lang=isAr?'ar':'en';
+ document.documentElement.dir=isAr?'rtl':'ltr';
+ document.getElementById('marketLabel').textContent=t(locale,'marketLabel');
+ document.querySelector('.tag').textContent=t(locale,'tagline');
+ document.getElementById('fileText').textContent=t(locale,'upload');
+ document.getElementById('analyzeBtn').textContent=t(locale,'analyze');
+ window.wafferLocale=locale;
+}
+localeSelect.addEventListener('change',()=>applyLocale(localeSelect.value));
+applyLocale(localeSelect.value);
 </script>
 <script src="/vin-ui.js"></script>
 <script src="/parts-match.js"></script>
