@@ -156,6 +156,30 @@ if (!failures.length) {
   if (!runtime.includes("engineVersion: 'mvp-2026-09'")) failures.push('Unexpected engine version');
   if (!runtime.includes('maxUploadBytes')) failures.push('Runtime upload limit missing');
   if (!runtime.includes('clientAnalysisTimeoutMs')) failures.push('Client analysis timeout is missing');
+  if (!runtime.includes('pdfCleanupTimeoutMs')) failures.push('PDF cleanup timeout is missing');
+
+  if (analyze.includes('res.locals.openaiFileId')) {
+    failures.push('PDF cleanup still depends on response locals instead of one finally path');
+  }
+  if (!analyze.includes('finally {\n    await cleanupOpenAIFile(openaiFileId')) {
+    failures.push('Uploaded PDF cleanup is not guaranteed by handler finally');
+  }
+  const pdfJsonRead = analyze.indexOf('uj = await up.json()');
+  const pdfTimeoutClear = analyze.indexOf('clearTimeout(uploadTimeout)');
+  if (!(pdfJsonRead >= 0 && pdfTimeoutClear > pdfJsonRead)) {
+    failures.push('PDF upload timeout does not cover response body consumption');
+  }
+  const analysisJsonRead = analyze.indexOf('data = await rr.json()');
+  const analysisTimeoutClear = analyze.indexOf('clearTimeout(timeout)');
+  if (!(analysisJsonRead >= 0 && analysisTimeoutClear > analysisJsonRead)) {
+    failures.push('Analysis timeout does not cover response body consumption');
+  }
+  if (!analyze.includes("if (error?.name === 'AbortError') throw error;")) {
+    failures.push('Response body timeout aborts are not preserved as timeout errors');
+  }
+  if (!analyze.includes("code: 'ANALYSIS_UPSTREAM_INVALID'")) {
+    failures.push('Malformed upstream/model JSON is not classified explicitly');
+  }
 
   if (!index.includes('signal:analysisController.signal')) {
     failures.push('Analysis request is not abortable from the client');
@@ -212,6 +236,9 @@ if (!failures.length) {
     if (RUNTIME_CONFIG.launchPhase !== 'field-test') failures.push('Unexpected launch phase');
     if (!(RUNTIME_CONFIG.clientAnalysisTimeoutMs > RUNTIME_CONFIG.analysisTimeoutMs)) {
       failures.push('Client analysis timeout must exceed the server analysis timeout');
+    }
+    if (!(RUNTIME_CONFIG.pdfCleanupTimeoutMs > 0 && RUNTIME_CONFIG.pdfCleanupTimeoutMs <= 10000)) {
+      failures.push('PDF cleanup timeout must be positive and bounded');
     }
 
     const robots = read('robots.txt');
