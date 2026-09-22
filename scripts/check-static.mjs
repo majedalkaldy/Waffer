@@ -86,6 +86,26 @@ if (!failures.length) {
 
   const analyze = read('api/analyze.js');
   const matcher = read('parts-match.js');
+  const vinUi = read('vin-ui.js');
+
+  if (vinUi.includes('vehicles[0]')) {
+    failures.push('VIN resolver must not silently choose the first vehicle variant');
+  }
+  if (!index.includes('id="vehicleCandidates"') || !index.includes('id="candidateSelect"')) {
+    failures.push('VIN ambiguity UI is missing');
+  }
+  if (!index.includes('vehicleData?.ambiguous')) {
+    failures.push('Analysis flow must stop until an ambiguous VIN variant is selected');
+  }
+  if (!index.includes("year=String(document.getElementById('year').value||'').trim();")) {
+    failures.push('Analysis must refresh model year after VIN resolution');
+  }
+  if (!index.includes("makeId:document.getElementById('make').value") ||
+      !index.includes("make:document.getElementById('make').selectedOptions?.[0]?.text||''") ||
+      !index.includes("vehicleId:window.wafferVehicleId||null")) {
+    failures.push('Analysis vehicle context must include make ID, display name, and resolved vehicle ID');
+  }
+
 
   for (const file of required.filter(path => /\.js$|\.mjs$/.test(path))) {
     const source = read(file);
