@@ -121,7 +121,8 @@ export default async function handler(req, res) {
         });
         try {
           uj = await up.json();
-        } catch {
+        } catch (error) {
+          if (error?.name === 'AbortError') throw error;
           return res.status(502).json({
             error: 'استجابة رفع PDF من مزود التحليل غير صالحة.',
             code: 'ANALYSIS_UPSTREAM_INVALID'
@@ -163,7 +164,8 @@ export default async function handler(req, res) {
       });
       try {
         data = await rr.json();
-      } catch {
+      } catch (error) {
+        if (error?.name === 'AbortError') throw error;
         return res.status(502).json({
           error: 'استجابة خدمة التحليل غير صالحة.',
           code: 'ANALYSIS_UPSTREAM_INVALID'
