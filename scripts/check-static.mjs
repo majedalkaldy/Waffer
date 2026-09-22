@@ -219,7 +219,33 @@ if (!failures.length) {
     if (noPartIdentity.identityConfidence > 40 || noPartIdentity.priceConfidence > 15) {
       failures.push('Confidence caps without visible part numbers are broken');
     }
-    if (noPartIdentity.items[0]?.itemType !== 'part') failures.push('Invalid itemType was not normalized');
+    if (noPartIdentity.items[0]?.itemType !== 'service') failures.push('Unknown itemType without part identity should not default to part');
+
+    const inferredPart = normalizeAnalysisResult({
+      result: { ...base, items: [{ name: 'Brake pad', partNumber: 'ABC-123', itemType: 'weird', identityConfidence: 80, price: '300' }] },
+      safeVehicle: { vin: '1HGCM82633A004352' },
+      market: 'SA',
+      locale: 'ar-SA',
+      currency: 'SAR',
+      engineVersion: 'mvp-2026-09',
+      requestId: 'test-part',
+      completedAt: '2026-09-22T00:00:00.000Z'
+    });
+    if (inferredPart.items[0]?.itemType !== 'part') failures.push('Unknown itemType with visible part number should fall back to part');
+
+    const malformedMixed = normalizeAnalysisResult({
+      result: { ...base, items: [{ name: 'Brake pad', partNumber: 'ABC-123', itemType: 'part' }, { price: '50' }] },
+      safeVehicle: { vin: '1HGCM82633A004352' },
+      market: 'SA',
+      locale: 'ar-SA',
+      currency: 'SAR',
+      engineVersion: 'mvp-2026-09',
+      requestId: 'test-malformed',
+      completedAt: '2026-09-22T00:00:00.000Z'
+    });
+    if (malformedMixed.acceptance.schemaValid !== false || !malformedMixed.acceptance.invalidItemIndexes.includes(1)) {
+      failures.push('Malformed raw line items are not reported in acceptance metadata');
+    }
 
     const incomplete = normalizeAnalysisResult({
       result: { status: 'x', items: [] },
