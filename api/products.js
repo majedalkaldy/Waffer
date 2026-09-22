@@ -16,7 +16,17 @@ export default async function handler(req, res) {
       '?vehicleId=' + encodeURIComponent(vehicleId) +
       '&langId=' + encodeURIComponent(langId);
 
-    const response = await fetch(url, { headers: { Accept: 'application/json', 'x-apiprofile-key': apiKey } });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 9000);
+    let response;
+    try {
+      response = await fetch(url, {
+        headers: { Accept: 'application/json', 'x-apiprofile-key': apiKey },
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timer);
+    }
     const data = await response.json();
     if (!response.ok) return res.status(response.status).json(data);
 
@@ -24,6 +34,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ market, langId, vehicleId: Number(vehicleId), count: products.length, products });
   } catch (error) {
     console.error('Vehicle products error:', error);
+    if (error?.name === 'AbortError') return res.status(504).json({ error: 'Parts catalog timed out' });
     return res.status(500).json({ error: 'Failed to load vehicle products' });
   }
 }
