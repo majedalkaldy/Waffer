@@ -283,10 +283,7 @@ async function start(){
  const runId=beginAnalysisRun();
  const analysisController=activeAnalysisController;
  let analysisTimedOut=false;
- const analysisTimeout=setTimeout(()=>{
-   analysisTimedOut=true;
-   analysisController.abort();
- },window.WAFFER_RUNTIME?.clientAnalysisTimeoutMs||60000);
+ let analysisTimeout=null;
  window.wafferPartMatches=null;
  window.wafferCatalogState={status:'NOT_STARTED',runId};
  analyzeBtn.disabled=true;
@@ -338,6 +335,10 @@ async function start(){
      setStage(en?'Image optimized to '+mb+' MB':'تم تحسين الصورة إلى '+mb+' MB');
    }
    setStage(en?'Analyzing line items and prices with AI':'تحليل البنود والأسعار بالذكاء الاصطناعي');
+   analysisTimeout=setTimeout(()=>{
+     analysisTimedOut=true;
+     analysisController.abort();
+   },window.WAFFER_RUNTIME?.clientAnalysisTimeoutMs||60000);
    const resp=await fetch('/api/analyze',{
      method:'POST',
      headers:{'Content-Type':'application/json'},
