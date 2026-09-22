@@ -105,7 +105,16 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 </main>
 <script>
 const ids=['home','loading','result','advanced','msg']; let analysis=null; let analysisTimer=null;
-function show(id){ids.forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));scrollTo(0,0)}
+function show(id){
+ ids.forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));
+ window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+ const section=document.getElementById(id);
+ const heading=section?.querySelector('h1,h2');
+ if(heading){
+   heading.setAttribute('tabindex','-1');
+   setTimeout(()=>heading.focus({preventScroll:true}),0);
+ }
+}
 function fileToDataURL(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)})}
 async function start(){
  if(!navigator.onLine){alert('لا يوجد اتصال بالإنترنت حاليًا.');return;}
