@@ -123,12 +123,13 @@ function show(id){
 }
 function fileToDataURL(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)})}
 async function start(){
- if(!navigator.onLine){alert('لا يوجد اتصال بالإنترنت حاليًا.');return;}
+ if(!navigator.onLine){alert(window.wafferLocale?.startsWith('en')?'There is no internet connection.':'لا يوجد اتصال بالإنترنت حاليًا.');return;}
  const analyzeBtn=document.getElementById('analyzeBtn');
  if(analyzeBtn.disabled)return;
  const file=document.getElementById('file').files[0];
- if(!file){alert('اختر صورة أو PDF أولًا');return}
- if(file.size>4*1024*1024){alert('الحد الحالي 4MB. صغّر الملف ثم حاول مجددًا.');return}
+ const en=window.wafferLocale?.startsWith('en');
+ if(!file){alert(en?'Select an image or PDF first.':'اختر صورة أو PDF أولًا');return}
+ if(file.size>4*1024*1024){alert(en?'The current limit is 4 MB. Reduce the file size and try again.':'الحد الحالي 4MB. صغّر الملف ثم حاول مجددًا.');return}
 
  const vin=String(document.getElementById('vin').value||'').trim().toUpperCase();
  const year=String(document.getElementById('year').value||'').trim();
@@ -153,15 +154,15 @@ async function start(){
  try{
    if(vin){
      if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)){
-       throw new Error('رقم الهيكل VIN يجب أن يتكون من 17 خانة صحيحة');
+       throw new Error(en?'VIN must contain 17 valid characters.':'رقم الهيكل VIN يجب أن يتكون من 17 خانة صحيحة');
      }
      if(typeof window.ensureWafferVehicle!=='function'){
-       throw new Error('وحدة التحقق من VIN لم يتم تحميلها');
+       throw new Error(en?'VIN verification module did not load.':'وحدة التحقق من VIN لم يتم تحميلها');
      }
      setStage('التحقق من رقم الهيكل VIN');
      const vehicleData=await window.ensureWafferVehicle();
      if(!vehicleData || !vehicleData.vehicleId){
-       throw new Error('تعذر تحديد Vehicle ID من رقم الهيكل');
+       throw new Error(en?'Could not determine Vehicle ID from the VIN.':'تعذر تحديد Vehicle ID من رقم الهيكل');
      }
    }
 
