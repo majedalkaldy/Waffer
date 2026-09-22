@@ -285,9 +285,12 @@ async function checkSystemHealth(){
  try{
    const r=await fetch('/api/health',{cache:'no-store'});
    const d=await r.json();
-   if(d.ok){
+   if(d.status==='ready'){
      el.textContent='● الخدمة جاهزة';
      el.style.color='#075b43';
+   }else if(d.status==='degraded'){
+     el.textContent='⚠ التحليل متاح، لكن خدمة الكتالوج محدودة حاليًا';
+     el.style.color='#a85b00';
    }else{
      el.textContent='⚠ بعض خدمات التحليل غير جاهزة';
      el.style.color='#a85b00';
