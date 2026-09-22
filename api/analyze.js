@@ -1,3 +1,4 @@
+import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { getMarketConfig } from '../lib/market-config.js';
 
 export default async function handler(req, res) {
@@ -30,7 +31,7 @@ export default async function handler(req, res) {
     }
     const fileBytes = Buffer.byteLength(base64, 'base64');
     if (!fileBytes) return res.status(400).json({ error: 'الملف فارغ.' });
-    if (fileBytes > 4 * 1024 * 1024) return res.status(413).json({ error: 'حجم الملف أكبر من 4MB. صغّر الملف ثم حاول مجددًا.' });
+    if (fileBytes > RUNTIME_CONFIG.maxUploadBytes) return res.status(413).json({ error: 'حجم الملف أكبر من 4MB. صغّر الملف ثم حاول مجددًا.' });
 
     const marketConfig = getMarketConfig(vehicle);
     const market = marketConfig.market;
@@ -77,7 +78,7 @@ export default async function handler(req, res) {
       form.append('purpose', 'user_data');
       form.append('file', new Blob([bytes], { type: 'application/pdf' }), safeFileName || 'quote.pdf');
       const uploadController = new AbortController();
-      const uploadTimeout = setTimeout(() => uploadController.abort(), 15000);
+      const uploadTimeout = setTimeout(() => uploadController.abort(), RUNTIME_CONFIG.pdfUploadTimeoutMs);
       let up;
       try {
         up = await fetch('https://api.openai.com/v1/files', {
@@ -101,7 +102,7 @@ export default async function handler(req, res) {
     } else return res.status(415).json({ error: 'نوع الملف غير مدعوم.' });
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 45000);
+    const timeout = setTimeout(() => controller.abort(), RUNTIME_CONFIG.analysisTimeoutMs);
     let rr;
     try {
       rr = await fetch('https://api.openai.com/v1/responses', {
@@ -143,7 +144,7 @@ export default async function handler(req, res) {
       ...result,
       requestId,
       completedAt,
-      engineVersion: 'mvp-2026-09',
+      engineVersion: RUNTIME_CONFIG.engineVersion,
       engineContext: {
         market,
         locale,
