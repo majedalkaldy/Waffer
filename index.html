@@ -289,7 +289,7 @@ function render(){
  const overallGate=document.getElementById('rOverallGate');
  if(overallGate){
    const a=analysis.acceptance||{};
-   const coreOk=Boolean(a.hasItems&&a.hasPrintedTotal&&a.hasConfidence);
+   const coreOk=Boolean(a.schemaValid!==false&&a.hasItems&&a.hasPrintedTotal&&a.hasConfidence);
    const versionOk=analysis.engineVersion==='mvp-2026-09';
    const contextOk=Boolean(analysis?.engineContext?.market&&analysis?.engineContext?.currency&&analysis?.engineContext?.locale);
    const checks=[coreOk,versionOk,contextOk];
@@ -305,6 +305,12 @@ function render(){
    const ok=actual===expected;
    const en=window.wafferLocale?.startsWith('en');
    versionIntegrity.textContent=(en?'Engine version: ':'نسخة المحرك: ')+(ok?'✓ ':'⚠ ')+(actual||'—')+(ok?'':(en?' — expected '+expected:' — المتوقع '+expected));
+ }
+ if(analysis.acceptance?.schemaValid===false){
+   const fields=(analysis.acceptance.missingShapeFields||[]).join(', ');
+   const en=window.wafferLocale?.startsWith('en');
+   const box=document.getElementById('rDataIntegrity');
+   if(box)box.textContent=(en?'Result contract is incomplete. Missing: ':'عقد نتيجة التحليل غير مكتمل. الحقول الناقصة: ')+fields;
  }
  const dataIntegrity=document.getElementById('rDataIntegrity');
  if(dataIntegrity){
