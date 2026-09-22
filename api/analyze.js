@@ -209,25 +209,14 @@ export default async function handler(req, res) {
       completedAt
     });
 
-    if (res.locals?.openaiFileId) {
-      fetch('https://api.openai.com/v1/files/' + encodeURIComponent(res.locals.openaiFileId), {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` }
-      }).catch(error => console.error('PDF cleanup error:', error));
-    }
-
     return res.status(200).json(normalized);
   } catch (e) {
-    if (res.locals?.openaiFileId) {
-      fetch('https://api.openai.com/v1/files/' + encodeURIComponent(res.locals.openaiFileId), {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` }
-      }).catch(error => console.error('PDF cleanup error:', error));
-    }
     console.error('Waffer analyze error:', e);
     if (e?.name === 'AbortError') {
       return res.status(504).json({ error: 'استغرق التحليل وقتًا أطول من المتوقع. حاول مرة أخرى.', code: 'ANALYSIS_TIMEOUT' });
     }
     return res.status(500).json({ error: 'تعذر إكمال التحليل الآن. تحقق من إعداد الخدمة أو حاول مرة أخرى لاحقًا.', code: 'ANALYSIS_FAILED' });
+  } finally {
+    await cleanupOpenAIFile(openaiFileId, process.env.OPENAI_API_KEY);
   }
 }
