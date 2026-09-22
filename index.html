@@ -491,63 +491,49 @@ function resetAnalysis(){
  window.analysis=null;
  window.wafferPartMatches=null;
  window.wafferCatalogState=null;
- document.getElementById('file').value='';
- document.getElementById('fileText').textContent=window.wafferLocale?.startsWith('en')?'Upload an estimate image or PDF':'ارفع صورة العرض أو ملف PDF';
+ window.wafferVehicle=null;
+ window.wafferVehicleId='';
+ window.wafferModelId='';
+ window.wafferManufacturerId='';
+
+ const file=document.getElementById('file');
+ if(file)file.value='';
+
+ const fileText=document.getElementById('fileText');
+ if(fileText)fileText.textContent=window.wafferLocale?.startsWith('en')
+   ? 'Upload an estimate image or PDF'
+   : 'ارفع صورة العرض أو ملف PDF';
+
  const elapsed=document.getElementById('elapsedTime');
  if(elapsed)elapsed.textContent=window.wafferLocale?.startsWith('en')?'Elapsed: 0 s':'الوقت المنقضي: 0 ث';
- document.getElementById('catalogSummary').textContent='🔎 حالة مطابقة الكتالوج: بانتظار التحليل.';
- const fieldTestSummary=document.getElementById('rFieldTestSummary');
- if(fieldTestSummary){
-   const state=window.wafferCatalogState||{};
-   const hasVin=Boolean(window.wafferVehicle?.vehicleId);
-   const completed=state.status==='COMPLETED';
-   const underLimit=!state.elapsedMs||state.elapsedMs<=(window.WAFFER_RUNTIME?.catalogMatchTimeoutMs||30000);
-   const axleOk=!state.axleRequested||state.axleVerified>0;
-   const en=window.wafferLocale?.startsWith('en');
-   if(!hasVin){
-     fieldTestSummary.textContent=en
-       ? 'VIN + catalog field checks: not applicable because no VIN was provided.'
-       : 'فحوصات VIN + الكتالوج: غير مطبقة لأن التحليل تم دون VIN.';
-   }else{
-     const checks=[hasVin,completed,underLimit,axleOk];
-     const passed=checks.filter(Boolean).length;
-     fieldTestSummary.textContent=(en?'VIN + catalog field checks: ':'فحوصات VIN + الكتالوج: ')+passed+'/'+checks.length+
-       ' • '+(hasVin?'✓':'✗')+' VIN • '+(completed?'✓':'✗')+' '+(en?'catalog':'الكتالوج')+
-       ' • '+(underLimit?'✓':'✗')+' '+(en?'time':'الوقت')+' • '+(axleOk?'✓':'✗')+' Front/Rear';
-   }
- }
- const axleGate=document.getElementById('rAxleGate');
- if(axleGate){
-   const axleRequested=matches.filter(m=>m?.requestedAxle);
-   const axleVerified=axleRequested.filter(m=>Number(m?.verifiedByAxle)>0);
-   const en=window.wafferLocale?.startsWith('en');
-   axleGate.textContent=axleRequested.length
-     ? (en?'Front/rear verification: ':'التحقق أمامي/خلفي: ')+axleVerified.length+'/'+axleRequested.length+(en?' item(s) verified by fitting position.':' بنود تم التحقق من موضعها عبر بيانات Fitting Position.')
-     : (en?'Front/rear verification: no position-specific line items detected.':'التحقق أمامي/خلفي: لم تظهر بنود تتطلب تحديد موضع.');
- }
- const catalogGate=document.getElementById('rCatalogGate');
- if(catalogGate){
-   const state=window.wafferCatalogState||{};
-   const en=window.wafferLocale?.startsWith('en');
-   const completed=state.status==='COMPLETED';
-   const elapsed=Number(state.elapsedMs)||0;
-   const underLimit=!elapsed || elapsed<=(window.WAFFER_RUNTIME?.catalogMatchTimeoutMs||30000);
-   const matchedCount=Number(state.matched)||0;
-   catalogGate.textContent=(en?'Catalog checks: ':'فحوصات الكتالوج: ')+(completed?'✓ ':'✗ ')+(en?'completed':'اكتملت')+' • '+(underLimit?'✓ ':'✗ ')+(en?'within time limit':'ضمن المهلة')+' • '+matchedCount+(en?' matched item(s)':' بنود مطابقة');
- }
- const coverage=document.getElementById('rCatalogCoverage');
- if(coverage)coverage.textContent='🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.';
- const gate=document.getElementById('rCatalogGate');
- if(gate)gate.textContent='🔎 فحص الكتالوج: بانتظار المطابقة.';
- const axleGate=document.getElementById('rAxleGate');
- if(axleGate)axleGate.textContent='';
- const fieldGate=document.getElementById('rFieldTestSummary');
- if(fieldGate)fieldGate.textContent='';
- document.getElementById('catalogMatches').innerHTML='<h3>🔎 مطابقة كتالوج القطع</h3><div class="note">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>';
+
  const vehicleInfo=document.getElementById('vehicleInfo');
  if(vehicleInfo){vehicleInfo.textContent='';vehicleInfo.classList.add('hidden');}
- const pr=document.getElementById('priceReadiness');
- if(pr)pr.textContent='💰 مقارنة الأسعار: بانتظار هوية قطعة قابلة للتحقق ومصدر سعر موثوق.';
+
+ const catalogSummary=document.getElementById('catalogSummary');
+ if(catalogSummary)catalogSummary.textContent='🔎 حالة مطابقة الكتالوج: بانتظار التحليل.';
+
+ const coverage=document.getElementById('rCatalogCoverage');
+ if(coverage)coverage.textContent='🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.';
+
+ const catalogGate=document.getElementById('rCatalogGate');
+ if(catalogGate)catalogGate.textContent='🔎 فحص الكتالوج: بانتظار المطابقة.';
+
+ const axleGate=document.getElementById('rAxleGate');
+ if(axleGate)axleGate.textContent='';
+
+ const fieldGate=document.getElementById('rFieldTestSummary');
+ if(fieldGate)fieldGate.textContent='';
+
+ const priceReadiness=document.getElementById('priceReadiness');
+ if(priceReadiness)priceReadiness.textContent=window.wafferLocale?.startsWith('en')
+   ? '💰 Price comparison is waiting for a verifiable part identity and a trusted price source.'
+   : '💰 مقارنة الأسعار: بانتظار هوية قطعة قابلة للتحقق ومصدر سعر موثوق.';
+
+ const catalogMatches=document.getElementById('catalogMatches');
+ if(catalogMatches)catalogMatches.innerHTML='<h3>🔎 مطابقة كتالوج القطع</h3><div class="note">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>';
+
+ updateFormHint();
  show('home');
 }
 async function copyMsg(){try{await navigator.clipboard.writeText(document.getElementById('message').innerText);alert('تم نسخ الرسالة')}catch(e){alert('حدد النص وانسخه يدويًا')}}
