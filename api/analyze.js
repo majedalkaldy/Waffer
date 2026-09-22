@@ -5,8 +5,24 @@ export default async function handler(req, res) {
   try {
     const { fileData, fileName, mimeType, vehicle = {} } = req.body || {};
     if (!fileData || !mimeType) return res.status(400).json({ error: 'لم يتم استلام الملف.' });
+
+    const allowedMimeTypes = new Set([
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'application/pdf'
+    ]);
+    if (!allowedMimeTypes.has(String(mimeType).toLowerCase())) {
+      return res.status(415).json({ error: 'نوع الملف غير مدعوم.' });
+    }
+
     const base64 = fileData.includes(',') ? fileData.split(',')[1] : fileData;
-    if (Buffer.byteLength(base64, 'base64') > 4 * 1024 * 1024) return res.status(413).json({ error: 'حجم الملف أكبر من 4MB. صغّر الملف ثم حاول مجددًا.' });
+    if (!base64 || !/^[A-Za-z0-9+/=\s]+$/.test(base64)) {
+      return res.status(400).json({ error: 'بيانات الملف غير صالحة.' });
+    }
+    const fileBytes = Buffer.byteLength(base64, 'base64');
+    if (!fileBytes) return res.status(400).json({ error: 'الملف فارغ.' });
+    if (fileBytes > 4 * 1024 * 1024) return res.status(413).json({ error: 'حجم الملف أكبر من 4MB. صغّر الملف ثم حاول مجددًا.' });
 
     const market = String(vehicle.market || 'SA').toUpperCase();
     const locale = String(vehicle.locale || 'ar-SA');
@@ -52,7 +68,29 @@ export default async function handler(req, res) {
     const text = data.output_text || (data.output || []).flatMap(o => o.content || []).find(c => c.type === 'output_text')?.text || '';
     const cleaned = text.replace(/^```json\s*/i, '').replace(/```\s*$/,'').trim();
     const result = JSON.parse(cleaned);
-    return res.status(200).json(result);
+    if (!result || typeof result !== 'object' || Array.isArray(result)) {
+      throw new Error('Invalid analysis result');
+    }
+
+    const clamp = value => {
+      const n = Number(value);
+      return Number.isFinite(n) ? Math.max(0, Math.min(100, Math.round(n))) : 0;
+    };
+
+    const normalized = {
+      ...result,
+      transparency: clamp(result.transparency),
+      identityConfidence: clamp(result.identityConfidence),
+      compatibilityConfidence: clamp(result.compatibilityConfidence),
+      priceConfidence: clamp(result.priceConfidence),
+      overallConfidence: clamp(result.overallConfidence),
+      missing: Array.isArray(result.missing) ? result.missing : [],
+      conflicts: Array.isArray(result.conflicts) ? result.conflicts : [],
+      nextActions: Array.isArray(result.nextActions) ? result.nextActions.slice(0, 5) : [],
+      items: Array.isArray(result.items) ? result.items.slice(0, 50) : []
+    };
+
+    return res.status(200).json(normalized);
   } catch (e) {
     console.error('Waffer analyze error:', e);
     return res.status(500).json({ error: 'تعذر إكمال التحليل الآن. تحقق من إعداد الخدمة أو حاول مرة أخرى لاحقًا.', code: 'ANALYSIS_FAILED' });
