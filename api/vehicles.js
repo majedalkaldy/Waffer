@@ -19,8 +19,10 @@ export default async function handler(req, res) {
     } finally {
       clearTimeout(timer);
     }
-    const data = await response.json();
-    if (!response.ok) return res.status(response.status).json(data);
+    let data;
+    try { data = await response.json(); }
+    catch { return res.status(502).json({ error: 'Invalid response from parts catalog', code: 'CATALOG_INVALID_RESPONSE' }); }
+    if (!response.ok) return res.status(response.status >= 500 ? 502 : response.status).json({ error: 'Parts catalog request failed', code: 'CATALOG_UPSTREAM_ERROR', details: data });
 
     const manufacturers = (Array.isArray(data)
       ? data
