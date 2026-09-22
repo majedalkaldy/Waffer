@@ -19,14 +19,17 @@ export default async function handler(req, res) {
 
     const price = Number(workshopPrice);
     const qty = Math.max(1, Number(quantity) || 1);
+    const normalizedMarket = String(market || 'SA').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) || 'SA';
+    const normalizedLocale = String(locale || 'ar-SA').replace(/[^A-Za-z-]/g, '').slice(0, 16) || 'ar-SA';
+    const normalizedCurrency = String(currency || 'SAR').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) || 'SAR';
     const hasPartIdentity = Boolean(String(partNumber || '').trim());
     const hasVehicleIdentity = Boolean(vehicle.vehicleId || vehicle.vin);
 
     return res.status(200).json({
       context: {
-        market: String(market).toUpperCase(),
-        locale: String(locale),
-        currency: String(currency).toUpperCase()
+        market: normalizedMarket,
+        locale: normalizedLocale,
+        currency: normalizedCurrency
       },
       part: {
         name: partName || 'غير محدد',
