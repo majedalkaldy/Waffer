@@ -66,7 +66,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
  <div class="card score">ثقة التوافق<b id="rCompatibility">—</b><small>إمكان التحقق للسيارة المحددة</small></div>
  <div class="card score">ثقة المقارنة السعرية<b id="rPrice">—</b><small>قابلية المقارنة دون تخمين</small></div></div>
  <div class="card"><h3>درجة الثقة الكلية</h3><div class="total"><b id="rOverall">—</b><small>تعكس قوة الأدلة المتاحة، وليست تقييمًا للورشة</small></div></div>
- <div class="card"><h3>أبرز ما وجدناه</h3><div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rAlerts"></div>
+ <div class="card"><h3>أبرز ما وجدناه</h3><div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
   <div class="lock">🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون مطابقة القطعة ومصدر سعر موثوق.</div>
   <div id="catalogSummary" class="lock">🔎 حالة مطابقة الكتالوج: بانتظار التحليل.</div>
   <button onclick="advanced()">عرض تفاصيل البنود</button><button class="secondary" onclick="messageWorkshop()">أنشئ رسالة للورشة</button>
@@ -224,6 +224,21 @@ function render(){
    calc.textContent=calculated && calculated!=='غير محسوب'
      ? 'مجموع البنود المحسوب من القيم الظاهرة: '+calculated
      : '';
+ }
+ const totalCheck=document.getElementById('rTotalCheck');
+ if(totalCheck){
+   const printed=String(analysis.total||'').trim();
+   const calculated=String(analysis.calculatedTotal||'').trim();
+   const pNum=Number((printed.match(/[\d,.]+/)||[])[0]?.replace(/,/g,''));
+   const cNum=Number((calculated.match(/[\d,.]+/)||[])[0]?.replace(/,/g,''));
+   if(Number.isFinite(pNum)&&Number.isFinite(cNum)){
+     const diff=Math.abs(pNum-cNum);
+     totalCheck.textContent=diff<0.01
+       ? '🧮 الإجمالي المطبوع يطابق مجموع البنود الظاهرة.'
+       : '🧮 يوجد فرق حسابي قدره '+diff.toFixed(2)+' بين الإجمالي المطبوع ومجموع البنود الظاهرة؛ يحتاج مراجعة.';
+   }else{
+     totalCheck.textContent='🧮 تعذر التحقق حسابيًا من الإجمالي بسبب نقص أو غموض القيم الظاهرة.';
+   }
  }
  document.getElementById('rStatus').textContent='⚠️ '+(analysis.status||'يحتاج مراجعة'); document.getElementById('rTransparency').textContent=(analysis.transparency??'—')+'/100'; document.getElementById('rIdentity').textContent=(analysis.identityConfidence??'—')+'/100'; document.getElementById('rCompatibility').textContent=(analysis.compatibilityConfidence??'—')+'/100'; document.getElementById('rPrice').textContent=(analysis.priceConfidence??'—')+'/100'; document.getElementById('rOverall').textContent=(analysis.overallConfidence??'—')+'/100';
  const alerts=[...(analysis.missing||[]).map(x=>'📋 '+x),...(analysis.conflicts||[]).map(x=>'⚙️ '+x)]; document.getElementById('rAlerts').innerHTML=(alerts.length?alerts:['لم تظهر ملاحظات رئيسية.']).map(x=>'<div class="alert">'+esc(x)+'</div>').join('');
