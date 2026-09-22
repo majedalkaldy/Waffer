@@ -24,7 +24,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:focus,input:focus,sele
 .alert{background:var(--redbg);border-radius:14px;padding:13px;margin:9px 0;color:#7d1e17}.lock{background:#f0f4f3;border-radius:14px;padding:14px;margin:12px 0}
 .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.top h2{margin:0}.pill{font-size:12px;padding:6px 9px;background:#e9f5f1;color:var(--g);border-radius:999px}
 .table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}table{width:100%;border-collapse:collapse;font-size:13px;min-width:650px}th,td{padding:10px 5px;border-bottom:1px solid var(--line);text-align:right}.note{font-size:12px;color:var(--muted);line-height:1.7}
-.nav{display:flex;gap:8px;margin-top:16px}.nav button{margin:0}.price{font-size:28px;font-weight:900;color:var(--g);text-align:center}
+.nav{display:flex;gap:8px;margin-top:16px}.nav button{margin:0}.price{font-size:28px;font-weight:900;color:var(--g);text-align:center}.vehicle-info{background:#eaf6f1;border:1px solid #cde8dc;border-radius:13px;padding:12px;margin-top:12px;color:var(--g);font-size:13px;line-height:1.7}
 </style>
 </head>
 <body><main class="app">
@@ -40,7 +40,8 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:focus,input:focus,sele
   <div class="grid"><div><label>الشركة</label><select id="make"><option>Ford — فورد</option><option>Toyota — تويوتا</option><option>أخرى</option></select></div>
   <div><label>الموديل</label><input id="model" value="Expedition" dir="ltr"></div></div>
   <label>سنة الصنع</label><input id="year" type="number" value="2013" inputmode="numeric">
-  <label>رقم الهيكل VIN <span style="font-weight:normal;color:#6b7773">(اختياري)</span></label><input id="vin" placeholder="يرفع دقة مطابقة القطع" dir="ltr">
+  <label>رقم الهيكل VIN <span style="font-weight:normal;color:#6b7773">(اختياري)</span></label><input id="vin" placeholder="يرفع دقة مطابقة القطع" dir="ltr" maxlength="17" autocomplete="off">
+  <div id="vehicleInfo" class="vehicle-info hidden"></div>
   <button onclick="start()">حلّل عرضي مجانًا ✨</button>
   <div class="privacy">🔒 يُرسل الملف إلى الخادم الآمن للتحليل، ولا يظهر مفتاح API للزائر.</div>
  </div>
@@ -211,7 +212,10 @@ window.addEventListener('wafferPartsMatched', function(event){
        productId:m.productId,
        productName:m.productName,
        matchScore:m.matchScore,
+       requestedAxle:m.requestedAxle||null,
        countArticles:m.countArticles,
+       totalCatalogArticles:m.totalCatalogArticles??m.countArticles,
+       verifiedByAxle:m.verifiedByAxle??0,
        articles:Array.isArray(m.articles)?m.articles:[]
      };
    }
@@ -253,6 +257,8 @@ window.addEventListener('wafferPartsMatched', function(event){
        '<div style="margin-top:8px">مطابقة الكتالوج: <strong>'+esc(m.productName||'-')+'</strong></div>'+
        '<div>Product ID: '+esc(m.productId)+'</div>'+
        '<div>درجة المطابقة: '+esc(m.matchScore??0)+'%</div>'+
+       (m.requestedAxle?'<div>الموضع المطلوب: <strong>'+(m.requestedAxle==='front'?'أمامي':'خلفي')+'</strong></div>':'')+
+       (m.requestedAxle?'<div>نتائج تم التحقق من موضعها: '+esc(m.verifiedByAxle??0)+'</div>':'')+
        '<div>عدد النتائج المتوافقة: '+esc(m.countArticles??0)+'</div>'+
        articleHtml+
        '</div>';
