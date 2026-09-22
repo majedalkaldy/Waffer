@@ -1,6 +1,9 @@
 import { getMarketConfig } from '../lib/market-config.js';
 
 export default async function handler(req, res) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   try {
     const apiKey = process.env.AUTOPARTS_API_KEY;
     const vehicleId = String(req.query.vehicleId || '').trim();
