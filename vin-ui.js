@@ -259,6 +259,19 @@
     if (vin === lastVin && window.wafferVehicleId && window.wafferVehicle) {
       return window.wafferVehicle;
     }
+    if (vin === lastVin && !window.wafferVehicleId && vinCandidates.length > 1) {
+      return {
+        vin,
+        ambiguous: true,
+        candidates: vinCandidates.map(candidate => ({
+          vehicleId: candidate.vehicleId,
+          manufacturerName: candidate.manufacturerName,
+          modelName: candidate.modelName,
+          vehicleDescription: candidate.vehicleDescription,
+          year: candidate.year
+        }))
+      };
+    }
 
     if (vinRequest && vinRequestVin === vin) return vinRequest;
     if (vinRequest && vinRequestVin !== vin) {
