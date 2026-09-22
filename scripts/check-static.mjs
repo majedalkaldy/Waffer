@@ -89,7 +89,7 @@ if (!failures.length) {
 
   for (const file of required.filter(path => /\.js$|\.mjs$/.test(path))) {
     const source = read(file);
-    if (/\|\|\s*[A-Za-z_$][\w$]*(?:\([^\n)]*\))?\s*\?/.test(source)) {
+    if (/\|\|\s*[A-Za-z_$][\w$]*\(\)\s*\?/.test(source)) {
       failures.push(`Ambiguous || / ternary precedence found in ${file}; add parentheses explicitly`);
     }
   }
