@@ -30,11 +30,18 @@ export default async function handler(req, res) {
     if (!fileBytes) return res.status(400).json({ error: 'الملف فارغ.' });
     if (fileBytes > 4 * 1024 * 1024) return res.status(413).json({ error: 'حجم الملف أكبر من 4MB. صغّر الملف ثم حاول مجددًا.' });
 
-    const market = String(vehicle.market || 'SA').toUpperCase();
-    const locale = String(vehicle.locale || 'ar-SA');
-    const currency = String(vehicle.currency || 'SAR').toUpperCase();
+    const market = String(vehicle.market || 'SA').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) || 'SA';
+    const locale = String(vehicle.locale || 'ar-SA').replace(/[^A-Za-z-]/g, '').slice(0, 16) || 'ar-SA';
+    const currency = String(vehicle.currency || 'SAR').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) || 'SAR';
 
-    const prompt = `أنت محرك تحليل مستقل لعروض صيانة السيارات باسم «وفّر». السوق الحالي ${market}، اللغة/المنطقة ${locale}، العملة ${currency}. السيارة: الشركة ${vehicle.make || 'غير محدد'}، الموديل ${vehicle.model || 'غير محدد'}، السنة ${vehicle.year || 'غير محدد'}، VIN ${vehicle.vin || 'غير متوفر'}.
+    const safeVehicle = {
+      make: String(vehicle.make || 'غير محدد').replace(/[\r\n]/g, ' ').slice(0, 120),
+      model: String(vehicle.model || 'غير محدد').replace(/[\r\n]/g, ' ').slice(0, 120),
+      year: String(vehicle.year || 'غير محدد').replace(/[^0-9]/g, '').slice(0, 4) || 'غير محدد',
+      vin: String(vehicle.vin || 'غير متوفر').toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '').slice(0, 17) || 'غير متوفر'
+    };
+
+    const prompt = `أنت محرك تحليل مستقل لعروض صيانة السيارات باسم «وفّر». السوق الحالي ${market}، اللغة/المنطقة ${locale}، العملة ${currency}. السيارة: الشركة ${safeVehicle.make}، الموديل ${safeVehicle.model}، السنة ${safeVehicle.year}، VIN ${safeVehicle.vin}.
 
 حلّل المستند وفق التسلسل: Identity → Compatibility → Price → Conflict → Confidence.
 أعد JSON فقط دون markdown بهذه البنية:
@@ -123,7 +130,7 @@ export default async function handler(req, res) {
     };
 
     // Confidence cannot exceed the evidence available in the source document.
-    const hasVin = /^[A-HJ-NPR-Z0-9]{17}$/.test(String(vehicle.vin || '').toUpperCase());
+    const hasVin = /^[A-HJ-NPR-Z0-9]{17}$/.test(safeVehicle.vin);
     const itemCount = normalized.items.length;
     const identifiedCount = normalized.items.filter(item =>
       item.partNumber && !/غير ظاهر|غير متوفر/i.test(item.partNumber)
