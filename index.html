@@ -196,6 +196,12 @@ async function start(){
      if(d?.code==='ANALYSIS_TIMEOUT'){
        throw new Error(window.wafferLocale?.startsWith('en')?'The analysis service timed out. Try again.':(d.error||'انتهت مهلة خدمة التحليل. حاول مرة أخرى.'));
      }
+     if(d?.code==='ANALYSIS_RATE_LIMITED'){
+       throw new Error(window.wafferLocale?.startsWith('en')?'The analysis service is busy. Wait briefly and try again.':'خدمة التحليل مشغولة حاليًا. انتظر قليلًا ثم حاول مرة أخرى.');
+     }
+     if(d?.code==='ANALYSIS_UPSTREAM_INVALID'||d?.code==='ANALYSIS_UPSTREAM_ERROR'){
+       throw new Error(window.wafferLocale?.startsWith('en')?'The analysis provider returned an invalid response. Try again.':'أعاد مزود التحليل استجابة غير صالحة. حاول مرة أخرى.');
+     }
      throw new Error(d.error||d.message||'تعذر التحليل');
    }
    if(!d || typeof d!=='object' || !Array.isArray(d.items)){
