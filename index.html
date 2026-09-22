@@ -44,7 +44,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
   <label>رقم الهيكل VIN <span style="font-weight:normal;color:#6b7773">(اختياري)</span></label><input id="vin" placeholder="يرفع دقة مطابقة القطع" dir="ltr" maxlength="17" autocomplete="off">
   <div id="vehicleInfo" class="vehicle-info hidden"></div>
   <button id="analyzeBtn" onclick="start()">حلّل عرضي مجانًا ✨</button>
-  <div class="privacy">🔒 يُرسل الملف إلى الخادم الآمن للتحليل، ولا يظهر مفتاح API للزائر.</div>
+  <div class="privacy">🔒 يُرسل الملف للتحليل عبر الخادم ولا يظهر مفتاح API للزائر. لا يحفظ «وفّر» العرض في قاعدة بيانات في هذه النسخة.</div>
  </div>
 </section>
 
@@ -84,7 +84,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
  <div class="card"><h3>قبل أن تدفع</h3><div id="nextActions"></div></div>
  <div class="card"><div class="price">التوفير المؤكد: غير محسوب</div><p class="lead">لا يحسب «وفّر» التوفير قبل مطابقة هوية القطعة بمصدر سعر موثوق.</p><div id="priceReadiness" class="lock">💰 مقارنة الأسعار: بانتظار هوية قطعة قابلة للتحقق ومصدر سعر موثوق.</div>
  <button onclick="messageWorkshop()">أنشئ رسالة استكمال للورشة</button></div>
- <div class="nav"><button class="secondary" onclick="show('result')">رجوع</button><button onclick="show('home')">تحليل عرض آخر</button></div>
+ <div class="nav"><button class="secondary" onclick="show('result')">رجوع</button><button onclick="resetAnalysis()">تحليل عرض آخر</button></div>
 </section>
 
 <section id="msg" class="hidden">
@@ -191,6 +191,18 @@ function render(){
  document.getElementById('message').textContent=analysis.workshopMessage||'السلام عليكم، أرجو تزويدي بتفاصيل القطع وأرقامها والشركة المصنعة والكمية وأجرة العمل والضريبة والضمان قبل اعتماد العرض. وشكرًا.';
 }
 function advanced(){show('advanced')} function messageWorkshop(){show('msg')}
+function resetAnalysis(){
+ analysis=null;
+ window.analysis=null;
+ window.wafferPartMatches=null;
+ document.getElementById('file').value='';
+ document.getElementById('fileText').textContent='ارفع صورة العرض أو ملف PDF';
+ document.getElementById('catalogSummary').textContent='🔎 حالة مطابقة الكتالوج: بانتظار التحليل.';
+ document.getElementById('catalogMatches').innerHTML='<h3>🔎 مطابقة كتالوج القطع</h3><div class="note">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>';
+ const pr=document.getElementById('priceReadiness');
+ if(pr)pr.textContent='💰 مقارنة الأسعار: بانتظار هوية قطعة قابلة للتحقق ومصدر سعر موثوق.';
+ show('home');
+}
 async function copyMsg(){try{await navigator.clipboard.writeText(document.getElementById('message').innerText);alert('تم نسخ الرسالة')}catch(e){alert('حدد النص وانسخه يدويًا')}}
 const fileInput=document.getElementById('file');
 const uploadBox=document.getElementById('uploadBox');
