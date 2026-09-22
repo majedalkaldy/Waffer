@@ -385,6 +385,44 @@
     return { articles: verified.slice(0,5), checked: checked.length, verified: verified.length };
   }
 
+  function articleKey(article) {
+    return norm(article?.articleNo || article?.articleNumber || article?.id || article?.articleId || '');
+  }
+
+  function supplierName(article) {
+    return String(article?.supplierName || article?.brandName || article?.manufacturerName || '').trim();
+  }
+
+  function shortlistArticles(articles, limit = 3) {
+    const seen = new Set();
+    const suppliers = new Set();
+    const unique = [];
+
+    for (const article of Array.isArray(articles) ? articles : []) {
+      const key = articleKey(article);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      unique.push(article);
+    }
+
+    // Prefer supplier diversity so the user sees useful alternatives, not duplicates.
+    const diverse = [];
+    for (const article of unique) {
+      const supplier = norm(supplierName(article));
+      if (supplier && suppliers.has(supplier)) continue;
+      if (supplier) suppliers.add(supplier);
+      diverse.push(article);
+      if (diverse.length >= limit) return diverse;
+    }
+
+    for (const article of unique) {
+      if (diverse.includes(article)) continue;
+      diverse.push(article);
+      if (diverse.length >= limit) break;
+    }
+    return diverse;
+  }
+
   async function matchWafferParts(analysisArg) {
     const analysis =
       analysisArg || window.analysis;
@@ -470,7 +508,7 @@
           criteriaChecked: filtered.checked,
           verifiedByAxle: filtered.verified,
           countArticles: requestedAxle ? filtered.verified : allArticles.length,
-          articles: requestedAxle ? filtered.articles : allArticles.slice(0,20)
+          articles: shortlistArticles(requestedAxle ? filtered.articles : allArticles, 3)
         });
       }
 
