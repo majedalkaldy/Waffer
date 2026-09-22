@@ -21,7 +21,8 @@ const required = [
   'lib/runtime-config.js',
   'lib/i18n.js',
   'sw.js',
-  'manifest.webmanifest'
+  'manifest.webmanifest',
+  'robots.txt'
 ];
 
 const failures = [];
@@ -135,6 +136,7 @@ if (!failures.length) {
     const unsupported = getMarketConfig({ market: 'ZZ' });
 
     if (RUNTIME_CONFIG.engineVersion !== 'mvp-2026-09') failures.push('Runtime engine version mismatch');
+    if (RUNTIME_CONFIG.launchPhase !== 'field-test') failures.push('Unexpected launch phase');
     if (!(RUNTIME_CONFIG.maxUploadBytes > 0)) failures.push('Runtime upload limit must be positive');
     if (!RUNTIME_CONFIG.supportedMimeTypes.includes('application/pdf')) failures.push('PDF support missing from runtime config');
     if (!(sa.supported && sa.market === 'SA' && sa.currency === 'SAR')) failures.push('Saudi market configuration is invalid');
