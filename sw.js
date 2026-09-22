@@ -1,4 +1,4 @@
-const CACHE_NAME = 'waffer-shell-v13';
+const CACHE_NAME = 'waffer-shell-v14';
 const SHELL = ['/', '/index.html', '/vin-ui.js', '/parts-match.js', '/manifest.webmanifest', '/lib/i18n.js'];
 
 self.addEventListener('install', event => {
