@@ -15,7 +15,7 @@ h1{font-size:27px;line-height:1.5;margin:10px 0;text-align:center} .lead{text-al
 input,select{width:100%;border:1px solid #cad9d4;border-radius:13px;padding:14px;background:#fff;font-size:16px;margin-top:7px}
 label{display:block;margin:12px 0 4px;font-weight:700}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 button{width:100%;border:0;border-radius:14px;padding:15px;font-size:17px;font-weight:800;cursor:pointer;background:var(--g);color:white;margin-top:14px}
-button.secondary{background:#e8f3ef;color:var(--g)}button:focus,input:focus,select:focus{outline:3px solid #84c9b2;outline-offset:2px}
+button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cursor:not-allowed}button:focus,input:focus,select:focus{outline:3px solid #84c9b2;outline-offset:2px}
 .privacy{text-align:center;color:var(--muted);font-size:12px;margin:12px}
 .hidden{display:none!important}.steps{list-style:none;padding:0;margin:20px 0}.steps li{padding:13px;border-bottom:1px solid var(--line)}.check{color:var(--g);font-weight:bold}
 .total{text-align:center;background:#eaf6f1;border-radius:16px;padding:18px}.total b{font-size:34px;color:var(--g);display:block}
@@ -42,7 +42,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:focus,input:focus,sele
   <label>سنة الصنع</label><input id="year" type="number" value="2013" inputmode="numeric">
   <label>رقم الهيكل VIN <span style="font-weight:normal;color:#6b7773">(اختياري)</span></label><input id="vin" placeholder="يرفع دقة مطابقة القطع" dir="ltr" maxlength="17" autocomplete="off">
   <div id="vehicleInfo" class="vehicle-info hidden"></div>
-  <button onclick="start()">حلّل عرضي مجانًا ✨</button>
+  <button id="analyzeBtn" onclick="start()">حلّل عرضي مجانًا ✨</button>
   <div class="privacy">🔒 يُرسل الملف إلى الخادم الآمن للتحليل، ولا يظهر مفتاح API للزائر.</div>
  </div>
 </section>
@@ -97,11 +97,15 @@ const ids=['home','loading','result','advanced','msg']; let analysis=null;
 function show(id){ids.forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));scrollTo(0,0)}
 function fileToDataURL(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)})}
 async function start(){
+ const analyzeBtn=document.getElementById('analyzeBtn');
+ if(analyzeBtn.disabled)return;
  const file=document.getElementById('file').files[0];
  if(!file){alert('اختر صورة أو PDF أولًا');return}
  if(file.size>4*1024*1024){alert('الحد الحالي 4MB. صغّر الملف ثم حاول مجددًا.');return}
 
  const vin=String(document.getElementById('vin').value||'').trim().toUpperCase();
+ analyzeBtn.disabled=true;
+ analyzeBtn.textContent='جارٍ التحليل...';
  show('loading');
 
  try{
@@ -163,6 +167,9 @@ async function start(){
  }catch(e){
    show('home');
    alert('تعذر التحليل: '+(e.message||e));
+ }finally{
+   analyzeBtn.disabled=false;
+   analyzeBtn.textContent='حلّل عرضي مجانًا ✨';
  }
 }
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
