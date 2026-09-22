@@ -246,6 +246,12 @@ async function start(){
 
    setStage(en?'Preparing the estimate':'تجهيز عرض الصيانة');
    const upload=await prepareUploadPayload(file);
+   window.wafferUploadMeta={
+     optimized:Boolean(upload.optimized),
+     originalBytes:Number(upload.originalBytes)||0,
+     uploadBytes:Number(upload.uploadBytes)||0,
+     mimeType:upload.mimeType||null
+   };
    if(upload.optimized){
      const mb=(upload.uploadBytes/1024/1024).toFixed(2);
      setStage(en?'Image optimized to '+mb+' MB':'تم تحسين الصورة إلى '+mb+' MB');
@@ -573,6 +579,7 @@ function resetAnalysis(){
  window.analysis=null;
  window.wafferPartMatches=null;
  window.wafferCatalogState=null;
+ window.wafferUploadMeta=null;
  window.wafferVehicle=null;
  window.wafferVehicleId='';
  window.wafferModelId='';
@@ -630,6 +637,7 @@ function exportDebugReport(){
    engineContext:analysis.engineContext||null,
    acceptance:analysis.acceptance||null,
    catalogState:window.wafferCatalogState||null,
+   upload:window.wafferUploadMeta||null,
    vehicle:{
      vehicleId:vehicle.vehicleId||window.wafferVehicleId||null,
      manufacturerName:vehicle.manufacturerName||null,
