@@ -220,7 +220,7 @@ async function start(){
      try{
        const matches=await Promise.race([
          window.matchWafferParts(analysis),
-         new Promise((_,reject)=>setTimeout(()=>reject(new Error('CATALOG_TIMEOUT')),30000))
+         new Promise((_,reject)=>setTimeout(()=>reject(new Error('CATALOG_TIMEOUT')),window.WAFFER_RUNTIME?.catalogMatchTimeoutMs||30000))
        ]);
        if(catalogSummary && Array.isArray(matches) && !matches.length){
          catalogSummary.textContent='⚠️ اكتمل فحص الكتالوج ولم تظهر مطابقة مناسبة.';
@@ -501,7 +501,7 @@ function resetAnalysis(){
    const state=window.wafferCatalogState||{};
    const hasVin=Boolean(window.wafferVehicle?.vehicleId);
    const completed=state.status==='COMPLETED';
-   const underLimit=!state.elapsedMs||state.elapsedMs<=30000;
+   const underLimit=!state.elapsedMs||state.elapsedMs<=(window.WAFFER_RUNTIME?.catalogMatchTimeoutMs||30000);
    const axleOk=!state.axleRequested||state.axleVerified>0;
    const en=window.wafferLocale?.startsWith('en');
    if(!hasVin){
@@ -531,7 +531,7 @@ function resetAnalysis(){
    const en=window.wafferLocale?.startsWith('en');
    const completed=state.status==='COMPLETED';
    const elapsed=Number(state.elapsedMs)||0;
-   const underLimit=!elapsed || elapsed<=30000;
+   const underLimit=!elapsed || elapsed<=(window.WAFFER_RUNTIME?.catalogMatchTimeoutMs||30000);
    const matchedCount=Number(state.matched)||0;
    catalogGate.textContent=(en?'Catalog checks: ':'فحوصات الكتالوج: ')+(completed?'✓ ':'✗ ')+(en?'completed':'اكتملت')+' • '+(underLimit?'✓ ':'✗ ')+(en?'within time limit':'ضمن المهلة')+' • '+matchedCount+(en?' matched item(s)':' بنود مطابقة');
  }
