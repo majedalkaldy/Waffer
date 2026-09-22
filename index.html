@@ -256,9 +256,9 @@ window.addEventListener('wafferPartsMatched', function(event){
  }
 
  box.innerHTML='<h3>🔎 مطابقة كتالوج القطع</h3>'+
-   '<p class="note">تمت مقارنة بنود عرض الورشة بكتالوج القطع المتوافقة مع السيارة.</p>'+
+   '<p class="note">تمت مقارنة بنود عرض الورشة بكتالوج السيارة، ويعرض وفّر حتى 3 بدائل مميزة فقط لكل بند بدل إظهار مئات النتائج.</p>'+
    matched.map(m=>{
-     const articles=Array.isArray(m.articles)?m.articles.slice(0,5):[];
+     const articles=Array.isArray(m.articles)?m.articles.slice(0,3):[];
      const articleHtml=articles.length?articles.map(a=>{
        const image=a.image||a.s3image||'';
        return '<div style="margin-top:10px;padding:10px;background:#eef8f4;border-radius:10px">'+
@@ -276,7 +276,8 @@ window.addEventListener('wafferPartsMatched', function(event){
        '<div>درجة المطابقة: '+esc(m.matchScore??0)+'%</div>'+
        (m.requestedAxle?'<div>الموضع المطلوب: <strong>'+(m.requestedAxle==='front'?'أمامي':'خلفي')+'</strong></div>':'')+
        (m.requestedAxle?'<div>نتائج تم التحقق من موضعها: '+esc(m.verifiedByAxle??0)+'</div>':'')+
-       '<div>عدد النتائج المتوافقة: '+esc(m.countArticles??0)+'</div>'+
+       '<div>عدد النتائج المتوافقة في الكتالوج: '+esc(m.countArticles??0)+'</div>'+
+       '<div class="note">البدائل أدناه مختصرة للمراجعة، ولا تعني ترتيبًا سعريًا قبل ربط مصدر أسعار موثوق.</div>'+
        articleHtml+
        '</div>';
    }).join('');
