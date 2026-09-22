@@ -126,6 +126,11 @@ if (!failures.length) {
         if (!baseKeys.has(key)) failures.push(`Extra i18n key "${key}" in ${locale}`);
       }
     }
+
+    const usedKeys = [...index.matchAll(/\bt\(locale,\s*['"]([^'"]+)['"]\)/g)].map(match => match[1]);
+    for (const key of new Set(usedKeys)) {
+      if (!baseKeys.has(key)) failures.push(`UI references missing i18n key "${key}"`);
+    }
   } catch (error) {
     failures.push('Localization semantic checks failed: ' + error.message);
   }
