@@ -137,6 +137,13 @@ if (!failures.length) {
 
     if (RUNTIME_CONFIG.engineVersion !== 'mvp-2026-09') failures.push('Runtime engine version mismatch');
     if (RUNTIME_CONFIG.launchPhase !== 'field-test') failures.push('Unexpected launch phase');
+
+    const robots = read('robots.txt');
+    const indexHtml = read('index.html');
+    if (RUNTIME_CONFIG.launchPhase === 'field-test') {
+      if (!robots.includes('Disallow: /')) failures.push('Field-test phase must block robots indexing');
+      if (!/name="robots"\s+content="noindex,nofollow"/i.test(indexHtml)) failures.push('Field-test phase must include noindex,nofollow');
+    }
     if (!(RUNTIME_CONFIG.maxUploadBytes > 0)) failures.push('Runtime upload limit must be positive');
     if (!RUNTIME_CONFIG.supportedMimeTypes.includes('application/pdf')) failures.push('PDF support missing from runtime config');
     if (!(sa.supported && sa.market === 'SA' && sa.currency === 'SAR')) failures.push('Saudi market configuration is invalid');
