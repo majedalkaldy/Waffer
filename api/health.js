@@ -18,6 +18,8 @@ export default async function handler(req, res) {
   };
 
   const upstream = { catalog: 'not_checked' };
+  const latency = { catalogMs: null };
+  const catalogStartedAt = Date.now();
 
   if (configured.catalog) {
     try {
@@ -35,11 +37,13 @@ export default async function handler(req, res) {
           }
         );
         upstream.catalog = response.ok ? 'reachable' : 'error';
+        latency.catalogMs = Date.now() - catalogStartedAt;
       } finally {
         clearTimeout(timer);
       }
     } catch {
       upstream.catalog = 'unreachable';
+      latency.catalogMs = Date.now() - catalogStartedAt;
     }
   }
 
@@ -62,6 +66,7 @@ export default async function handler(req, res) {
     },
     configured,
     upstream,
+    latency,
     limits: {
       maxUploadBytes: 4194304,
       supportedMimeTypes: ['image/jpeg','image/png','image/webp','application/pdf'],
