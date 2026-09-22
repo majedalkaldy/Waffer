@@ -408,18 +408,20 @@ uploadBox.addEventListener('keydown',e=>{
 fileInput.addEventListener('change',e=>{
  const f=e.target.files&&e.target.files[0];
  const text=document.getElementById('fileText');
- if(!f){text.textContent='ارفع صورة العرض أو ملف PDF';return;}
+ if(!f){text.textContent=window.wafferLocale?.startsWith('en')?'Upload an estimate image or PDF':'ارفع صورة العرض أو ملف PDF';updateFormHint();return;}
  const supported=['image/jpeg','image/png','image/webp','application/pdf'];
  if(f.type && !supported.includes(f.type)){
    fileInput.value='';
-   text.textContent='ارفع صورة العرض أو ملف PDF';
-   alert('نوع الملف غير مدعوم. استخدم JPG أو PNG أو WEBP أو PDF.');
+   text.textContent=window.wafferLocale?.startsWith('en')?'Upload an estimate image or PDF':'ارفع صورة العرض أو ملف PDF';
+   updateFormHint();
+   alert(window.wafferLocale?.startsWith('en')?'Unsupported file type. Use JPG, PNG, WEBP, or PDF.':'نوع الملف غير مدعوم. استخدم JPG أو PNG أو WEBP أو PDF.');
    return;
  }
  if(f.size>4*1024*1024){
    fileInput.value='';
-   text.textContent='ارفع صورة العرض أو ملف PDF';
-   alert('حجم الملف أكبر من 4MB. صغّر الملف ثم حاول مجددًا.');
+   text.textContent=window.wafferLocale?.startsWith('en')?'Upload an estimate image or PDF':'ارفع صورة العرض أو ملف PDF';
+   updateFormHint();
+   alert(window.wafferLocale?.startsWith('en')?'The file is larger than 4 MB. Reduce its size and try again.':'حجم الملف أكبر من 4MB. صغّر الملف ثم حاول مجددًا.');
    return;
  }
  text.textContent='تم اختيار: '+f.name+' — '+(f.size/1024/1024).toFixed(2)+' MB';
