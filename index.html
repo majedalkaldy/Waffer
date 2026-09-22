@@ -124,6 +124,29 @@ function show(id){
    setTimeout(()=>heading.focus({preventScroll:true}),0);
  }
 }
+function apiErrorMessage(payload, fallbackAr='تعذر التحليل', fallbackEn='Analysis failed'){
+ const en=window.wafferLocale?.startsWith('en');
+ const code=payload?.code;
+ const map={
+   UNSUPPORTED_FILE_TYPE:['نوع الملف غير مدعوم.','Unsupported file type.'],
+   INVALID_BASE64:['بيانات الملف غير صالحة.','The file data is invalid.'],
+   EMPTY_FILE:['الملف فارغ.','The selected file is empty.'],
+   FILE_TOO_LARGE:['حجم الملف أكبر من الحد المسموح.','The file is larger than the allowed limit.'],
+   UNKNOWN_FILE_SIGNATURE:['تعذر التحقق من نوع الملف.','The file type could not be verified.'],
+   MIME_SIGNATURE_MISMATCH:['امتداد/نوع الملف لا يطابق محتواه.','The file type does not match its contents.'],
+   ANALYSIS_TIMEOUT:['انتهت مهلة خدمة التحليل. حاول مرة أخرى.','The analysis service timed out. Try again.'],
+   ANALYSIS_RATE_LIMITED:['خدمة التحليل مشغولة حاليًا. انتظر قليلًا ثم حاول مرة أخرى.','The analysis service is busy. Wait briefly and try again.'],
+   ANALYSIS_UPSTREAM_INVALID:['أعاد مزود التحليل استجابة غير صالحة. حاول مرة أخرى.','The analysis provider returned an invalid response. Try again.'],
+   ANALYSIS_UPSTREAM_ERROR:['تعذر الوصول إلى مزود التحليل. حاول مرة أخرى.','The analysis provider failed. Try again.'],
+   UNSUPPORTED_MARKET:['السوق المطلوب غير مدعوم حاليًا.','The requested market is not supported yet.']
+ };
+ const pair=map[code];
+ if(pair)return pair[en?1:0];
+ const raw=payload?.error||payload?.message;
+ if(raw && !en)return raw;
+ return en?fallbackEn:(raw||fallbackAr);
+}
+
 function fileToDataURL(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)})}
 
 function inferMimeType(file){
@@ -297,19 +320,10 @@ async function start(){
      throw new Error('استجابة التحليل غير صالحة. حاول مرة أخرى.');
    }
    if(!resp.ok){
-     if(d?.code==='ANALYSIS_TIMEOUT'){
-       throw new Error(window.wafferLocale?.startsWith('en')?'The analysis service timed out. Try again.':(d.error||'انتهت مهلة خدمة التحليل. حاول مرة أخرى.'));
-     }
-     if(d?.code==='ANALYSIS_RATE_LIMITED'){
-       throw new Error(window.wafferLocale?.startsWith('en')?'The analysis service is busy. Wait briefly and try again.':'خدمة التحليل مشغولة حاليًا. انتظر قليلًا ثم حاول مرة أخرى.');
-     }
-     if(d?.code==='ANALYSIS_UPSTREAM_INVALID'||d?.code==='ANALYSIS_UPSTREAM_ERROR'){
-       throw new Error(window.wafferLocale?.startsWith('en')?'The analysis provider returned an invalid response. Try again.':'أعاد مزود التحليل استجابة غير صالحة. حاول مرة أخرى.');
-     }
-     throw new Error(d.error||d.message||'تعذر التحليل');
+     throw new Error(apiErrorMessage(d));
    }
    if(!d || typeof d!=='object' || !Array.isArray(d.items)){
-     throw new Error('لم تُرجع خدمة التحليل نتيجة مكتملة.');
+     throw new Error(en?'The analysis service returned an incomplete result.':'لم تُرجع خدمة التحليل نتيجة مكتملة.');
    }
 
    analysis=d;
