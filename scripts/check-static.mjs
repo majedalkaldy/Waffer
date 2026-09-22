@@ -19,6 +19,7 @@ const required = [
   'api/self-test.js',
   'lib/market-config.js',
   'lib/runtime-config.js',
+  'lib/analysis-normalizer.js',
   'lib/i18n.js',
   'sw.js',
   'manifest.webmanifest',
@@ -176,6 +177,65 @@ if (!failures.length) {
     if (unsupported.supported !== false) failures.push('Unsupported market fallback is not explicit');
   } catch (error) {
     failures.push('Runtime/market semantic checks failed: ' + error.message);
+  }
+
+  try {
+    const { normalizeAnalysisResult } = await import('../lib/analysis-normalizer.js');
+    const base = {
+      total: '300 SAR',
+      status: 'ok',
+      transparency: 90,
+      identityConfidence: 90,
+      compatibilityConfidence: 90,
+      priceConfidence: 90,
+      overallConfidence: 90,
+      missing: [],
+      conflicts: [],
+      items: [{ name: 'Brake pad', partNumber: 'TEST-1', itemType: 'part', identityConfidence: 90, price: '300' }]
+    };
+
+    const noVin = normalizeAnalysisResult({
+      result: base,
+      safeVehicle: { vin: 'غير متوفر' },
+      market: 'SA',
+      locale: 'en-SA',
+      currency: 'SAR',
+      engineVersion: 'mvp-2026-09',
+      requestId: 'test',
+      completedAt: '2026-09-22T00:00:00.000Z'
+    });
+    if (noVin.compatibilityConfidence > 45) failures.push('Compatibility confidence cap without VIN is broken');
+
+    const noPartIdentity = normalizeAnalysisResult({
+      result: { ...base, items: [{ name: 'Brake pad', partNumber: 'غير ظاهر', itemType: 'weird', identityConfidence: 99, price: '300' }] },
+      safeVehicle: { vin: '1HGCM82633A004352' },
+      market: 'SA',
+      locale: 'ar-SA',
+      currency: 'SAR',
+      engineVersion: 'mvp-2026-09',
+      requestId: 'test2',
+      completedAt: '2026-09-22T00:00:00.000Z'
+    });
+    if (noPartIdentity.identityConfidence > 40 || noPartIdentity.priceConfidence > 15) {
+      failures.push('Confidence caps without visible part numbers are broken');
+    }
+    if (noPartIdentity.items[0]?.itemType !== 'part') failures.push('Invalid itemType was not normalized');
+
+    const incomplete = normalizeAnalysisResult({
+      result: { status: 'x', items: [] },
+      safeVehicle: { vin: '' },
+      market: 'SA',
+      locale: 'ar-SA',
+      currency: 'SAR',
+      engineVersion: 'mvp-2026-09',
+      requestId: 'test3',
+      completedAt: '2026-09-22T00:00:00.000Z'
+    });
+    if (incomplete.acceptance.schemaValid !== false || !incomplete.acceptance.missingShapeFields.includes('total')) {
+      failures.push('Missing raw AI contract fields are not detected');
+    }
+  } catch (error) {
+    failures.push('Analysis normalizer tests failed: ' + error.message);
   }
 
   try {
