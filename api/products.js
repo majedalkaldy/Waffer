@@ -25,24 +25,28 @@ export default async function handler(req, res) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), RUNTIME_CONFIG.catalogProductsTimeoutMs);
     let response;
+    let data;
     try {
       response = await fetch(url, {
         headers: { Accept: 'application/json', 'x-apiprofile-key': apiKey },
         signal: controller.signal
       });
+      try {
+        data = await response.json();
+      } catch (error) {
+        if (error?.name === 'AbortError') throw error;
+        return res.status(502).json({ error: 'Invalid response from parts catalog', code: 'CATALOG_INVALID_RESPONSE' });
+      }
     } finally {
       clearTimeout(timer);
     }
-    let data;
-    try { data = await response.json(); }
-    catch { return res.status(502).json({ error: 'Invalid response from parts catalog', code: 'CATALOG_INVALID_RESPONSE' }); }
     if (!response.ok) return res.status(response.status >= 500 ? 502 : response.status).json({ error: 'Parts catalog request failed', code: 'CATALOG_UPSTREAM_ERROR', details: data });
 
     const products = Array.isArray(data) ? data : [];
     return res.status(200).json({ market, langId, vehicleId: Number(vehicleId), count: products.length, products });
   } catch (error) {
     console.error('Vehicle products error:', error);
-    if (error?.name === 'AbortError') return res.status(504).json({ error: 'Parts catalog timed out' });
+    if (error?.name === 'AbortError') return res.status(504).json({ error: 'Parts catalog timed out', code: 'CATALOG_TIMEOUT' });
     return res.status(500).json({ error: 'Failed to load vehicle products' });
   }
 }
