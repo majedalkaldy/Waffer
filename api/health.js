@@ -1,3 +1,5 @@
+import { getMarketConfig } from '../lib/market-config.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ ok: false, error: 'Method not allowed' });
 
@@ -41,7 +43,7 @@ export default async function handler(req, res) {
     status: ok ? 'ready' : degraded ? 'degraded' : 'unavailable',
     service: 'waffer',
     version: 'mvp',
-    defaults: { market: 'SA', locale: 'ar-SA', currency: 'SAR' },
+    defaults: getMarketConfig({}),
     capabilities: {
       quoteAnalysis: configured.analysis,
       vinAndCatalog: configured.catalog && upstream.catalog === 'reachable',
