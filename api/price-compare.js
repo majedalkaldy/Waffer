@@ -1,9 +1,5 @@
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({
-      error: 'Method not allowed'
-    });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
     const {
@@ -11,72 +7,68 @@ export default async function handler(req, res) {
       partNumber,
       workshopPrice,
       quantity = 1,
-      vehicle = {}
+      vehicle = {},
+      market = 'SA',
+      locale = 'ar-SA',
+      currency = 'SAR'
     } = req.body || {};
 
     if (!partName && !partNumber) {
-      return res.status(400).json({
-        error: 'يلزم اسم القطعة أو رقم القطعة.'
-      });
+      return res.status(400).json({ error: 'يلزم اسم القطعة أو رقم القطعة.' });
     }
 
     const price = Number(workshopPrice);
-    const qty = Number(quantity) || 1;
+    const qty = Math.max(1, Number(quantity) || 1);
+    const hasPartIdentity = Boolean(String(partNumber || '').trim());
+    const hasVehicleIdentity = Boolean(vehicle.vehicleId || vehicle.vin);
 
-    const result = {
-      partName: partName || 'غير محدد',
-      partNumber: partNumber || 'غير متوفر',
+    return res.status(200).json({
+      context: {
+        market: String(market).toUpperCase(),
+        locale: String(locale),
+        currency: String(currency).toUpperCase()
+      },
+      part: {
+        name: partName || 'غير محدد',
+        number: partNumber || null,
+        quantity: qty
+      },
       vehicle: {
-        make: vehicle.make || 'غير محدد',
-        model: vehicle.model || 'غير محدد',
-        year: vehicle.year || 'غير محدد',
-        vin: vehicle.vin || 'غير متوفر'
+        vehicleId: vehicle.vehicleId || null,
+        make: vehicle.make || null,
+        model: vehicle.model || null,
+        year: vehicle.year || null,
+        vin: vehicle.vin || null
       },
-
-      workshopPrice: Number.isFinite(price) ? price : null,
-      quantity: qty,
-
-      identityStatus: partNumber
-        ? 'رقم القطعة متوفر ويحتاج تحقق'
-        : 'هوية القطعة غير مكتملة',
-
-      compatibilityStatus:
-        partNumber && vehicle.vin
-          ? 'جاهز للتحقق من التوافق عند ربط مصدر بيانات'
-          : 'يحتاج رقم قطعة وبيانات مركبة أدق',
-
-      marketPrice: null,
-      marketPriceCurrency: 'SAR',
-      priceSource: null,
-      priceSourceUrl: null,
-      priceCheckedAt: null,
-
-      saving: null,
-      savingStatus: 'غير محسوب',
-
+      workshop: {
+        unitPrice: Number.isFinite(price) ? price : null,
+        totalPrice: Number.isFinite(price) ? price * qty : null
+      },
+      verification: {
+        identity: hasPartIdentity ? 'PART_NUMBER_PRESENT' : 'PART_NUMBER_MISSING',
+        compatibility: hasPartIdentity && hasVehicleIdentity ? 'READY_FOR_VERIFICATION' : 'INSUFFICIENT_IDENTITY'
+      },
+      marketPrice: {
+        min: null,
+        median: null,
+        max: null,
+        source: null,
+        checkedAt: null
+      },
+      saving: {
+        amount: null,
+        status: 'NOT_CALCULATED'
+      },
       confidence: {
-        identity: partNumber ? 60 : 25,
-        compatibility: partNumber && vehicle.vin ? 50 : 20,
-        price: 0,
-        overall: 20
+        identity: hasPartIdentity ? 60 : 25,
+        compatibility: hasPartIdentity && hasVehicleIdentity ? 50 : 20,
+        price: 0
       },
-
       status: 'WAITING_FOR_VERIFIED_PRICE_SOURCE',
-
-      message:
-        'لم يتم احتساب سعر السوق أو التوفير لأن وفّر لا يملك بعد مصدر أسعار خارجيًا موثوقًا لهذه القطعة.',
-
-      nextRequired:
-        'ربط مزود أسعار وبيانات قطع موثوق، ثم التحقق من رقم القطعة والتوافق قبل حساب التوفير.'
-    };
-
-    return res.status(200).json(result);
-
+      message: 'لم يتم احتساب سعر السوق أو التوفير لعدم وجود مصدر أسعار خارجي موثوق ومربوط بهذا السوق.'
+    });
   } catch (error) {
     console.error('Waffer price compare error:', error);
-
-    return res.status(500).json({
-      error: 'تعذر تنفيذ مقارنة السعر حاليًا.'
-    });
+    return res.status(500).json({ error: 'تعذر تنفيذ مقارنة السعر حاليًا.' });
   }
 }
