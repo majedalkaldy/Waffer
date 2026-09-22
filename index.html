@@ -35,6 +35,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
  <div id="systemStatus" class="note" style="text-align:center;margin-bottom:8px">جارٍ التحقق من جاهزية الخدمة...</div>
  <div id="offlineStatus" class="alert hidden" style="text-align:center">لا يوجد اتصال بالإنترنت. يلزم الاتصال لتحليل العرض والتحقق من الكتالوج.</div>
  <div class="brand"><div class="logo">وفّر</div><div class="tag">افحص عرض صيانة سيارتك قبل أن تدفع</div></div>
+ <button id="installBtn" class="secondary hidden" type="button" style="margin:0 0 12px">إضافة وفّر إلى الشاشة الرئيسية</button>
  <h1>هل عرض الورشة واضح ومعقول؟</h1>
  <p class="lead">ارفع صورة أو PDF لعرض الصيانة. سيقرأ «وفّر» البنود والأسعار ويحدد المعلومات الناقصة ونقاط التحقق قبل الموافقة.</p>
  <div class="card upload" id="uploadBox" role="button" tabindex="0" aria-controls="file">
@@ -377,6 +378,27 @@ async function checkSystemHealth(){
  }
 }
 checkSystemHealth();
+
+let deferredInstallPrompt=null;
+const installBtn=document.getElementById('installBtn');
+window.addEventListener('beforeinstallprompt',event=>{
+ event.preventDefault();
+ deferredInstallPrompt=event;
+ if(installBtn)installBtn.classList.remove('hidden');
+});
+if(installBtn){
+ installBtn.addEventListener('click',async()=>{
+   if(!deferredInstallPrompt)return;
+   deferredInstallPrompt.prompt();
+   try{await deferredInstallPrompt.userChoice;}catch(e){}
+   deferredInstallPrompt=null;
+   installBtn.classList.add('hidden');
+ });
+}
+window.addEventListener('appinstalled',()=>{
+ deferredInstallPrompt=null;
+ if(installBtn)installBtn.classList.add('hidden');
+});
 
 if('serviceWorker' in navigator){
  window.addEventListener('load',()=>{
