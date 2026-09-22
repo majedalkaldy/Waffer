@@ -64,7 +64,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 </section>
 
 <section id="result" class="hidden">
- <div class="top"><span class="pill">فحص AI</span><h2>نتيجة التحليل</h2></div>
+ <div class="top"><span class="pill">فحص AI</span><h2 id="resultTitle">نتيجة التحليل</h2></div>
  <div class="card"><div class="total">إجمالي العرض الظاهر<b id="rTotal">—</b></div><div id="rCalculatedTotal" class="note" style="text-align:center;margin-top:8px"></div><div id="rTaxLabor" class="note" style="text-align:center;margin-top:5px"></div><div id="rWarranty" class="note" style="text-align:center;margin-top:5px"></div><div class="status" id="rStatus">—</div></div>
  <div class="scores"><div class="card score">شفافية العرض<b id="rTransparency">—</b><small>اكتمال ووضوح البيانات</small></div>
  <div class="card score">ثقة هوية القطع<b id="rIdentity">—</b><small>رقم القطعة والمصنع والوصف</small></div>
@@ -74,12 +74,12 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
  <div class="card"><h3>أبرز ما وجدناه</h3><div id="rConfidenceNote" class="note" style="margin-bottom:10px">درجات الثقة تقيس قوة الأدلة المتاحة وليست تقييمًا لجودة الورشة.</div><div id="rWarningsSummary" class="lock"></div><div id="rDocQuality" class="lock"></div><div id="rCatalogCoverage" class="lock">🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.</div><div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
   <div class="lock">🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون مطابقة القطعة ومصدر سعر موثوق.</div>
   <div id="catalogSummary" class="lock">🔎 حالة مطابقة الكتالوج: بانتظار التحليل.</div>
-  <button onclick="advanced()">عرض تفاصيل البنود</button><button class="secondary" onclick="messageWorkshop()">أنشئ رسالة للورشة</button>
+  <button id="detailsBtn" onclick="advanced()">عرض تفاصيل البنود</button><button id="workshopBtn" class="secondary" onclick="messageWorkshop()">أنشئ رسالة للورشة</button>
  </div>
 </section>
 
 <section id="advanced" class="hidden">
- <div class="top"><span class="pill">نموذج تجريبي</span><h2>التحليل المتقدم</h2></div>
+ <div class="top"><span class="pill">نموذج تجريبي</span><h2 id="advancedTitle">التحليل المتقدم</h2></div>
  <div class="card"><h3>تفاصيل بنود العرض المقروءة</h3><div id="itemTypeSummary" class="note" style="margin-bottom:8px"></div>
  <div class="table-wrap"><table><thead><tr><th>البند</th><th>النوع</th><th>رقم القطعة</th><th>السعر</th><th>الهوية</th><th>التوافق</th><th>السعر</th><th>التداخل</th></tr></thead>
  <tbody id="itemsBody"></tbody></table></div>
@@ -91,13 +91,13 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
  <div class="card"><h3>قبل أن تدفع</h3><div id="nextActions"></div><div id="decisionSummary" class="lock"></div><button id="shareSummaryBtn" class="secondary" type="button" onclick="shareSummary()">مشاركة ملخص النتيجة</button></div>
  <div class="card"><div class="price">التوفير المؤكد: غير محسوب</div><p class="lead">لا يحسب «وفّر» التوفير قبل مطابقة هوية القطعة بمصدر سعر موثوق.</p><div id="priceReadiness" class="lock">💰 مقارنة الأسعار: بانتظار هوية قطعة قابلة للتحقق ومصدر سعر موثوق.</div>
  <button onclick="messageWorkshop()">أنشئ رسالة استكمال للورشة</button></div>
- <div class="nav"><button class="secondary" onclick="show('result')">رجوع</button><button onclick="resetAnalysis()">تحليل عرض آخر</button></div>
+ <div class="nav"><button id="backBtn" class="secondary" onclick="show('result')">رجوع</button><button id="newAnalysisBtn" onclick="resetAnalysis()">تحليل عرض آخر</button></div>
 </section>
 
 <section id="msg" class="hidden">
- <div class="top"><span class="pill">جاهزة للنسخ</span><h2>رسالة للورشة</h2></div>
+ <div class="top"><span class="pill">جاهزة للنسخ</span><h2 id="workshopMessageTitle">رسالة للورشة</h2></div>
  <div class="card"><p id="message" style="line-height:2">السلام عليكم، قبل اعتماد العرض أحتاج فضلاً كشفًا مفصلًا يوضح اسم ورقم كل قطعة، الشركة المصنعة، وهل هي أصلية Ford/Motorcraft أو بديلة، والكمية وسعر القطعة وأجرة التركيب والضريبة والضمان. كذلك أرجو توضيح ما إذا كان السعر يشمل ضبط الزوايا بعد أعمال التعليق والدركسون. وشكرًا.</p>
- <button onclick="copyMsg()">نسخ الرسالة</button><button class="secondary" onclick="show('result')">العودة للنتيجة</button></div>
+ <button id="copyMessageBtn" onclick="copyMsg()">نسخ الرسالة</button><button id="resultBackBtn" class="secondary" onclick="show('result')">العودة للنتيجة</button></div>
 </section>
 </main>
 <script>
@@ -564,6 +564,16 @@ function applyLocale(locale){
  document.getElementById('vinLabel').textContent=t(locale,'vin');
  document.getElementById('analyzeBtn').textContent=t(locale,'analyze');
  document.getElementById('installBtn').textContent=t(locale,'install');
+ document.getElementById('resultTitle').textContent=t(locale,'resultTitle');
+ document.getElementById('advancedTitle').textContent=t(locale,'advancedTitle');
+ document.getElementById('workshopMessageTitle').textContent=t(locale,'workshopMessageTitle');
+ document.getElementById('detailsBtn').textContent=t(locale,'details');
+ document.getElementById('workshopBtn').textContent=t(locale,'workshopButton');
+ document.getElementById('backBtn').textContent=t(locale,'back');
+ document.getElementById('newAnalysisBtn').textContent=t(locale,'newAnalysis');
+ document.getElementById('copyMessageBtn').textContent=t(locale,'copyMessage');
+ document.getElementById('resultBackBtn').textContent=t(locale,'resultBack');
+ document.getElementById('shareSummaryBtn').textContent=t(locale,'shareSummary');
  window.wafferLocale=locale;
 }
 const savedLocale=localStorage.getItem('waffer-locale');
