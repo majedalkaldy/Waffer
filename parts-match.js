@@ -109,6 +109,26 @@
       ],
       product: 'brake fluid',
       type: 'brake_fluid'
+    },
+    {
+      words: ['ذراع تحكم', 'مقص', 'مقصات', 'control arm', 'track control arm'],
+      product: 'track control arm',
+      type: 'control_arm'
+    },
+    {
+      words: ['تي رود', 'طرف دركسون', 'طرف توجيه', 'tie rod end', 'track rod end'],
+      product: 'tie rod end',
+      type: 'tie_rod_end'
+    },
+    {
+      words: ['رمان بلي', 'رمان عجل', 'wheel bearing', 'wheel hub bearing'],
+      product: 'wheel bearing',
+      type: 'wheel_bearing'
+    },
+    {
+      words: ['ثرموستات', 'بلف حرارة', 'thermostat'],
+      product: 'thermostat',
+      type: 'thermostat'
     }
   ];
 
