@@ -311,6 +311,8 @@ function resetAnalysis(){
  document.getElementById('fileText').textContent='ارفع صورة العرض أو ملف PDF';
  document.getElementById('catalogSummary').textContent='🔎 حالة مطابقة الكتالوج: بانتظار التحليل.';
  document.getElementById('catalogMatches').innerHTML='<h3>🔎 مطابقة كتالوج القطع</h3><div class="note">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>';
+ const vehicleInfo=document.getElementById('vehicleInfo');
+ if(vehicleInfo){vehicleInfo.textContent='';vehicleInfo.classList.add('hidden');}
  const pr=document.getElementById('priceReadiness');
  if(pr)pr.textContent='💰 مقارنة الأسعار: بانتظار هوية قطعة قابلة للتحقق ومصدر سعر موثوق.';
  show('home');
