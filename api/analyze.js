@@ -116,10 +116,13 @@ export default async function handler(req, res) {
     };
 
     const requestId = globalThis.crypto?.randomUUID?.() || ('waffer-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8));
+    const completedAt = new Date().toISOString();
 
     const normalized = {
       ...result,
       requestId,
+      completedAt,
+      engineVersion: 'mvp-2026-09',
       engineContext: {
         market,
         locale,
