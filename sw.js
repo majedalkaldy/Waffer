@@ -1,4 +1,4 @@
-const CACHE_NAME = 'waffer-shell-v1';
+const CACHE_NAME = 'waffer-shell-v2';
 const SHELL = ['/', '/index.html', '/vin-ui.js', '/parts-match.js', '/manifest.webmanifest'];
 
 self.addEventListener('install', event => {
@@ -22,13 +22,25 @@ self.addEventListener('fetch', event => {
   // Never cache API calls or user analysis data.
   if (url.pathname.startsWith('/api/') || request.method !== 'GET') return;
 
+  // HTML uses network-first so a new deployment is visible immediately.
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request).catch(() => caches.match('/index.html').then(hit => hit || caches.match('/')))
+    );
+    return;
+  }
+
+  // Static shell assets use stale-while-revalidate.
   event.respondWith(
-    fetch(request)
-      .then(response => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(request, copy)).catch(() => undefined);
+    caches.match(request).then(hit => {
+      const network = fetch(request).then(response => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, copy)).catch(() => undefined);
+        }
         return response;
-      })
-      .catch(() => caches.match(request).then(hit => hit || caches.match('/')))
+      });
+      return hit || network;
+    })
   );
 });
