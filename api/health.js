@@ -55,9 +55,15 @@ export default async function handler(req, res) {
     ok,
     status: ok ? 'ready' : degraded ? 'degraded' : 'unavailable',
     service: 'waffer',
-    version: 'mvp',
+    version: 'mvp-2026-09',
     defaults: getMarketConfig({}),
     market: marketConfig,
+    contract: {
+      analysisEngineVersion: 'mvp-2026-09',
+      acceptanceMetadata: true,
+      requestTraceability: true,
+      marketConfig: true
+    },
     capabilities: {
       quoteAnalysis: configured.analysis,
       vinAndCatalog: configured.catalog && upstream.catalog === 'reachable',
