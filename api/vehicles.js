@@ -6,6 +6,7 @@ export default async function handler(req, res) {
     if (!apiKey) return res.status(500).json({ error: 'AUTOPARTS_API_KEY is not configured' });
 
     const config = getMarketConfig(req.query);
+    if (!config.supported) return res.status(400).json({ error: 'Unsupported market', code: 'UNSUPPORTED_MARKET', requestedMarket: config.requestedMarket });
     const ctx = { market: config.market, langId: config.catalog.langId, countryFilterId: config.catalog.countryFilterId };
     const response = await fetch(
       'https://auto-parts-catalog.apiprofile.com/api/v2/manufacturers/list/type-id/1',
