@@ -129,7 +129,7 @@ async function start(){
  const file=document.getElementById('file').files[0];
  const en=window.wafferLocale?.startsWith('en');
  if(!file){alert(en?'Select an image or PDF first.':'اختر صورة أو PDF أولًا');return}
- if(file.size>4*1024*1024){alert(en?'The current limit is 4 MB. Reduce the file size and try again.':'الحد الحالي 4MB. صغّر الملف ثم حاول مجددًا.');return}
+ if(file.size>(window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024)){alert(en?'The current limit is 4 MB. Reduce the file size and try again.':'الحد الحالي 4MB. صغّر الملف ثم حاول مجددًا.');return}
 
  const vin=String(document.getElementById('vin').value||'').trim().toUpperCase();
  const year=String(document.getElementById('year').value||'').trim();
@@ -280,7 +280,7 @@ function render(){
  const manualTestPrompt=document.getElementById('rManualTestPrompt');
  if(manualTestPrompt){
    const a=analysis.acceptance||{};
-   const ready=Boolean(a.hasItems&&a.hasPrintedTotal&&a.hasConfidence&&analysis.engineVersion==='mvp-2026-09');
+   const ready=Boolean(a.hasItems&&a.hasPrintedTotal&&a.hasConfidence&&analysis.engineVersion===(window.WAFFER_RUNTIME?.engineVersion||'mvp-2026-09'));
    const en=window.wafferLocale?.startsWith('en');
    manualTestPrompt.textContent=ready
      ? (en?'Next field test: verify the extracted line items against the uploaded estimate, then check VIN/catalog evidence if a VIN was supplied.':'خطوة الاختبار التالية: قارن البنود المستخرجة يدويًا مع عرض الصيانة المرفوع، ثم تحقق من أدلة VIN/الكتالوج إذا تم إدخال VIN.')
@@ -300,7 +300,7 @@ function render(){
  }
  const versionIntegrity=document.getElementById('rVersionIntegrity');
  if(versionIntegrity){
-   const expected='mvp-2026-09';
+   const expected=window.WAFFER_RUNTIME?.engineVersion||'mvp-2026-09';
    const actual=analysis.engineVersion||'';
    const ok=actual===expected;
    const en=window.wafferLocale?.startsWith('en');
@@ -605,7 +605,7 @@ fileInput.addEventListener('change',e=>{
    alert(window.wafferLocale?.startsWith('en')?'Unsupported file type. Use JPG, PNG, WEBP, or PDF.':'نوع الملف غير مدعوم. استخدم JPG أو PNG أو WEBP أو PDF.');
    return;
  }
- if(f.size>4*1024*1024){
+ if(f.size>(window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024)){
    fileInput.value='';
    text.textContent=window.wafferLocale?.startsWith('en')?'Upload an estimate image or PDF':'ارفع صورة العرض أو ملف PDF';
    updateFormHint();
@@ -795,6 +795,8 @@ window.addEventListener('wafferPartsMatched', function(event){
 </script>
 <script type="module">
 import { t } from '/lib/i18n.js';
+import { RUNTIME_CONFIG } from '/lib/runtime-config.js';
+window.WAFFER_RUNTIME=RUNTIME_CONFIG;
 
 const localeSelect=document.getElementById('localeSelect');
 function applyLocale(locale){
