@@ -293,6 +293,7 @@ window.addEventListener('wafferPartsMatched', function(event){
  if(!box)return;
 
  const matched=matches.filter(m=>m && m.productId);
+ const elapsed=matches.find(m=>Number.isFinite(m?.matchingElapsedMs))?.matchingElapsedMs;
  const priceReadiness=document.getElementById('priceReadiness');
  if(priceReadiness){
    const withArticles=matched.filter(m=>Array.isArray(m.articles)&&m.articles.length);
@@ -302,7 +303,7 @@ window.addEventListener('wafferPartsMatched', function(event){
  }
  if(summary){
    summary.textContent=matched.length
-     ? '✅ تمت مطابقة '+matched.length+' من بنود العرض مع كتالوج السيارة.'
+     ? '✅ تمت مطابقة '+matched.length+' من بنود العرض مع كتالوج السيارة.'+(elapsed?' ('+(elapsed/1000).toFixed(1)+' ث)':'')
      : '⚠️ اكتمل فحص الكتالوج ولم تظهر مطابقة مناسبة.';
  }
 
