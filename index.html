@@ -430,7 +430,9 @@ async function checkSystemHealth(){
    }
    const d=await r.json();
    if(d.status==='ready'){
-     el.textContent='● الخدمة جاهزة';
+     const ms=Number(d?.latency?.catalogMs);
+     const latencyText=Number.isFinite(ms)?' • الكتالوج '+ms+'ms':'';
+     el.textContent='● الخدمة جاهزة'+latencyText;
      el.style.color='#075b43';
    }else if(d.status==='degraded'){
      el.textContent='⚠ التحليل متاح، لكن خدمة الكتالوج محدودة حاليًا';
