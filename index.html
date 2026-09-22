@@ -83,7 +83,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
   <h3>🔎 مطابقة كتالوج القطع</h3>
   <div class="note">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>
  </div>
- <div class="card"><h3>قبل أن تدفع</h3><div id="nextActions"></div></div>
+ <div class="card"><h3>قبل أن تدفع</h3><div id="nextActions"></div><div id="decisionSummary" class="lock"></div></div>
  <div class="card"><div class="price">التوفير المؤكد: غير محسوب</div><p class="lead">لا يحسب «وفّر» التوفير قبل مطابقة هوية القطعة بمصدر سعر موثوق.</p><div id="priceReadiness" class="lock">💰 مقارنة الأسعار: بانتظار هوية قطعة قابلة للتحقق ومصدر سعر موثوق.</div>
  <button onclick="messageWorkshop()">أنشئ رسالة استكمال للورشة</button></div>
  <div class="nav"><button class="secondary" onclick="show('result')">رجوع</button><button onclick="resetAnalysis()">تحليل عرض آخر</button></div>
@@ -253,6 +253,13 @@ function render(){
  document.getElementById('rStatus').textContent='⚠️ '+(analysis.status||'يحتاج مراجعة'); document.getElementById('rTransparency').textContent=(analysis.transparency??'—')+'/100'; document.getElementById('rIdentity').textContent=(analysis.identityConfidence??'—')+'/100'; document.getElementById('rCompatibility').textContent=(analysis.compatibilityConfidence??'—')+'/100'; document.getElementById('rPrice').textContent=(analysis.priceConfidence??'—')+'/100'; document.getElementById('rOverall').textContent=(analysis.overallConfidence??'—')+'/100';
  const alerts=[...(analysis.missing||[]).map(x=>'📋 '+x),...(analysis.conflicts||[]).map(x=>'⚙️ '+x)]; document.getElementById('rAlerts').innerHTML=(alerts.length?alerts:['لم تظهر ملاحظات رئيسية.']).map(x=>'<div class="alert">'+esc(x)+'</div>').join('');
  document.getElementById('itemsBody').innerHTML=(analysis.items||[]).map(i=>`<tr><td>${esc(i.name)}</td><td>${esc(({part:'قطعة',labor:'أجرة عمل',fluid:'سائل/زيت',service:'خدمة',other:'أخرى'})[i.category]||'أخرى')}</td><td>${esc(i.partNumber||'غير ظاهر')}</td><td>${esc(i.price)}</td><td>${esc(i.identityConfidence)}%</td><td>${esc(i.compatibility)}</td><td>${esc(i.priceAssessment)}</td><td>${esc(i.conflict)}</td></tr>`).join('')||'<tr><td colspan="8">لم تُستخرج بنود واضحة.</td></tr>'; document.getElementById('nextActions').innerHTML=(analysis.nextActions||[]).map((x,n)=>'<div class="alert">'+(n+1)+'. '+esc(x)+'</div>').join('')||'<div class="note">لا توجد خطوات إضافية مستخرجة.</div>'; 
+ const decision=document.getElementById('decisionSummary');
+ if(decision){
+   const missingCount=Array.isArray(analysis.missing)?analysis.missing.length:0;
+   const conflictCount=Array.isArray(analysis.conflicts)?analysis.conflicts.length:0;
+   const verifiedVehicle=Boolean(window.wafferVehicle?.vehicleId);
+   decision.textContent='ملخص قبل الموافقة: '+(verifiedVehicle?'هوية السيارة موثقة. ':'تحقق من هوية السيارة. ')+(missingCount?'بيانات ناقصة: '+missingCount+'. ':'')+(conflictCount?'نقاط تحتاج تحقق: '+conflictCount+'. ':'')+'لا تعتمد أي توفير مالي قبل ظهور مصدر سعر موثوق.';
+ }
  document.getElementById('message').textContent=analysis.workshopMessage||'السلام عليكم، أرجو تزويدي بتفاصيل القطع وأرقامها والشركة المصنعة والكمية وأجرة العمل والضريبة والضمان قبل اعتماد العرض. وشكرًا.';
 }
 function advanced(){show('advanced')} function messageWorkshop(){show('msg')}
