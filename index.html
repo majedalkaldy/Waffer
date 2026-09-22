@@ -420,7 +420,14 @@ updateNetworkStatus();
 async function checkSystemHealth(){
  const el=document.getElementById('systemStatus');
  try{
-   const r=await fetch('/api/health',{cache:'no-store'});
+   const controller=new AbortController();
+   const timer=setTimeout(()=>controller.abort(),6000);
+   let r;
+   try{
+     r=await fetch('/api/health',{cache:'no-store',signal:controller.signal});
+   }finally{
+     clearTimeout(timer);
+   }
    const d=await r.json();
    if(d.status==='ready'){
      el.textContent='● الخدمة جاهزة';
