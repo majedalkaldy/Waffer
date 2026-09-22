@@ -57,6 +57,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 <section id="loading" class="hidden">
  <div class="brand"><div class="logo">وفّر</div></div><h1 id="loadingTitle">جارٍ تحليل عرضك</h1>
  <div class="stage" id="loadingStage">المرحلة الحالية: <strong>قراءة عرض الصيانة</strong></div>
+ <div class="note" id="elapsedTime" style="text-align:center;margin-top:6px">الوقت المنقضي: 0 ث</div>
  <div class="card"><ul class="steps">
   <li><span class="check">✓</span> قراءة عرض السعر</li><li><span class="check">✓</span> استخراج القطع والأسعار</li>
   <li><span class="check">✓</span> فحص اكتمال المعلومات</li><li><span class="check">✓</span> البحث عن البنود المحتمل تداخلها</li>
@@ -101,7 +102,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 </section>
 </main>
 <script>
-const ids=['home','loading','result','advanced','msg']; let analysis=null;
+const ids=['home','loading','result','advanced','msg']; let analysis=null; let analysisTimer=null;
 function show(id){ids.forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));scrollTo(0,0)}
 function fileToDataURL(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)})}
 async function start(){
@@ -119,8 +120,15 @@ async function start(){
    return;
  }
  analyzeBtn.disabled=true;
- analyzeBtn.textContent='جارٍ التحليل...';
+ analyzeBtn.textContent=window.wafferLocale?.startsWith('en')?'Analyzing...':'جارٍ التحليل...';
  show('loading');
+ const startedAt=Date.now();
+ clearInterval(analysisTimer);
+ analysisTimer=setInterval(()=>{
+   const seconds=Math.floor((Date.now()-startedAt)/1000);
+   const el=document.getElementById('elapsedTime');
+   if(el)el.textContent=(window.wafferLocale?.startsWith('en')?'Elapsed: ':'الوقت المنقضي: ')+seconds+(window.wafferLocale?.startsWith('en')?' s':' ث');
+ },1000);
  const loadingStage=document.getElementById('loadingStage');
  const setStage=text=>{if(loadingStage)loadingStage.innerHTML='المرحلة الحالية: <strong>'+esc(text)+'</strong>';};
  setStage('قراءة بيانات السيارة والملف');
@@ -199,6 +207,8 @@ async function start(){
    show('home');
    alert('تعذر التحليل: '+(e.message||e));
  }finally{
+   clearInterval(analysisTimer);
+   analysisTimer=null;
    analyzeBtn.disabled=false;
    analyzeBtn.textContent=window.wafferLocale?.startsWith('en')?'Analyze my estimate':'حلّل عرضي مجانًا ✨';
  }
