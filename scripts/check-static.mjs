@@ -87,6 +87,7 @@ if (!failures.length) {
   const analyze = read('api/analyze.js');
   const matcher = read('parts-match.js');
   const vinUi = read('vin-ui.js');
+  const health = read('api/health.js');
 
   if (vinUi.includes('vehicles[0]')) {
     failures.push('VIN resolver must not silently choose the first vehicle variant');
@@ -157,6 +158,29 @@ if (!failures.length) {
   if (!runtime.includes('maxUploadBytes')) failures.push('Runtime upload limit missing');
   if (!runtime.includes('clientAnalysisTimeoutMs')) failures.push('Client analysis timeout is missing');
   if (!runtime.includes('pdfCleanupTimeoutMs')) failures.push('PDF cleanup timeout is missing');
+
+  if (!health.includes("analysis: configured.analysis ? 'configured_not_probed' : 'not_configured'") ||
+      !health.includes("analysis: configured.analysis ? 'configuration_only' : 'unavailable'")) {
+    failures.push('Health contract does not distinguish configured analysis from live verification');
+  }
+  if (!health.includes('quoteAnalysisVerified: false')) {
+    failures.push('Health capabilities overstate analysis verification');
+  }
+  const healthFunctionStart = index.indexOf('async function checkSystemHealth(){');
+  const healthFunctionEnd = index.indexOf('checkSystemHealth();', healthFunctionStart);
+  const healthClient = healthFunctionStart >= 0 && healthFunctionEnd > healthFunctionStart
+    ? index.slice(healthFunctionStart, healthFunctionEnd)
+    : '';
+  if (!healthClient.includes('d=await r.json()') ||
+      healthClient.indexOf('d=await r.json()') > healthClient.indexOf('clearTimeout(timer)')) {
+    failures.push('Client health timeout does not cover response body consumption');
+  }
+  if (!healthClient.includes('run!==healthCheckRun') || !healthClient.includes('healthCheckController?.abort()')) {
+    failures.push('Client health checks are not protected against stale responses');
+  }
+  if (!healthClient.includes('Core services ready') || !healthClient.includes('الخدمات الأساسية جاهزة')) {
+    failures.push('Health status is not localized for Arabic and English');
+  }
 
   if (analyze.includes('res.locals.openaiFileId')) {
     failures.push('PDF cleanup still depends on response locals instead of one finally path');
