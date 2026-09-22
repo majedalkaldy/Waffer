@@ -1,3 +1,4 @@
+import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 export default async function handler(req, res) {
   res.setHeader('Allow', 'GET');
   res.setHeader('Cache-Control', 'no-store');
@@ -13,7 +14,7 @@ export default async function handler(req, res) {
     }
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 10000);
+    const timer = setTimeout(() => controller.abort(), RUNTIME_CONFIG.vinTimeoutMs);
     let response;
     try {
       response = await fetch(
