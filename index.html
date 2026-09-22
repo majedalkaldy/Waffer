@@ -286,7 +286,11 @@ function render(){
    const fee=allItems.filter(i=>i.itemType==='fee').length;
    typeSummary.textContent='التصنيف: قطع '+parts+' • عمل '+labor+' • خدمات '+service+' • رسوم '+fee;
  }
- document.getElementById('itemsBody').innerHTML=allItems.map(i=>`<tr><td>${esc(i.name)}</td><td>${esc(({part:'قطعة',labor:'أجرة عمل',fluid:'سائل/زيت',service:'خدمة',other:'أخرى'})[i.category]||'أخرى')}</td><td>${esc(i.partNumber||'غير ظاهر')}</td><td>${esc(i.price)}</td><td>${esc(i.identityConfidence)}%</td><td>${esc(i.compatibility)}</td><td>${esc(i.priceAssessment)}</td><td>${esc(i.conflict)}</td></tr>`).join('')||'<tr><td colspan="8">لم تُستخرج بنود واضحة.</td></tr>'; document.getElementById('nextActions').innerHTML=(analysis.nextActions||[]).map((x,n)=>'<div class="alert">'+(n+1)+'. '+esc(x)+'</div>').join('')||'<div class="note">لا توجد خطوات إضافية مستخرجة.</div>'; 
+ document.getElementById('itemsBody').innerHTML=allItems.map(i=>{
+ const typeLabels={part:'قطعة',labor:'أجرة عمل',service:'خدمة',fee:'رسوم'};
+ const label=typeLabels[i.itemType]||'قطعة';
+ return `<tr><td>${esc(i.name)}</td><td>${esc(label)}</td><td>${esc(i.partNumber||'غير ظاهر')}</td><td>${esc(i.price)}</td><td>${esc(i.identityConfidence)}%</td><td>${esc(i.compatibility)}</td><td>${esc(i.priceAssessment)}</td><td>${esc(i.conflict)}</td></tr>`;
+}).join('')||'<tr><td colspan="8">لم تُستخرج بنود واضحة.</td></tr>'; document.getElementById('nextActions').innerHTML=(analysis.nextActions||[]).map((x,n)=>'<div class="alert">'+(n+1)+'. '+esc(x)+'</div>').join('')||'<div class="note">لا توجد خطوات إضافية مستخرجة.</div>'; 
  const priceBox=document.querySelector('#advanced .price');
  if(priceBox){
    priceBox.textContent='التوفير المؤكد: غير محسوب';
