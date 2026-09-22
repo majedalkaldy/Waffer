@@ -8,10 +8,17 @@ export default async function handler(req, res) {
     const config = getMarketConfig(req.query);
     if (!config.supported) return res.status(400).json({ error: 'Unsupported market', code: 'UNSUPPORTED_MARKET', requestedMarket: config.requestedMarket });
     const ctx = { market: config.market, langId: config.catalog.langId, countryFilterId: config.catalog.countryFilterId };
-    const response = await fetch(
-      'https://auto-parts-catalog.apiprofile.com/api/v2/manufacturers/list/type-id/1',
-      { headers: { Accept: 'application/json', 'x-apiprofile-key': apiKey } }
-    );
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    let response;
+    try {
+      response = await fetch(
+        'https://auto-parts-catalog.apiprofile.com/api/v2/manufacturers/list/type-id/1',
+        { headers: { Accept: 'application/json', 'x-apiprofile-key': apiKey }, signal: controller.signal }
+      );
+    } finally {
+      clearTimeout(timer);
+    }
     const data = await response.json();
     if (!response.ok) return res.status(response.status).json(data);
 
@@ -30,6 +37,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ ...ctx, count: manufacturers.length, manufacturers });
   } catch (error) {
     console.error('Vehicle manufacturers error:', error);
+    if (error?.name === 'AbortError') return res.status(504).json({ error: 'Vehicle catalog timed out' });
     return res.status(500).json({ error: 'Failed to fetch vehicle manufacturers' });
   }
 }
