@@ -98,6 +98,8 @@ export default async function handler(req, res) {
       clientAnalysisTimeoutMs: RUNTIME_CONFIG.clientAnalysisTimeoutMs,
       pdfUploadTimeoutMs: RUNTIME_CONFIG.pdfUploadTimeoutMs,
       pdfCleanupTimeoutMs: RUNTIME_CONFIG.pdfCleanupTimeoutMs,
+      manufacturersTimeoutMs: RUNTIME_CONFIG.manufacturersTimeoutMs,
+      clientManufacturersTimeoutMs: RUNTIME_CONFIG.clientManufacturersTimeoutMs,
       healthCatalogTimeoutMs: RUNTIME_CONFIG.healthCatalogTimeoutMs
     },
     timestamp: new Date().toISOString()
