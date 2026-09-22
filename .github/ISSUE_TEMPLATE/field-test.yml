@@ -1,7 +1,6 @@
 name: Waffer field-test issue
 description: Report a reproducible issue found during MVP field testing
 title: "[Field Test] "
-labels: ["field-test"]
 body:
   - type: markdown
     attributes:
