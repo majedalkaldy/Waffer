@@ -128,9 +128,9 @@ export default async function handler(req, res) {
             manufacturer: String(item?.manufacturer || 'غير ظاهر').slice(0, 120),
             quantity: String(item?.quantity || 'غير ظاهرة').slice(0, 80),
             price: String(item?.price || '').slice(0, 120),
-            category: ['part','labor','fluid','service','other'].includes(String(item?.category || '').toLowerCase())
-              ? String(item.category).toLowerCase()
-              : 'other',
+            itemType: ['part','labor','service','fee'].includes(String(item?.itemType || '').toLowerCase())
+              ? String(item.itemType).toLowerCase()
+              : 'part',
             identityConfidence: clamp(item?.identityConfidence),
             itemType: ['part','labor','service','fee'].includes(String(item?.itemType || '').toLowerCase())
               ? String(item.itemType).toLowerCase()
