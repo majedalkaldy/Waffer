@@ -1,10 +1,15 @@
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: 'OPENAI_API_KEY غير مضاف في Vercel.' });
 
   try {
     const { fileData, fileName, mimeType, vehicle = {} } = req.body || {};
     res.setHeader('Cache-Control', 'no-store');
+
+    const safeFileName = String(fileName || 'upload')
+      .replace(/[\r\n\\/]/g, '_')
+      .slice(0, 120);
     if (!fileData || !mimeType) return res.status(400).json({ error: 'لم يتم استلام الملف.' });
 
     const allowedMimeTypes = new Set([
@@ -50,7 +55,7 @@ export default async function handler(req, res) {
       const bytes = Buffer.from(base64, 'base64');
       const form = new FormData();
       form.append('purpose', 'user_data');
-      form.append('file', new Blob([bytes], { type: 'application/pdf' }), fileName || 'quote.pdf');
+      form.append('file', new Blob([bytes], { type: 'application/pdf' }), safeFileName || 'quote.pdf');
       const up = await fetch('https://api.openai.com/v1/files', { method: 'POST', headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` }, body: form });
       const uj = await up.json();
       if (!up.ok) throw new Error(uj?.error?.message || 'تعذر رفع PDF إلى خدمة التحليل');
