@@ -1,6 +1,7 @@
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { getMarketConfig } from '../lib/market-config.js';
 import { normalizeAnalysisResult } from '../lib/analysis-normalizer.js';
+import { validateBase64Upload } from '../lib/upload-validation.js';
 
 export default async function handler(req, res) {
   res.setHeader('Allow', 'POST');
@@ -16,23 +17,31 @@ export default async function handler(req, res) {
       .slice(0, 120);
     if (!fileData || !mimeType) return res.status(400).json({ error: 'لم يتم استلام الملف.' });
 
-    const allowedMimeTypes = new Set([
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-      'application/pdf'
-    ]);
-    if (!allowedMimeTypes.has(String(mimeType).toLowerCase())) {
-      return res.status(415).json({ error: 'نوع الملف غير مدعوم.' });
+    const normalizedMimeType = String(mimeType).toLowerCase();
+    const base64 = fileData.includes(',') ? fileData.split(',')[1] : fileData;
+    const uploadValidation = validateBase64Upload({
+      base64,
+      claimedMimeType: normalizedMimeType,
+      maxBytes: RUNTIME_CONFIG.maxUploadBytes
+    });
+
+    if (!uploadValidation.ok) {
+      const messages = {
+        UNSUPPORTED_FILE_TYPE: 'نوع الملف غير مدعوم.',
+        INVALID_BASE64: 'بيانات الملف غير صالحة.',
+        EMPTY_FILE: 'الملف فارغ.',
+        FILE_TOO_LARGE: 'حجم الملف أكبر من الحد المسموح.',
+        UNKNOWN_FILE_SIGNATURE: 'تعذر التحقق من نوع الملف.',
+        MIME_SIGNATURE_MISMATCH: 'نوع الملف لا يطابق محتواه.'
+      };
+      return res.status(uploadValidation.status).json({
+        error: messages[uploadValidation.code] || 'تعذر التحقق من الملف.',
+        code: uploadValidation.code
+      });
     }
 
-    const base64 = fileData.includes(',') ? fileData.split(',')[1] : fileData;
-    if (!base64 || !/^[A-Za-z0-9+/=\s]+$/.test(base64)) {
-      return res.status(400).json({ error: 'بيانات الملف غير صالحة.' });
-    }
-    const fileBytes = Buffer.byteLength(base64, 'base64');
-    if (!fileBytes) return res.status(400).json({ error: 'الملف فارغ.' });
-    if (fileBytes > RUNTIME_CONFIG.maxUploadBytes) return res.status(413).json({ error: 'حجم الملف أكبر من 4MB. صغّر الملف ثم حاول مجددًا.' });
+    const fileBytes = uploadValidation.bytes;
+    const uploadBuffer = uploadValidation.buffer;
 
     const marketConfig = getMarketConfig(vehicle);
     const market = marketConfig.market;
@@ -73,11 +82,10 @@ export default async function handler(req, res) {
 - استخدم العربية الواضحة والمختصرة.`
 
     let attachment;
-    if (mimeType === 'application/pdf') {
-      const bytes = Buffer.from(base64, 'base64');
+    if (normalizedMimeType === 'application/pdf') {
       const form = new FormData();
       form.append('purpose', 'user_data');
-      form.append('file', new Blob([bytes], { type: 'application/pdf' }), safeFileName || 'quote.pdf');
+      form.append('file', new Blob([uploadBuffer], { type: 'application/pdf' }), safeFileName || 'quote.pdf');
       const uploadController = new AbortController();
       const uploadTimeout = setTimeout(() => uploadController.abort(), RUNTIME_CONFIG.pdfUploadTimeoutMs);
       let up;
@@ -98,8 +106,8 @@ export default async function handler(req, res) {
       // Best-effort cleanup is performed after analysis so uploaded PDFs are not retained unnecessarily.
       res.locals = res.locals || {};
       res.locals.openaiFileId = uj.id;
-    } else if (mimeType.startsWith('image/')) {
-      attachment = { type: 'input_image', image_url: `data:${mimeType};base64,${base64}` };
+    } else if (normalizedMimeType.startsWith('image/')) {
+      attachment = { type: 'input_image', image_url: `data:${normalizedMimeType};base64,${base64}` };
     } else return res.status(415).json({ error: 'نوع الملف غير مدعوم.' });
 
     const controller = new AbortController();
