@@ -566,7 +566,12 @@ function applyLocale(locale){
  document.getElementById('installBtn').textContent=t(locale,'install');
  window.wafferLocale=locale;
 }
-localeSelect.addEventListener('change',()=>applyLocale(localeSelect.value));
+const savedLocale=localStorage.getItem('waffer-locale');
+if(savedLocale && Array.from(localeSelect.options).some(o=>o.value===savedLocale))localeSelect.value=savedLocale;
+localeSelect.addEventListener('change',()=>{
+ localStorage.setItem('waffer-locale',localeSelect.value);
+ applyLocale(localeSelect.value);
+});
 applyLocale(localeSelect.value);
 </script>
 <script src="/vin-ui.js"></script>
