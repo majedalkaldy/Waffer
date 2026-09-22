@@ -84,6 +84,20 @@ if (!failures.length) {
 
   const analyze = read('api/analyze.js');
   const matcher = read('parts-match.js');
+
+  const marketSensitiveFiles = [
+    'parts-match.js',
+    'api/vehicles.js',
+    'api/products.js',
+    'api/articles.js',
+    'api/article-criteria.js',
+    'api/health.js'
+  ];
+  for (const file of marketSensitiveFiles) {
+    const text = read(file);
+    if (/countryFilterId\s*[:=]\s*63/.test(text)) failures.push(`Hard-coded countryFilterId remains in ${file}`);
+    if (/type-id\/1(?:['"`]|\/)/.test(text)) failures.push(`Hard-coded vehicle type ID remains in ${file}`);
+  }
   if (/item\?\.category|item\.category/.test(analyze)) failures.push('Legacy category field remains in analyze API');
   if (/item\?\.category|item\.category/.test(matcher)) failures.push('Legacy category field remains in parts matcher');
 
