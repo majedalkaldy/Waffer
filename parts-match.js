@@ -457,6 +457,18 @@
         : [];
 
     if (!analysis || !vehicleId || !items.length) {
+      window.wafferCatalogState = {
+        status: !vehicleId ? 'NO_VEHICLE_ID' : !items.length ? 'NO_ITEMS' : 'NO_ANALYSIS',
+        matched: 0,
+        totalItems: items.length
+      };
+      window.wafferCatalogState = {
+        status: 'FAILED',
+        matched: 0,
+        totalItems: items.length,
+        error: String(error?.message || error)
+      };
+
       window.dispatchEvent(
         new CustomEvent(
           'wafferPartsMatched',
@@ -536,6 +548,12 @@
       window.wafferPartMatches = matches;
 
       const elapsedMs = Date.now() - startedAt;
+      window.wafferCatalogState = {
+        status: 'COMPLETED',
+        matched: matches.filter(x => x && x.productId).length,
+        totalItems: items.length,
+        elapsedMs
+      };
       matches.forEach(match => { match.matchingElapsedMs = elapsedMs; });
 
       window.dispatchEvent(
