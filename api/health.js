@@ -3,6 +3,15 @@ import { getMarketConfig } from '../lib/market-config.js';
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ ok: false, error: 'Method not allowed' });
 
+  const marketConfig = getMarketConfig(req.query || {});
+  if (!marketConfig.supported) {
+    return res.status(400).json({
+      ok: false,
+      status: 'unsupported_market',
+      requestedMarket: marketConfig.requestedMarket
+    });
+  }
+
   const configured = {
     analysis: Boolean(process.env.OPENAI_API_KEY),
     catalog: Boolean(process.env.AUTOPARTS_API_KEY)
@@ -44,6 +53,7 @@ export default async function handler(req, res) {
     service: 'waffer',
     version: 'mvp',
     defaults: getMarketConfig({}),
+    market: marketConfig,
     capabilities: {
       quoteAnalysis: configured.analysis,
       vinAndCatalog: configured.catalog && upstream.catalog === 'reachable',
