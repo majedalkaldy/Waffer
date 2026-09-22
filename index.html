@@ -200,7 +200,7 @@ async function start(){
    alert('تعذر التحليل: '+(e.message||e));
  }finally{
    analyzeBtn.disabled=false;
-   analyzeBtn.textContent='حلّل عرضي مجانًا ✨';
+   analyzeBtn.textContent=window.wafferLocale?.startsWith('en')?'Analyze my estimate':'حلّل عرضي مجانًا ✨';
  }
 }
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
