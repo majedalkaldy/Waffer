@@ -1,4 +1,4 @@
-const DEFAULTS = { market: 'SA', langId: 4, countryFilterId: 63 };
+import { getMarketConfig } from '../lib/market-config.js';
 
 export default async function handler(req, res) {
   try {
@@ -8,9 +8,10 @@ export default async function handler(req, res) {
     const apiKey = process.env.AUTOPARTS_API_KEY;
     if (!apiKey) return res.status(500).json({ error: 'AUTOPARTS_API_KEY is not configured' });
 
-    const market = String(req.query.market || DEFAULTS.market).toUpperCase();
-    const langId = Number(req.query.langId || DEFAULTS.langId);
-    const countryFilterId = Number(req.query.countryFilterId || DEFAULTS.countryFilterId);
+    const config = getMarketConfig(req.query);
+    const market = config.market;
+    const langId = config.catalog.langId;
+    const countryFilterId = config.catalog.countryFilterId;
 
     const url = 'https://auto-parts-catalog.apiprofile.com' +
       '/api/v2/articles/selection-of-all-specifications-criterias-for-the-article' +
