@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     let response;
     try {
       response = await fetch(
-        'https://auto-parts-catalog.apiprofile.com/api/v2/manufacturers/list/type-id/1',
+        'https://auto-parts-catalog.apiprofile.com/api/v2/manufacturers/list/type-id/' + encodeURIComponent(config.catalog.typeId),
         { headers: { Accept: 'application/json', 'x-apiprofile-key': apiKey }, signal: controller.signal }
       );
     } finally {
