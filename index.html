@@ -108,6 +108,11 @@ async function start(){
  if(file.size>4*1024*1024){alert('الحد الحالي 4MB. صغّر الملف ثم حاول مجددًا.');return}
 
  const vin=String(document.getElementById('vin').value||'').trim().toUpperCase();
+ const year=String(document.getElementById('year').value||'').trim();
+ if(year && (!/^\d{4}$/.test(year) || Number(year)<1980 || Number(year)>new Date().getFullYear()+1)){
+   alert('تحقق من سنة الصنع.');
+   return;
+ }
  analyzeBtn.disabled=true;
  analyzeBtn.textContent='جارٍ التحليل...';
  show('loading');
@@ -143,7 +148,7 @@ async function start(){
        vehicle:{
          make:document.getElementById('make').value,
          model:document.getElementById('model').value,
-         year:document.getElementById('year').value,
+         year,
          vin,
          market:'SA',
          locale:'ar-SA',
