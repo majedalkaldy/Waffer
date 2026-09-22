@@ -1,3 +1,4 @@
+import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { getMarketConfig } from '../lib/market-config.js';
 
 export default async function handler(req, res) {
@@ -57,11 +58,11 @@ export default async function handler(req, res) {
     ok,
     status: ok ? 'ready' : degraded ? 'degraded' : 'unavailable',
     service: 'waffer',
-    version: 'mvp-2026-09',
+    version: RUNTIME_CONFIG.engineVersion,
     defaults: getMarketConfig({}),
     market: marketConfig,
     contract: {
-      analysisEngineVersion: 'mvp-2026-09',
+      analysisEngineVersion: RUNTIME_CONFIG.engineVersion,
       acceptanceMetadata: true,
       requestTraceability: true,
       marketConfig: true
@@ -76,10 +77,10 @@ export default async function handler(req, res) {
     upstream,
     latency,
     limits: {
-      maxUploadBytes: 4194304,
-      supportedMimeTypes: ['image/jpeg','image/png','image/webp','application/pdf'],
-      catalogMatchTimeoutMs: 30000,
-      analysisTimeoutMs: 45000
+      maxUploadBytes: RUNTIME_CONFIG.maxUploadBytes,
+      supportedMimeTypes: RUNTIME_CONFIG.supportedMimeTypes,
+      catalogMatchTimeoutMs: RUNTIME_CONFIG.catalogMatchTimeoutMs,
+      analysisTimeoutMs: RUNTIME_CONFIG.analysisTimeoutMs
     },
     timestamp: new Date().toISOString()
   });
