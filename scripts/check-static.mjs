@@ -22,7 +22,8 @@ const required = [
   'lib/i18n.js',
   'sw.js',
   'manifest.webmanifest',
-  'robots.txt'
+  'robots.txt',
+  'docs/FIELD_TEST.md'
 ];
 
 const failures = [];
