@@ -111,6 +111,21 @@ if (!failures.length) {
   if (!runtime.includes("engineVersion: 'mvp-2026-09'")) failures.push('Unexpected engine version');
   if (!runtime.includes('maxUploadBytes')) failures.push('Runtime upload limit missing');
 
+  try {
+    const { RUNTIME_CONFIG } = await import('../lib/runtime-config.js');
+    const { getMarketConfig } = await import('../lib/market-config.js');
+    const sa = getMarketConfig({ market: 'SA' });
+    const unsupported = getMarketConfig({ market: 'ZZ' });
+
+    if (RUNTIME_CONFIG.engineVersion !== 'mvp-2026-09') failures.push('Runtime engine version mismatch');
+    if (!(RUNTIME_CONFIG.maxUploadBytes > 0)) failures.push('Runtime upload limit must be positive');
+    if (!RUNTIME_CONFIG.supportedMimeTypes.includes('application/pdf')) failures.push('PDF support missing from runtime config');
+    if (!(sa.supported && sa.market === 'SA' && sa.currency === 'SAR')) failures.push('Saudi market configuration is invalid');
+    if (unsupported.supported !== false) failures.push('Unsupported market fallback is not explicit');
+  } catch (error) {
+    failures.push('Runtime/market semantic checks failed: ' + error.message);
+  }
+
   const sw = read('sw.js');
   if (!sw.includes('/lib/i18n.js') || !sw.includes('/lib/runtime-config.js')) {
     failures.push('PWA shell missing localization/runtime modules');
