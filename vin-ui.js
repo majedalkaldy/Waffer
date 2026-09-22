@@ -1,562 +1,66 @@
-(function () {
-  'use strict';
+import { arrayAt, fetchJSON, RequestError, text, VIN_PATTERN } from './lib/client-core.js?v=20260922-stability';
 
-  let vinRequest = null;
-  let lastVin = '';
+const pick = (row, keys) => keys.map(key => row?.[key]).find(value => value !== undefined && value !== null && value !== '');
+const byIdOrOnly = (rows, id, keys) => id != null
+  ? rows.find(row => String(pick(row, keys) ?? '') === String(id))
+  : rows.length === 1 ? rows[0] : undefined;
 
-  function firstArray(obj, paths) {
-    for (const path of paths) {
-      let value = obj;
-
-      for (const key of path) {
-        value = value?.[key];
-      }
-
-      if (Array.isArray(value) && value.length) {
-        return value;
-      }
-    }
-
-    return [];
+// This resolves catalog candidates, not proof of physical fitment or OEM identity.
+export function readVinCandidates(data, vin) {
+  const get = key => arrayAt(data, ['data.'+key+'.array', key+'.array', 'data.'+key, key]);
+  const manufacturers = get('matchingManufacturers');
+  const models = get('matchingModels');
+  const vehicles = get('matchingVehicles');
+  const unique = new Map();
+  for (const vehicle of vehicles) {
+    const vehicleId = String(pick(vehicle, ['vehicleId','carId','id']) ?? '');
+    if (!/^\d+$/.test(vehicleId)) continue;
+    const modelId = pick(vehicle, ['modelId']);
+    const manufacturerId = pick(vehicle, ['manuId','manufacturerId']);
+    const manufacturer = byIdOrOnly(manufacturers, manufacturerId, ['manuId','manufacturerId','id']);
+    const model = byIdOrOnly(models, modelId, ['modelId','id']);
+    const year = String(pick(vehicle, ['year','constructionYear','yearOfConstruction']) ?? data?.data?.year ?? '');
+    unique.set(vehicleId, {
+      vin, vehicleId,
+      modelId: String(modelId ?? pick(model, ['modelId','id']) ?? ''),
+      manufacturerId: String(manufacturerId ?? pick(manufacturer, ['manuId','manufacturerId','id']) ?? ''),
+      manufacturerName: text(pick(manufacturer, ['manuName','manufacturerName','name']) ?? pick(vehicle, ['manufacturerName','manuName'])),
+      modelName: text(pick(model, ['modelName','name']) ?? pick(vehicle, ['modelName'])),
+      vehicleDescription: text(pick(vehicle, ['vehicleTypeDescription','typeName','description'])),
+      year: /^\d{4}$/.test(year) ? year : ''
+    });
   }
-
-  function pick(obj, keys) {
-    for (const key of keys) {
-      const value = obj?.[key];
-
-      if (
-        value !== undefined &&
-        value !== null &&
-        value !== ''
-      ) {
-        return value;
-      }
-    }
-
-    return null;
-  }
-
-  function findMakeOption(select, manufacturer) {
-    if (!select || !manufacturer) {
-      return null;
-    }
-
-    const id = String(
-      pick(
-        manufacturer,
-        ['manuId', 'manufacturerId', 'id']
-      ) ?? ''
-    );
-
-    const name = String(
-      pick(
-        manufacturer,
-        ['manuName', 'manufacturerName', 'name']
-      ) ?? ''
-    )
-      .trim()
-      .toLowerCase();
-
-    return (
-      Array.from(select.options).find(function (option) {
-        const value = String(option.value ?? '');
-
-        const text = String(
-          option.textContent ?? ''
-        )
-          .trim()
-          .toLowerCase();
-
-        return (
-          (id && value === id) ||
-          (name && text.includes(name))
-        );
-      }) || null
-    );
-  }
-
-  async function checkVin(force = false) {
-
-    const vinInput =
-      document.getElementById('vin');
-
-    if (!vinInput) {
-      return null;
-    }
-
-    const vin = String(
-      vinInput.value || ''
-    )
-      .trim()
-      .toUpperCase();
-
-    // VIN يجب أن يكون 17 خانة
-    if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) {
-      return null;
-    }
-
-    // إذا سبق التعرف على نفس السيارة
-    if (
-      !force &&
-      vin === lastVin &&
-      window.wafferVehicleId
-    ) {
-      return {
-        vehicleId:
-          window.wafferVehicleId,
-
-        modelId:
-          window.wafferModelId,
-
-        manufacturerId:
-          window.wafferManufacturerId
-      };
-    }
-
-    // منع الطلبات المتكررة
-    if (vinRequest) {
-      return vinRequest;
-    }
-
-    vinRequest = (async function () {
-
-      try {
-
-        const response = await fetch(
-          '/api/vin?vin=' +
-          encodeURIComponent(vin)
-        );
-
-        let result;
-
-        try {
-          result = await response.json();
-        } catch (e) {
-          throw new Error(
-            'استجابة VIN غير صالحة'
-          );
-        }
-
-        if (!response.ok) {
-          throw new Error(
-            result?.message ||
-            result?.error ||
-            'تعذر التحقق من رقم الهيكل'
-          );
-        }
-
-        // الشركات المطابقة
-        const manufacturers =
-          firstArray(
-            result,
-            [
-              [
-                'data',
-                'matchingManufacturers',
-                'array'
-              ],
-              [
-                'matchingManufacturers',
-                'array'
-              ],
-              [
-                'data',
-                'matchingManufacturers'
-              ],
-              [
-                'matchingManufacturers'
-              ]
-            ]
-          );
-
-        // الموديلات المطابقة
-        const models =
-          firstArray(
-            result,
-            [
-              [
-                'data',
-                'matchingModels',
-                'array'
-              ],
-              [
-                'matchingModels',
-                'array'
-              ],
-              [
-                'data',
-                'matchingModels'
-              ],
-              [
-                'matchingModels'
-              ]
-            ]
-          );
-
-        // السيارات المطابقة
-        const vehicles =
-          firstArray(
-            result,
-            [
-              [
-                'data',
-                'matchingVehicles',
-                'array'
-              ],
-              [
-                'matchingVehicles',
-                'array'
-              ],
-              [
-                'data',
-                'matchingVehicles'
-              ],
-              [
-                'matchingVehicles'
-              ]
-            ]
-          );
-
-        const manufacturer =
-          manufacturers[0] || null;
-
-        const model =
-          models[0] || null;
-
-        const vehicle =
-          vehicles[0] || null;
-
-        if (!vehicle) {
-          throw new Error(
-            'تم فحص رقم الهيكل ولكن لم يتم العثور على سيارة مطابقة'
-          );
-        }
-
-        const vehicleId =
-          pick(
-            vehicle,
-            [
-              'vehicleId',
-              'carId',
-              'id'
-            ]
-          );
-
-        const modelId =
-          pick(
-            vehicle,
-            ['modelId']
-          ) ??
-          pick(
-            model,
-            [
-              'modelId',
-              'id'
-            ]
-          );
-
-        const manufacturerId =
-          pick(
-            vehicle,
-            [
-              'manuId',
-              'manufacturerId'
-            ]
-          ) ??
-          pick(
-            manufacturer,
-            [
-              'manuId',
-              'manufacturerId',
-              'id'
-            ]
-          );
-
-        if (!vehicleId) {
-          throw new Error(
-            'تم العثور على السيارة لكن Vehicle ID غير متوفر'
-          );
-        }
-
-        // حفظ المعرفات لاستخدامها في مطابقة القطع
-        window.wafferVehicleId =
-          String(vehicleId);
-
-        window.wafferModelId =
-          modelId != null
-            ? String(modelId)
-            : '';
-
-        window.wafferManufacturerId =
-          manufacturerId != null
-            ? String(manufacturerId)
-            : '';
-
-        const makeSelect =
-          document.getElementById('make');
-
-        const modelInput =
-          document.getElementById('model');
-
-        const yearInput =
-          document.getElementById('year');
-
-        // اختيار الشركة تلقائياً
-        const makeOption =
-          findMakeOption(
-            makeSelect,
-            manufacturer
-          );
-
-        if (makeSelect && manufacturer) {
-          let option = makeOption;
-          if (!option) {
-            const optionValue = String(
-              pick(manufacturer, ['manuId','manufacturerId','id']) ?? ''
-            );
-            const optionText = String(
-              pick(manufacturer, ['manuName','manufacturerName','name']) ?? 'الشركة المحددة من VIN'
-            );
-            if (optionValue) {
-              option = new Option(optionText, optionValue);
-              makeSelect.add(option);
-            }
-          }
-          if (option) {
-            makeSelect.value = option.value;
-            makeSelect.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-        }
-
-        // اسم الموديل
-        const modelName =
-          pick(
-            model,
-            [
-              'modelName',
-              'name'
-            ]
-          ) ??
-          pick(
-            vehicle,
-            [
-              'modelName',
-              'vehicleTypeDescription',
-              'typeName'
-            ]
-          );
-
-        if (
-          modelInput &&
-          modelName
-        ) {
-          modelInput.value =
-            String(modelName);
-        }
-
-        // سنة السيارة إذا كانت متوفرة
-        const year =
-          pick(
-            vehicle,
-            [
-              'year',
-              'constructionYear',
-              'yearOfConstruction'
-            ]
-          ) ??
-          pick(
-            result?.data,
-            ['year']
-          );
-
-        if (
-          yearInput &&
-          year &&
-          /^\d{4}$/.test(
-            String(year)
-          )
-        ) {
-          yearInput.value =
-            String(year);
-        }
-
-        lastVin = vin;
-
-        const detail = {
-
-          vin: vin,
-
-          vehicleId:
-            window.wafferVehicleId,
-
-          modelId:
-            window.wafferModelId,
-
-          manufacturerId:
-            window.wafferManufacturerId,
-
-          manufacturerName:
-            pick(
-              manufacturer,
-              [
-                'manuName',
-                'manufacturerName',
-                'name'
-              ]
-            ) || '',
-
-          modelName:
-            modelName || '',
-
-          vehicleDescription:
-            pick(
-              vehicle,
-              [
-                'vehicleTypeDescription',
-                'typeName',
-                'description'
-              ]
-            ) || '',
-
-          raw: result
-        };
-
-        window.wafferVehicle =
-          detail;
-
-        const vehicleInfo =
-          document.getElementById('vehicleInfo');
-
-        if (vehicleInfo) {
-          const parts = [
-            detail.manufacturerName,
-            detail.modelName,
-            detail.vehicleDescription
-          ].filter(Boolean);
-
-          vehicleInfo.textContent =
-            '✓ تم التعرف على السيارة' +
-            (parts.length ? ': ' + parts.join(' — ') : '') +
-            ' | Vehicle ID: ' + detail.vehicleId;
-
-          vehicleInfo.classList.remove('hidden');
-        }
-
-        // إرسال حدث لبقية نظام وفر
-        window.dispatchEvent(
-          new CustomEvent(
-            'wafferVinResolved',
-            {
-              detail: detail
-            }
-          )
-        );
-
-        return detail;
-
-      } finally {
-
-        vinRequest = null;
-
-      }
-
-    })();
-
-    return vinRequest;
-  }
-
-  // هذه الدالة يحتاجها index.html
-  window.ensureWafferVehicle =
-    function () {
-      return checkVin(true);
-    };
-
-  window.checkWafferVin =
-    checkVin;
-
-  function attach() {
-
-    const vinField =
-      document.getElementById('vin');
-
-    if (
-      !vinField ||
-      vinField.dataset.wafferVinBound === '1'
-    ) {
-      return;
-    }
-
-    vinField.dataset.wafferVinBound =
-      '1';
-
-    // عند تغيير VIN
-    vinField.addEventListener(
-      'change',
-      function () {
-
-        checkVin(false)
-          .catch(function (error) {
-
-            console.error(
-              'VIN lookup error:',
-              error
-            );
-
-            alert(
-              'تعذر التحقق من رقم الهيكل.\n' +
-              (error?.message || '')
-            );
-
-          });
-
-      }
-    );
-
-    // عند الخروج من خانة VIN
-    vinField.addEventListener(
-      'blur',
-      function () {
-
-        const vin = String(
-          vinField.value || ''
-        )
-          .trim()
-          .toUpperCase();
-
-        if (
-          /^[A-HJ-NPR-Z0-9]{17}$/.test(vin)
-        ) {
-
-          checkVin(false)
-            .catch(function (error) {
-
-              console.error(
-                'VIN lookup error:',
-                error
-              );
-
-            });
-
-        }
-
-      }
-    );
-  }
-
-  if (
-    document.readyState ===
-    'loading'
-  ) {
-
-    document.addEventListener(
-      'DOMContentLoaded',
-      attach
-    );
-
-  } else {
-
-    attach();
-
-  }
-
-})();
+  return [...unique.values()];
+}
+
+export function createVinResolver({ request = fetchJSON, onUpdate = () => {} } = {}) {
+  let sequence = 0, currentVin = '', cached = null, pending = null, controller = null;
+  const clear = () => {
+    sequence++;
+    controller?.abort();
+    controller = null;
+    currentVin = '';
+    cached = null;
+    pending = null;
+  };
+  const resolve = value => {
+    const vin = text(value).trim().toUpperCase();
+    if (!VIN_PATTERN.test(vin)) { clear(); return Promise.reject(new RequestError('VIN_INVALID')); }
+    if (vin === currentVin && cached) return Promise.resolve(cached);
+    if (vin === currentVin && pending) return pending;
+    clear();
+    currentVin = vin;
+    controller = new AbortController();
+    const ownController = controller, ownSequence = sequence;
+    pending = (async () => {
+      const result = await request('/api/vin?vin='+encodeURIComponent(vin), { signal: ownController.signal, timeoutMs: 12000 });
+      if (ownSequence !== sequence || ownController.signal.aborted) throw new DOMException('Aborted', 'AbortError');
+      const candidates = readVinCandidates(result, vin);
+      cached = { vin, candidates, selected: candidates.length === 1 ? candidates[0] : null };
+      onUpdate(cached);
+      return cached;
+    })().finally(() => { if (ownSequence === sequence) pending = null; });
+    return pending;
+  };
+  return { clear, resolve };
+}
