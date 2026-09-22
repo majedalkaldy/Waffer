@@ -126,6 +126,17 @@ function show(id){
 }
 function fileToDataURL(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)})}
 
+function inferMimeType(file){
+ const declared=String(file?.type||'').toLowerCase();
+ if(declared)return declared;
+ const name=String(file?.name||'').toLowerCase();
+ if(/\.jpe?g$/.test(name))return 'image/jpeg';
+ if(/\.png$/.test(name))return 'image/png';
+ if(/\.webp$/.test(name))return 'image/webp';
+ if(/\.pdf$/.test(name))return 'application/pdf';
+ return '';
+}
+
 function uploadLimitMb(){
  return Math.round(((window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024)/1024/1024)*10)/10;
 }
@@ -188,16 +199,17 @@ async function imageFileToCompressedPayload(file){
 
 async function prepareUploadPayload(file){
  const limit=window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024;
- if(file.type==='application/pdf'){
+ const mimeType=inferMimeType(file);
+ if(mimeType==='application/pdf'){
    if(file.size>limit){
      throw new Error(window.wafferLocale?.startsWith('en')?'The PDF is larger than '+uploadLimitMb()+' MB. Reduce its size and try again.':'حجم ملف PDF أكبر من '+uploadLimitMb()+'MB. صغّر الملف ثم حاول مجددًا.');
    }
    return {fileData:await fileToDataURL(file),fileName:file.name,mimeType:file.type,optimized:false,originalBytes:file.size,uploadBytes:file.size};
  }
 
- if(file.type?.startsWith('image/')){
+ if(mimeType.startsWith('image/')){
    if(file.size<=limit){
-     return {fileData:await fileToDataURL(file),fileName:file.name,mimeType:file.type,optimized:false,originalBytes:file.size,uploadBytes:file.size};
+     return {fileData:await fileToDataURL(file),fileName:file.name,mimeType,optimized:false,originalBytes:file.size,uploadBytes:file.size};
    }
    return imageFileToCompressedPayload(file);
  }
@@ -718,14 +730,15 @@ fileInput.addEventListener('change',e=>{
  const text=document.getElementById('fileText');
  if(!f){text.textContent=window.wafferLocale?.startsWith('en')?'Upload an estimate image or PDF':'ارفع صورة العرض أو ملف PDF';updateFormHint();return;}
  const supported=['image/jpeg','image/png','image/webp','application/pdf'];
- if(f.type && !supported.includes(f.type)){
+ const mimeType=inferMimeType(f);
+ if(!mimeType || !supported.includes(mimeType)){
    fileInput.value='';
    text.textContent=window.wafferLocale?.startsWith('en')?'Upload an estimate image or PDF':'ارفع صورة العرض أو ملف PDF';
    updateFormHint();
    alert(window.wafferLocale?.startsWith('en')?'Unsupported file type. Use JPG, PNG, WEBP, or PDF.':'نوع الملف غير مدعوم. استخدم JPG أو PNG أو WEBP أو PDF.');
    return;
  }
- if(f.type==='application/pdf' && f.size>(window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024)){
+ if(mimeType==='application/pdf' && f.size>(window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024)){
    fileInput.value='';
    text.textContent=window.wafferLocale?.startsWith('en')?'Upload an estimate image or PDF':'ارفع صورة العرض أو ملف PDF';
    updateFormHint();
@@ -733,7 +746,7 @@ fileInput.addEventListener('change',e=>{
    return;
  }
  const sizeText=(f.size/1024/1024).toFixed(2)+' MB';
- const willOptimize=f.type?.startsWith('image/')&&f.size>(window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024);
+ const willOptimize=mimeType.startsWith('image/')&&f.size>(window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024);
  text.textContent=window.wafferLocale?.startsWith('en')
    ? 'Selected: '+f.name+' — '+sizeText+(willOptimize?' • will optimize automatically':'')
    : 'تم اختيار: '+f.name+' — '+sizeText+(willOptimize?' • سيتم تحسين الصورة تلقائيًا':'');
