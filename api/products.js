@@ -5,6 +5,7 @@ export default async function handler(req, res) {
     const apiKey = process.env.AUTOPARTS_API_KEY;
     const vehicleId = String(req.query.vehicleId || '').trim();
     const config = getMarketConfig(req.query);
+    if (!config.supported) return res.status(400).json({ error: 'Unsupported market', code: 'UNSUPPORTED_MARKET', requestedMarket: config.requestedMarket });
     const market = config.market;
     const langId = config.catalog.langId;
 
