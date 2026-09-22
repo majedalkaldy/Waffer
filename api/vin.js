@@ -29,11 +29,12 @@ export default async function handler(req, res) {
     const text = await response.text();
     let data;
     try { data = JSON.parse(text); }
-    catch { return res.status(502).json({ error: 'Invalid VIN provider response' }); }
+    catch { return res.status(502).json({ error: 'Invalid VIN provider response', code: 'VIN_INVALID_RESPONSE' }); }
 
     if (!response.ok) {
-      return res.status(response.status).json({
-        error: data?.error || data?.message || 'VIN lookup failed'
+      return res.status(response.status >= 500 ? 502 : response.status).json({
+        error: data?.error || data?.message || 'VIN lookup failed',
+        code: 'VIN_UPSTREAM_ERROR'
       });
     }
 
