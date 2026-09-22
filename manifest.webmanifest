@@ -1,0 +1,13 @@
+{
+  "name": "وفّر — Waffer",
+  "short_name": "وفّر",
+  "description": "افحص عرض صيانة سيارتك قبل أن تدفع",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f8f7",
+  "theme_color": "#075b43",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["automotive", "utilities"]
+}
