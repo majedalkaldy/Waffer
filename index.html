@@ -309,7 +309,22 @@ uploadBox.addEventListener('keydown',e=>{
 });
 fileInput.addEventListener('change',e=>{
  const f=e.target.files&&e.target.files[0];
- document.getElementById('fileText').textContent=f?'تم اختيار: '+f.name:'ارفع صورة العرض أو ملف PDF';
+ const text=document.getElementById('fileText');
+ if(!f){text.textContent='ارفع صورة العرض أو ملف PDF';return;}
+ const supported=['image/jpeg','image/png','image/webp','application/pdf'];
+ if(f.type && !supported.includes(f.type)){
+   fileInput.value='';
+   text.textContent='ارفع صورة العرض أو ملف PDF';
+   alert('نوع الملف غير مدعوم. استخدم JPG أو PNG أو WEBP أو PDF.');
+   return;
+ }
+ if(f.size>4*1024*1024){
+   fileInput.value='';
+   text.textContent='ارفع صورة العرض أو ملف PDF';
+   alert('حجم الملف أكبر من 4MB. صغّر الملف ثم حاول مجددًا.');
+   return;
+ }
+ text.textContent='تم اختيار: '+f.name+' — '+(f.size/1024/1024).toFixed(2)+' MB';
 });
 function updateNetworkStatus(){
  const box=document.getElementById('offlineStatus');
