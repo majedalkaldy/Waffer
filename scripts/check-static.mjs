@@ -86,6 +86,13 @@ if (!failures.length) {
   const analyze = read('api/analyze.js');
   const matcher = read('parts-match.js');
 
+  for (const file of required.filter(path => /\.js$|\.mjs$/.test(path))) {
+    const source = read(file);
+    if (/\|\|\s*[A-Za-z_$][\w$]*(?:\([^\n)]*\))?\s*\?/.test(source)) {
+      failures.push(`Ambiguous || / ternary precedence found in ${file}; add parentheses explicitly`);
+    }
+  }
+
   const marketSensitiveFiles = [
     'parts-match.js',
     'api/vehicles.js',
