@@ -172,7 +172,7 @@
           throw new Error(
             result?.message ||
             result?.error ||
-            isEnglish() ? 'Could not verify the VIN' : 'تعذر التحقق من رقم الهيكل'
+            (isEnglish() ? 'Could not verify the VIN' : 'تعذر التحقق من رقم الهيكل')
           );
         }
 
