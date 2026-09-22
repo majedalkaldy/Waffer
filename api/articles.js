@@ -20,7 +20,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Valid vehicleId and productId are required' });
     }
 
-    const url = 'https://auto-parts-catalog.apiprofile.com/api/v2/articles/list-by-product/type-id/1/vehicle-id/' +
+    const url = 'https://auto-parts-catalog.apiprofile.com/api/v2/articles/list-by-product/type-id/' + encodeURIComponent(config.catalog.typeId) + '/vehicle-id/' +
       encodeURIComponent(vehicleId) + '/product-id/' + encodeURIComponent(productId) +
       '/lang-id/' + encodeURIComponent(langId);
 
