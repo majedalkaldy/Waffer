@@ -280,19 +280,26 @@
     }
 
     vinRequestVin = vin;
-    vinAbortController = new AbortController();
+    const controller = new AbortController();
+    vinAbortController = controller;
+    let timedOut = false;
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, Number(window.WAFFER_RUNTIME?.clientVinTimeoutMs) || 15000);
 
     vinRequest = (async function () {
       try {
         const response = await fetch(
           '/api/vin?vin=' + encodeURIComponent(vin),
-          { signal: vinAbortController.signal }
+          { signal: controller.signal }
         );
 
         let result;
         try {
           result = await response.json();
-        } catch {
+        } catch (error) {
+          if (error?.name === 'AbortError') throw error;
           throw new Error(isEnglish() ? 'Invalid VIN provider response' : 'استجابة VIN غير صالحة');
         }
 
@@ -365,13 +372,23 @@
         return applyCandidate(candidates[0]);
 
       } catch (error) {
-        if (error?.name === 'AbortError') return null;
+        if (error?.name === 'AbortError') {
+          if (timedOut) {
+            const timeoutError = new Error(
+              isEnglish() ? 'VIN lookup timed out. Try again.' : 'انتهت مهلة التحقق من VIN. حاول مرة أخرى.'
+            );
+            timeoutError.code = 'VIN_TIMEOUT';
+            throw timeoutError;
+          }
+          return null;
+        }
         throw error;
       } finally {
+        clearTimeout(timeout);
         if (vinRequestVin === vin) {
           vinRequest = null;
           vinRequestVin = '';
-          vinAbortController = null;
+          if (vinAbortController === controller) vinAbortController = null;
         }
       }
     })();
