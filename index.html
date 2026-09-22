@@ -331,7 +331,9 @@ function render(){
  if(breakdown){
    breakdown.textContent='الشفافية '+(analysis.transparency??0)+'/100 • هوية القطع '+(analysis.identityConfidence??0)+'/100 • التوافق '+(analysis.compatibilityConfidence??0)+'/100 • قابلية مقارنة السعر '+(analysis.priceConfidence??0)+'/100';
  }
- const alerts=[...(analysis.missing||[]).map(x=>'📋 '+x),...(analysis.conflicts||[]).map(x=>'⚙️ '+x)]; document.getElementById('rAlerts').innerHTML=(alerts.length?alerts:['لم تظهر ملاحظات رئيسية.']).map(x=>'<div class="alert">'+esc(x)+'</div>').join('');
+ const alerts=[...(analysis.missing||[]).map(x=>'📋 '+x),...(analysis.conflicts||[]).map(x=>'⚙️ '+x)];
+ const noAlerts=window.wafferLocale?.startsWith('en')?'No major issues were extracted.':'لم تظهر ملاحظات رئيسية.';
+ document.getElementById('rAlerts').innerHTML=(alerts.length?alerts:[noAlerts]).map(x=>'<div class="alert">'+esc(x)+'</div>').join('');
  const allItems=Array.isArray(analysis.items)?analysis.items:[];
  const typeSummary=document.getElementById('itemTypeSummary');
  if(typeSummary){
