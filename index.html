@@ -407,12 +407,18 @@ function resetAnalysis(){
    const completed=state.status==='COMPLETED';
    const underLimit=!state.elapsedMs||state.elapsedMs<=30000;
    const axleOk=!state.axleRequested||state.axleVerified>0;
-   const checks=[hasVin,completed,underLimit,axleOk];
-   const passed=checks.filter(Boolean).length;
    const en=window.wafferLocale?.startsWith('en');
-   fieldTestSummary.textContent=(en?'VIN + catalog field checks: ':'فحوصات VIN + الكتالوج: ')+passed+'/'+checks.length+
-     ' • '+(hasVin?'✓':'✗')+' VIN • '+(completed?'✓':'✗')+' '+(en?'catalog':'الكتالوج')+
-     ' • '+(underLimit?'✓':'✗')+' '+(en?'time':'الوقت')+' • '+(axleOk?'✓':'✗')+' Front/Rear';
+   if(!hasVin){
+     fieldTestSummary.textContent=en
+       ? 'VIN + catalog field checks: not applicable because no VIN was provided.'
+       : 'فحوصات VIN + الكتالوج: غير مطبقة لأن التحليل تم دون VIN.';
+   }else{
+     const checks=[hasVin,completed,underLimit,axleOk];
+     const passed=checks.filter(Boolean).length;
+     fieldTestSummary.textContent=(en?'VIN + catalog field checks: ':'فحوصات VIN + الكتالوج: ')+passed+'/'+checks.length+
+       ' • '+(hasVin?'✓':'✗')+' VIN • '+(completed?'✓':'✗')+' '+(en?'catalog':'الكتالوج')+
+       ' • '+(underLimit?'✓':'✗')+' '+(en?'time':'الوقت')+' • '+(axleOk?'✓':'✗')+' Front/Rear';
+   }
  }
  const axleGate=document.getElementById('rAxleGate');
  if(axleGate){
