@@ -587,12 +587,16 @@
       const elapsedMs = Date.now() - startedAt;
       const partItems = items.filter(item => !item?.itemType || item.itemType === 'part');
       const skippedItems = matches.filter(x => x?.skipped).length;
+      const axleRequested = matches.filter(x => x?.requestedAxle).length;
+      const axleVerified = matches.filter(x => x?.requestedAxle && Number(x?.verifiedByAxle) > 0).length;
       window.wafferCatalogState = {
         status: 'COMPLETED',
         matched: matches.filter(x => x && x.productId).length,
         totalItems: items.length,
         partItems: partItems.length,
         skippedItems,
+        axleRequested,
+        axleVerified,
         elapsedMs
       };
       matches.forEach(match => { match.matchingElapsedMs = elapsedMs; });
