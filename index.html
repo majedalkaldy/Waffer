@@ -154,10 +154,20 @@ async function start(){
    if(window.wafferVehicleId && typeof window.matchWafferParts==='function'){
      if(catalogSummary)catalogSummary.textContent='🔎 جارٍ مطابقة البنود مع كتالوج السيارة...';
      try{
-       await window.matchWafferParts(analysis);
+       const matches=await Promise.race([
+         window.matchWafferParts(analysis),
+         new Promise((_,reject)=>setTimeout(()=>reject(new Error('CATALOG_TIMEOUT')),30000))
+       ]);
+       if(catalogSummary && Array.isArray(matches) && !matches.length){
+         catalogSummary.textContent='⚠️ اكتمل فحص الكتالوج ولم تظهر مطابقة مناسبة.';
+       }
      }catch(matchError){
        console.error('Parts matching error:',matchError);
-       if(catalogSummary)catalogSummary.textContent='⚠️ تعذر إكمال مطابقة الكتالوج.';
+       if(catalogSummary){
+         catalogSummary.textContent=matchError?.message==='CATALOG_TIMEOUT'
+           ? '⚠️ استغرقت مطابقة الكتالوج وقتًا أطول من المتوقع. نتيجة تحليل العرض متاحة.'
+           : '⚠️ تعذر إكمال مطابقة الكتالوج. نتيجة تحليل العرض متاحة.';
+       }
      }
    }else if(catalogSummary){
      catalogSummary.textContent=vin
