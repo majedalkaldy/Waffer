@@ -139,6 +139,8 @@ if (!failures.length) {
     const { RUNTIME_CONFIG } = await import('../lib/runtime-config.js');
     const { getMarketConfig } = await import('../lib/market-config.js');
     const sa = getMarketConfig({ market: 'SA' });
+    const saEnglish = getMarketConfig({ market: 'SA', locale: 'en-SA' });
+    const tampered = getMarketConfig({ market: 'SA', currency: 'USD', langId: 999, countryFilterId: 999 });
     const unsupported = getMarketConfig({ market: 'ZZ' });
 
     if (RUNTIME_CONFIG.engineVersion !== 'mvp-2026-09') failures.push('Runtime engine version mismatch');
@@ -153,6 +155,10 @@ if (!failures.length) {
     if (!(RUNTIME_CONFIG.maxUploadBytes > 0)) failures.push('Runtime upload limit must be positive');
     if (!RUNTIME_CONFIG.supportedMimeTypes.includes('application/pdf')) failures.push('PDF support missing from runtime config');
     if (!(sa.supported && sa.market === 'SA' && sa.currency === 'SAR')) failures.push('Saudi market configuration is invalid');
+    if (saEnglish.locale !== 'en-SA') failures.push('Supported Saudi English locale is unavailable');
+    if (tampered.currency !== 'SAR' || tampered.catalog.langId !== 4 || tampered.catalog.countryFilterId !== 63) {
+      failures.push('Client input can override protected market catalog configuration');
+    }
     if (unsupported.supported !== false) failures.push('Unsupported market fallback is not explicit');
   } catch (error) {
     failures.push('Runtime/market semantic checks failed: ' + error.message);
