@@ -1,0 +1,100 @@
+import fs from 'node:fs';
+
+const required = [
+  'index.html',
+  'parts-match.js',
+  'vin-ui.js',
+  'api/analyze.js',
+  'api/vehicles.js',
+  'api/products.js',
+  'api/articles.js',
+  'api/article-criteria.js',
+  'api/vin.js',
+  'api/price-compare.js',
+  'api/health.js',
+  'api/self-test.js',
+  'lib/market-config.js',
+  'lib/runtime-config.js',
+  'lib/i18n.js',
+  'sw.js',
+  'manifest.webmanifest'
+];
+
+const failures = [];
+const read = path => fs.readFileSync(path, 'utf8');
+
+for (const path of required) {
+  if (!fs.existsSync(path)) failures.push(`Missing required file: ${path}`);
+}
+
+if (!failures.length) {
+  const index = read('index.html');
+  const ids = [...index.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
+  const idCounts = new Map();
+  for (const id of ids) idCounts.set(id, (idCounts.get(id) || 0) + 1);
+  for (const [id, count] of idCounts) {
+    if (count > 1) failures.push(`Duplicate DOM id: ${id}`);
+  }
+
+  const refs = [...index.matchAll(/getElementById\(['"]([^'"]+)['"]\)/g)].map(m => m[1]);
+  for (const ref of new Set(refs)) {
+    if (!idCounts.has(ref)) failures.push(`Missing DOM element referenced by JS: ${ref}`);
+  }
+
+  const handlers = [...index.matchAll(/\bonclick="([A-Za-z_$][\w$]*)\s*\(/g)].map(m => m[1]);
+  for (const name of new Set(handlers)) {
+    const fn = new RegExp(`function\\s+${name}\\s*\\(`);
+    const variable = new RegExp(`(?:const|let|var)\\s+${name}\\s*=`);
+    if (!fn.test(index) && !variable.test(index)) failures.push(`Undefined onclick handler: ${name}`);
+  }
+
+  const analyze = read('api/analyze.js');
+  const matcher = read('parts-match.js');
+  if (/item\?\.category|item\.category/.test(analyze)) failures.push('Legacy category field remains in analyze API');
+  if (/item\?\.category|item\.category/.test(matcher)) failures.push('Legacy category field remains in parts matcher');
+
+  const allText = required.map(path => read(path)).join('\n');
+  if (/sk-[A-Za-z0-9_-]{10,}/.test(allText)) failures.push('Possible hard-coded OpenAI secret');
+  if (/x-apiprofile-key\s*:\s*['"][^'"]+['"]/.test(allText)) failures.push('Possible hard-coded catalog secret');
+
+  const apiContracts = {
+    'api/analyze.js': 'POST',
+    'api/price-compare.js': 'POST',
+    'api/vehicles.js': 'GET',
+    'api/products.js': 'GET',
+    'api/articles.js': 'GET',
+    'api/article-criteria.js': 'GET',
+    'api/vin.js': 'GET',
+    'api/health.js': 'GET',
+    'api/self-test.js': 'GET'
+  };
+  for (const [path, method] of Object.entries(apiContracts)) {
+    const text = read(path);
+    if (!text.includes(`res.setHeader('Allow', '${method}')`)) failures.push(`${path} missing Allow: ${method}`);
+    if (!text.includes("Cache-Control', 'no-store")) failures.push(`${path} missing no-store`);
+    if (!text.includes("X-Content-Type-Options', 'nosniff")) failures.push(`${path} missing nosniff`);
+  }
+
+  const runtime = read('lib/runtime-config.js');
+  if (!runtime.includes("engineVersion: 'mvp-2026-09'")) failures.push('Unexpected engine version');
+  if (!runtime.includes('maxUploadBytes')) failures.push('Runtime upload limit missing');
+
+  const sw = read('sw.js');
+  if (!sw.includes('/lib/i18n.js') || !sw.includes('/lib/runtime-config.js')) {
+    failures.push('PWA shell missing localization/runtime modules');
+  }
+
+  try {
+    JSON.parse(read('manifest.webmanifest'));
+  } catch {
+    failures.push('manifest.webmanifest is invalid JSON');
+  }
+}
+
+if (failures.length) {
+  console.error('Waffer static checks failed:');
+  for (const failure of failures) console.error('- ' + failure);
+  process.exit(1);
+}
+
+console.log('Waffer static checks passed.');
