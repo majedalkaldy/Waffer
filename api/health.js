@@ -28,10 +28,10 @@ export default async function handler(req, res) {
   if (configured.catalog) {
     try {
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 3500);
+      const timer = setTimeout(() => controller.abort(), RUNTIME_CONFIG.healthCatalogTimeoutMs);
       try {
         const response = await fetch(
-          'https://auto-parts-catalog.apiprofile.com/api/v2/manufacturers/list/type-id/1',
+          'https://auto-parts-catalog.apiprofile.com/api/v2/manufacturers/list/type-id/' + encodeURIComponent(marketConfig.catalog.typeId),
           {
             headers: {
               Accept: 'application/json',
