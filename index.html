@@ -24,7 +24,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 .alert{background:var(--redbg);border-radius:14px;padding:13px;margin:9px 0;color:#7d1e17}.lock{background:#f0f4f3;border-radius:14px;padding:14px;margin:12px 0}
 .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.top h2{margin:0}.pill{font-size:12px;padding:6px 9px;background:#e9f5f1;color:var(--g);border-radius:999px}
 .table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}table{width:100%;border-collapse:collapse;font-size:13px;min-width:650px}th,td{padding:10px 5px;border-bottom:1px solid var(--line);text-align:right}.note{font-size:12px;color:var(--muted);line-height:1.7}
-.nav{display:flex;gap:8px;margin-top:16px}.nav button{margin:0}.price{font-size:28px;font-weight:900;color:var(--g);text-align:center}.vehicle-info{background:#eaf6f1;border:1px solid #cde8dc;border-radius:13px;padding:12px;margin-top:12px;color:var(--g);font-size:13px;line-height:1.7}
+.nav{display:flex;gap:8px;margin-top:16px}.nav button{margin:0}.price{font-size:28px;font-weight:900;color:var(--g);text-align:center}.stage{font-size:13px;color:var(--muted);margin-top:10px;text-align:center}.stage strong{color:var(--g)}.vehicle-info{background:#eaf6f1;border:1px solid #cde8dc;border-radius:13px;padding:12px;margin-top:12px;color:var(--g);font-size:13px;line-height:1.7}
 </style>
 </head>
 <body><main class="app">
@@ -50,6 +50,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 
 <section id="loading" class="hidden">
  <div class="brand"><div class="logo">وفّر</div></div><h1>جارٍ تحليل عرضك</h1>
+ <div class="stage" id="loadingStage">المرحلة الحالية: <strong>قراءة عرض الصيانة</strong></div>
  <div class="card"><ul class="steps">
   <li><span class="check">✓</span> قراءة عرض السعر</li><li><span class="check">✓</span> استخراج القطع والأسعار</li>
   <li><span class="check">✓</span> فحص اكتمال المعلومات</li><li><span class="check">✓</span> البحث عن البنود المحتمل تداخلها</li>
@@ -108,6 +109,9 @@ async function start(){
  analyzeBtn.disabled=true;
  analyzeBtn.textContent='جارٍ التحليل...';
  show('loading');
+ const loadingStage=document.getElementById('loadingStage');
+ const setStage=text=>{if(loadingStage)loadingStage.innerHTML='المرحلة الحالية: <strong>'+esc(text)+'</strong>';};
+ setStage('قراءة بيانات السيارة والملف');
 
  try{
    if(vin){
@@ -117,13 +121,16 @@ async function start(){
      if(typeof window.ensureWafferVehicle!=='function'){
        throw new Error('وحدة التحقق من VIN لم يتم تحميلها');
      }
+     setStage('التحقق من رقم الهيكل VIN');
      const vehicleData=await window.ensureWafferVehicle();
      if(!vehicleData || !vehicleData.vehicleId){
        throw new Error('تعذر تحديد Vehicle ID من رقم الهيكل');
      }
    }
 
+   setStage('تجهيز عرض الصيانة');
    const fileData=await fileToDataURL(file);
+   setStage('تحليل البنود والأسعار بالذكاء الاصطناعي');
    const resp=await fetch('/api/analyze',{
      method:'POST',
      headers:{'Content-Type':'application/json'},
@@ -148,6 +155,7 @@ async function start(){
 
    analysis=d;
    window.analysis=d;
+   setStage('إعداد النتيجة');
    render();
    show('result');
 
