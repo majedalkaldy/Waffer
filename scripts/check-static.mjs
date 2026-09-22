@@ -179,6 +179,42 @@ if (!failures.length) {
   }
 
   try {
+    const { default: priceCompareHandler } = await import('../api/price-compare.js');
+    let statusCode = 200;
+    let body = null;
+    const headers = {};
+    const req = {
+      method: 'POST',
+      body: {
+        partName: 'brake pad',
+        partNumber: 'TEST-123',
+        workshopPrice: 300,
+        quantity: 1,
+        market: 'SA',
+        locale: 'en-SA',
+        currency: 'USD',
+        vehicle: { vin: '1HGCM82633A004352' }
+      }
+    };
+    const res = {
+      setHeader(name, value) { headers[name] = value; },
+      status(code) { statusCode = code; return this; },
+      json(value) { body = value; return value; }
+    };
+    await priceCompareHandler(req, res);
+    if (statusCode !== 200) failures.push('price-compare deterministic smoke test did not return 200');
+    if (body?.context?.currency !== 'SAR') failures.push('price-compare allowed client currency override');
+    if (body?.marketPrice?.min !== null || body?.marketPrice?.median !== null || body?.marketPrice?.max !== null) {
+      failures.push('price-compare fabricated market pricing without provider');
+    }
+    if (body?.saving?.amount !== null || body?.saving?.status !== 'NOT_CALCULATED') {
+      failures.push('price-compare calculated savings without trusted price source');
+    }
+  } catch (error) {
+    failures.push('Price comparison trust-boundary test failed: ' + error.message);
+  }
+
+  try {
     const { default: selfTestHandler } = await import('../api/self-test.js');
     let statusCode = 200;
     let body = null;
