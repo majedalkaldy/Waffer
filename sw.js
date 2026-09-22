@@ -1,5 +1,5 @@
-const CACHE_NAME = 'waffer-shell-v2';
-const SHELL = ['/', '/index.html', '/vin-ui.js', '/parts-match.js', '/manifest.webmanifest'];
+const CACHE_NAME = 'waffer-shell-v3';
+const SHELL = ['/', '/index.html', '/vin-ui.js', '/parts-match.js', '/manifest.webmanifest', '/lib/i18n.js'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
