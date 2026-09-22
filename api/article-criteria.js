@@ -1,3 +1,4 @@
+import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { getMarketConfig } from '../lib/market-config.js';
 
 export default async function handler(req, res) {
@@ -26,7 +27,7 @@ export default async function handler(req, res) {
       '/country-filter-id/' + encodeURIComponent(countryFilterId);
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 8000);
+    const timer = setTimeout(() => controller.abort(), RUNTIME_CONFIG.catalogCriteriaTimeoutMs);
     let response;
     try {
       response = await fetch(url, {
