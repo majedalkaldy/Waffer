@@ -9,6 +9,7 @@ export default async function handler(req, res) {
     if (!apiKey) return res.status(500).json({ error: 'AUTOPARTS_API_KEY is not configured' });
 
     const config = getMarketConfig(req.query);
+    if (!config.supported) return res.status(400).json({ error: 'Unsupported market', code: 'UNSUPPORTED_MARKET', requestedMarket: config.requestedMarket });
     const market = config.market;
     const langId = config.catalog.langId;
     const countryFilterId = config.catalog.countryFilterId;
