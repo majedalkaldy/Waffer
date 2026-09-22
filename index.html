@@ -192,7 +192,12 @@ async function start(){
    try{d=await resp.json();}catch(parseError){
      throw new Error('استجابة التحليل غير صالحة. حاول مرة أخرى.');
    }
-   if(!resp.ok)throw new Error(d.error||d.message||'تعذر التحليل');
+   if(!resp.ok){
+     if(d?.code==='ANALYSIS_TIMEOUT'){
+       throw new Error(window.wafferLocale?.startsWith('en')?'The analysis service timed out. Try again.':(d.error||'انتهت مهلة خدمة التحليل. حاول مرة أخرى.'));
+     }
+     throw new Error(d.error||d.message||'تعذر التحليل');
+   }
    if(!d || typeof d!=='object' || !Array.isArray(d.items)){
      throw new Error('لم تُرجع خدمة التحليل نتيجة مكتملة.');
    }
