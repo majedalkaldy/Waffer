@@ -125,6 +125,81 @@ function show(id){
  }
 }
 function fileToDataURL(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)})}
+
+function dataUrlBytes(dataUrl){
+ const base64=String(dataUrl||'').split(',')[1]||'';
+ return Math.floor(base64.length*3/4);
+}
+
+async function imageFileToCompressedPayload(file){
+ const limit=window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024;
+ const sourceUrl=URL.createObjectURL(file);
+ try{
+   const image=await new Promise((resolve,reject)=>{
+     const img=new Image();
+     img.onload=()=>resolve(img);
+     img.onerror=()=>reject(new Error(window.wafferLocale?.startsWith('en')?'Could not read the selected image.':'تعذر قراءة الصورة المختارة.'));
+     img.src=sourceUrl;
+   });
+
+   const maxDimension=2200;
+   const scale=Math.min(1,maxDimension/Math.max(image.naturalWidth||image.width,image.naturalHeight||image.height));
+   const width=Math.max(1,Math.round((image.naturalWidth||image.width)*scale));
+   const height=Math.max(1,Math.round((image.naturalHeight||image.height)*scale));
+
+   const canvas=document.createElement('canvas');
+   canvas.width=width;
+   canvas.height=height;
+   const ctx=canvas.getContext('2d',{alpha:false});
+   if(!ctx)throw new Error('Canvas unavailable');
+   ctx.fillStyle='#fff';
+   ctx.fillRect(0,0,width,height);
+   ctx.drawImage(image,0,0,width,height);
+
+   const qualities=[0.88,0.78,0.68,0.58,0.48];
+   let best=null;
+   for(const quality of qualities){
+     const dataUrl=canvas.toDataURL('image/jpeg',quality);
+     best=dataUrl;
+     if(dataUrlBytes(dataUrl)<=limit)break;
+   }
+
+   if(!best || dataUrlBytes(best)>limit){
+     throw new Error(window.wafferLocale?.startsWith('en')?'The image is still too large after optimization. Try a smaller image.':'ما زال حجم الصورة كبيرًا بعد التحسين. جرّب صورة أصغر.');
+   }
+
+   const baseName=(file.name||'estimate').replace(/\.[^.]+$/,'').slice(0,80);
+   return {
+     fileData:best,
+     fileName:baseName+'.jpg',
+     mimeType:'image/jpeg',
+     optimized:true,
+     originalBytes:file.size,
+     uploadBytes:dataUrlBytes(best)
+   };
+ }finally{
+   URL.revokeObjectURL(sourceUrl);
+ }
+}
+
+async function prepareUploadPayload(file){
+ const limit=window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024;
+ if(file.type==='application/pdf'){
+   if(file.size>limit){
+     throw new Error(window.wafferLocale?.startsWith('en')?'The PDF is larger than 4 MB. Reduce its size and try again.':'حجم ملف PDF أكبر من 4MB. صغّر الملف ثم حاول مجددًا.');
+   }
+   return {fileData:await fileToDataURL(file),fileName:file.name,mimeType:file.type,optimized:false,originalBytes:file.size,uploadBytes:file.size};
+ }
+
+ if(file.type?.startsWith('image/')){
+   if(file.size<=limit){
+     return {fileData:await fileToDataURL(file),fileName:file.name,mimeType:file.type,optimized:false,originalBytes:file.size,uploadBytes:file.size};
+   }
+   return imageFileToCompressedPayload(file);
+ }
+
+ throw new Error(window.wafferLocale?.startsWith('en')?'Unsupported file type.':'نوع الملف غير مدعوم.');
+}
 async function start(){
  if(!navigator.onLine){alert(window.wafferLocale?.startsWith('en')?'There is no internet connection.':'لا يوجد اتصال بالإنترنت حاليًا.');return;}
  const analyzeBtn=document.getElementById('analyzeBtn');
@@ -132,7 +207,7 @@ async function start(){
  const file=document.getElementById('file').files[0];
  const en=window.wafferLocale?.startsWith('en');
  if(!file){alert(en?'Select an image or PDF first.':'اختر صورة أو PDF أولًا');return}
- if(file.size>(window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024)){alert(en?'The current limit is 4 MB. Reduce the file size and try again.':'الحد الحالي 4MB. صغّر الملف ثم حاول مجددًا.');return}
+ if(file.type==='application/pdf' && file.size>(window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024)){alert(en?'The PDF limit is 4 MB. Reduce the file size and try again.':'حد PDF الحالي 4MB. صغّر الملف ثم حاول مجددًا.');return}
 
  const vin=String(document.getElementById('vin').value||'').trim().toUpperCase();
  const year=String(document.getElementById('year').value||'').trim();
@@ -169,16 +244,20 @@ async function start(){
      }
    }
 
-   setStage('تجهيز عرض الصيانة');
-   const fileData=await fileToDataURL(file);
-   setStage('تحليل البنود والأسعار بالذكاء الاصطناعي');
+   setStage(en?'Preparing the estimate':'تجهيز عرض الصيانة');
+   const upload=await prepareUploadPayload(file);
+   if(upload.optimized){
+     const mb=(upload.uploadBytes/1024/1024).toFixed(2);
+     setStage(en?'Image optimized to '+mb+' MB':'تم تحسين الصورة إلى '+mb+' MB');
+   }
+   setStage(en?'Analyzing line items and prices with AI':'تحليل البنود والأسعار بالذكاء الاصطناعي');
    const resp=await fetch('/api/analyze',{
      method:'POST',
      headers:{'Content-Type':'application/json'},
      body:JSON.stringify({
-       fileData,
-       fileName:file.name,
-       mimeType:file.type,
+       fileData:upload.fileData,
+       fileName:upload.fileName,
+       mimeType:upload.mimeType,
        vehicle:{
          make:document.getElementById('make').value,
          model:document.getElementById('model').value,
@@ -634,14 +713,18 @@ fileInput.addEventListener('change',e=>{
    alert(window.wafferLocale?.startsWith('en')?'Unsupported file type. Use JPG, PNG, WEBP, or PDF.':'نوع الملف غير مدعوم. استخدم JPG أو PNG أو WEBP أو PDF.');
    return;
  }
- if(f.size>(window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024)){
+ if(f.type==='application/pdf' && f.size>(window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024)){
    fileInput.value='';
    text.textContent=window.wafferLocale?.startsWith('en')?'Upload an estimate image or PDF':'ارفع صورة العرض أو ملف PDF';
    updateFormHint();
-   alert(window.wafferLocale?.startsWith('en')?'The file is larger than 4 MB. Reduce its size and try again.':'حجم الملف أكبر من 4MB. صغّر الملف ثم حاول مجددًا.');
+   alert(window.wafferLocale?.startsWith('en')?'The PDF is larger than 4 MB. Reduce its size and try again.':'حجم ملف PDF أكبر من 4MB. صغّر الملف ثم حاول مجددًا.');
    return;
  }
- text.textContent='تم اختيار: '+f.name+' — '+(f.size/1024/1024).toFixed(2)+' MB';
+ const sizeText=(f.size/1024/1024).toFixed(2)+' MB';
+ const willOptimize=f.type?.startsWith('image/')&&f.size>(window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024);
+ text.textContent=window.wafferLocale?.startsWith('en')
+   ? 'Selected: '+f.name+' — '+sizeText+(willOptimize?' • will optimize automatically':'')
+   : 'تم اختيار: '+f.name+' — '+sizeText+(willOptimize?' • سيتم تحسين الصورة تلقائيًا':'');
  updateFormHint();
 });
 function updateFormHint(){
