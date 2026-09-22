@@ -1,0 +1,65 @@
+name: Waffer field-test issue
+description: Report a reproducible issue found during MVP field testing
+title: "[Field Test] "
+labels: ["field-test"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        لا ترفق VIN كاملًا أو مستند الصيانة إذا لم يكن ذلك ضروريًا. يفضّل إرفاق تقرير JSON من وضع ?debug=1.
+
+  - type: dropdown
+    id: scenario
+    attributes:
+      label: السيناريو
+      options:
+        - صورة بدون VIN
+        - صورة مع VIN
+        - PDF
+        - صورة كبيرة تم تحسينها
+        - مطابقة كتالوج
+        - Front / Rear
+        - إجمالي/ضريبة/أجور
+        - العربية/الإنجليزية
+        - PWA / الجوال
+        - أخرى
+    validations:
+      required: true
+
+  - type: input
+    id: analysis_id
+    attributes:
+      label: Analysis ID
+      placeholder: "مثال: UUID من نتيجة debug"
+
+  - type: input
+    id: engine_version
+    attributes:
+      label: Engine version
+      placeholder: "mvp-2026-09"
+
+  - type: input
+    id: commit
+    attributes:
+      label: Published commit
+      placeholder: "8 أحرف من /api/health"
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: المتوقع
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: ما حدث فعليًا
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: ملاحظات إضافية
+      description: اذكر نوع الملف، هل استُخدم VIN، وزمن الكتالوج إن كان مهمًا.
