@@ -20,6 +20,7 @@ const required = [
   'lib/market-config.js',
   'lib/runtime-config.js',
   'lib/analysis-normalizer.js',
+  'lib/upload-validation.js',
   'lib/i18n.js',
   'sw.js',
   'manifest.webmanifest',
@@ -184,6 +185,42 @@ if (!failures.length) {
     if (unsupported.supported !== false) failures.push('Unsupported market fallback is not explicit');
   } catch (error) {
     failures.push('Runtime/market semantic checks failed: ' + error.message);
+  }
+
+  try {
+    const { validateBase64Upload, detectUploadMime } = await import('../lib/upload-validation.js');
+    const pdf = Buffer.from('%PDF-1.7\n');
+    const jpg = Buffer.from([0xff,0xd8,0xff,0xe0,0x00,0x10]);
+    const png = Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a,0x00]);
+    const webp = Buffer.concat([Buffer.from('RIFF'),Buffer.from([0,0,0,0]),Buffer.from('WEBP'),Buffer.from([0])]);
+
+    if (detectUploadMime(pdf) !== 'application/pdf') failures.push('PDF signature detection failed');
+    if (detectUploadMime(jpg) !== 'image/jpeg') failures.push('JPEG signature detection failed');
+    if (detectUploadMime(png) !== 'image/png') failures.push('PNG signature detection failed');
+    if (detectUploadMime(webp) !== 'image/webp') failures.push('WEBP signature detection failed');
+
+    const validPdf = validateBase64Upload({
+      base64: pdf.toString('base64'),
+      claimedMimeType: 'application/pdf',
+      maxBytes: 1000
+    });
+    if (!validPdf.ok) failures.push('Valid PDF upload rejected');
+
+    const mismatch = validateBase64Upload({
+      base64: jpg.toString('base64'),
+      claimedMimeType: 'image/png',
+      maxBytes: 1000
+    });
+    if (mismatch.code !== 'MIME_SIGNATURE_MISMATCH') failures.push('MIME/signature mismatch was not rejected');
+
+    const tooLarge = validateBase64Upload({
+      base64: Buffer.alloc(101, 1).toString('base64'),
+      claimedMimeType: 'image/jpeg',
+      maxBytes: 100
+    });
+    if (tooLarge.code !== 'FILE_TOO_LARGE') failures.push('Oversized upload was not rejected before signature validation');
+  } catch (error) {
+    failures.push('Upload validation tests failed: ' + error.message);
   }
 
   try {
