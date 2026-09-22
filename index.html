@@ -49,7 +49,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
   <label id="yearLabel">سنة الصنع</label><input id="year" type="number" value="2013" inputmode="numeric">
   <label><span id="vinLabel">رقم الهيكل VIN</span> <span style="font-weight:normal;color:#6b7773">(اختياري)</span></label><input id="vin" placeholder="يرفع دقة مطابقة القطع" dir="ltr" maxlength="17" autocomplete="off">
   <div id="vehicleInfo" class="vehicle-info hidden"></div>
-  <button id="analyzeBtn" onclick="start()">حلّل عرضي مجانًا ✨</button>
+  <button id="analyzeBtn" onclick="start()">حلّل عرضي مجانًا ✨</button><div id="formHint" class="note" style="text-align:center;margin-top:8px"></div>
   <div class="privacy" id="privacyText">🔒 يُرسل الملف للتحليل عبر الخادم ولا يظهر مفتاح API للزائر. لا يحفظ «وفّر» العرض في قاعدة بيانات في هذه النسخة.</div>
  </div>
 </section>
@@ -423,7 +423,25 @@ fileInput.addEventListener('change',e=>{
    return;
  }
  text.textContent='تم اختيار: '+f.name+' — '+(f.size/1024/1024).toFixed(2)+' MB';
+ updateFormHint();
 });
+function updateFormHint(){
+ const hint=document.getElementById('formHint');
+ if(!hint)return;
+ const file=document.getElementById('file')?.files?.[0];
+ const vin=String(document.getElementById('vin')?.value||'').trim();
+ const en=window.wafferLocale?.startsWith('en');
+ if(!file){
+   hint.textContent=en?'Select an estimate file to begin.':'اختر ملف عرض الصيانة للبدء.';
+ }else if(vin && vin.length!==17){
+   hint.textContent=en?'VIN is optional, but if entered it must contain 17 characters.':'رقم VIN اختياري، وإذا أُدخل فيجب أن يتكون من 17 خانة.';
+ }else{
+   hint.textContent=en?'Ready to analyze.':'جاهز للتحليل.';
+ }
+}
+document.getElementById('vin').addEventListener('input',updateFormHint);
+document.getElementById('year').addEventListener('input',updateFormHint);
+
 function updateNetworkStatus(){
  const box=document.getElementById('offlineStatus');
  if(!box)return;
@@ -631,6 +649,7 @@ function applyLocale(locale){
  if(!window.wafferPartMatches)document.getElementById('priceReadiness').textContent=t(locale,'priceWaiting');
  document.getElementById('workshopFollowupBtn').textContent=t(locale,'workshopFollowup');
  window.wafferLocale=locale;
+ updateFormHint();
 }
 const savedLocale=localStorage.getItem('waffer-locale');
 if(savedLocale && Array.from(localeSelect.options).some(o=>o.value===savedLocale))localeSelect.value=savedLocale;
