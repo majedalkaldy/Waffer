@@ -36,6 +36,13 @@ export default async function handler(req, res) {
     const market = marketConfig.market;
     const locale = marketConfig.locale;
     const currency = marketConfig.currency;
+    if (!marketConfig.supported) {
+      return res.status(400).json({
+        error: 'السوق المطلوب غير مدعوم حاليًا.',
+        code: 'UNSUPPORTED_MARKET',
+        requestedMarket: marketConfig.requestedMarket
+      });
+    }
 
     const safeVehicle = {
       make: String(vehicle.make || 'غير محدد').replace(/[\r\n]/g, ' ').slice(0, 120),
