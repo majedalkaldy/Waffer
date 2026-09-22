@@ -4,6 +4,7 @@ export default async function handler(req, res) {
 
   try {
     const { fileData, fileName, mimeType, vehicle = {} } = req.body || {};
+    res.setHeader('Cache-Control', 'no-store');
     if (!fileData || !mimeType) return res.status(400).json({ error: 'لم يتم استلام الملف.' });
 
     const allowedMimeTypes = new Set([
@@ -54,6 +55,10 @@ export default async function handler(req, res) {
       const uj = await up.json();
       if (!up.ok) throw new Error(uj?.error?.message || 'تعذر رفع PDF إلى خدمة التحليل');
       attachment = { type: 'input_file', file_id: uj.id };
+
+      // Best-effort cleanup is performed after analysis so uploaded PDFs are not retained unnecessarily.
+      res.locals = res.locals || {};
+      res.locals.openaiFileId = uj.id;
     } else if (mimeType.startsWith('image/')) {
       attachment = { type: 'input_image', image_url: `data:${mimeType};base64,${base64}` };
     } else return res.status(415).json({ error: 'نوع الملف غير مدعوم.' });
@@ -98,8 +103,21 @@ export default async function handler(req, res) {
       items: Array.isArray(result.items) ? result.items.slice(0, 50) : []
     };
 
+    if (res.locals?.openaiFileId) {
+      fetch('https://api.openai.com/v1/files/' + encodeURIComponent(res.locals.openaiFileId), {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` }
+      }).catch(error => console.error('PDF cleanup error:', error));
+    }
+
     return res.status(200).json(normalized);
   } catch (e) {
+    if (res.locals?.openaiFileId) {
+      fetch('https://api.openai.com/v1/files/' + encodeURIComponent(res.locals.openaiFileId), {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` }
+      }).catch(error => console.error('PDF cleanup error:', error));
+    }
     console.error('Waffer analyze error:', e);
     if (e?.name === 'AbortError') {
       return res.status(504).json({ error: 'استغرق التحليل وقتًا أطول من المتوقع. حاول مرة أخرى.', code: 'ANALYSIS_TIMEOUT' });
