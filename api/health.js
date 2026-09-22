@@ -2,6 +2,8 @@ import { getMarketConfig } from '../lib/market-config.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ ok: false, error: 'Method not allowed' });
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Cache-Control', 'no-store');
 
   const marketConfig = getMarketConfig(req.query || {});
   if (!marketConfig.supported) {
