@@ -308,66 +308,92 @@
     return '&market=' + encodeURIComponent(catalogContext.market);
   }
 
-  async function loadProducts(vehicleId) {
-    const response = await fetch(
-      '/api/products?vehicleId=' +
-      encodeURIComponent(vehicleId) +
-      catalogQuery()
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data?.error ||
-        data?.message ||
-        'تعذر تحميل كتالوج القطع'
-      );
-    }
-
-    return Array.isArray(data.products)
-      ? data.products
-      : [];
+  function abortError(message = 'Operation cancelled') {
+    const error = new Error(message);
+    error.name = 'AbortError';
+    return error;
   }
 
-  async function loadArticles(vehicleId, productId) {
+  function throwIfAborted(signal) {
+    if (signal?.aborted) throw abortError();
+  }
+
+  async function fetchCatalogJson(url, { signal, timeoutMs }) {
+    throwIfAborted(signal);
+    const controller = new AbortController();
+    let timedOut = false;
+    const abortFromParent = () => controller.abort();
+
+    if (signal) signal.addEventListener('abort', abortFromParent, { once: true });
+    const timer = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, timeoutMs);
+
     try {
-      const response = await fetch(
+      const response = await fetch(url, { signal: controller.signal });
+      const data = await response.json();
+      if (!response.ok) {
+        const error = new Error(data?.error || data?.message || 'Catalog request failed');
+        error.code = 'CATALOG_UPSTREAM_ERROR';
+        throw error;
+      }
+      return data;
+    } catch (error) {
+      if (signal?.aborted) throw abortError();
+      if (controller.signal.aborted && timedOut) {
+        const timeoutError = new Error('Catalog request timed out');
+        timeoutError.code = 'CATALOG_TIMEOUT';
+        throw timeoutError;
+      }
+      throw error;
+    } finally {
+      clearTimeout(timer);
+      if (signal) signal.removeEventListener('abort', abortFromParent);
+    }
+  }
+
+  async function loadProducts(vehicleId, signal) {
+    const data = await fetchCatalogJson(
+      '/api/products?vehicleId=' +
+      encodeURIComponent(vehicleId) +
+      catalogQuery(),
+      { signal, timeoutMs: runtimeValue('catalogProductsTimeoutMs', 12000) }
+    );
+
+    return Array.isArray(data.products) ? data.products : [];
+  }
+
+  async function loadArticles(vehicleId, productId, signal) {
+    try {
+      const data = await fetchCatalogJson(
         '/api/articles?vehicleId=' +
         encodeURIComponent(vehicleId) +
         '&productId=' +
         encodeURIComponent(productId) +
-        catalogQuery()
+        catalogQuery(),
+        { signal, timeoutMs: runtimeValue('catalogArticlesTimeoutMs', 9000) }
       );
-
-      const data = await response.json();
-
-      if (!response.ok) return [];
-
-      return Array.isArray(data.articles)
-        ? data.articles
-        : [];
-
+      return Array.isArray(data.articles) ? data.articles : [];
     } catch (error) {
-      console.error(
-        'Article lookup error:',
-        error
-      );
-
+      if (error?.name === 'AbortError') throw error;
+      console.error('Article lookup error:', error);
       return [];
     }
   }
 
-  async function loadArticleCriteria(articleId) {
+  async function loadArticleCriteria(articleId, signal) {
     if (!articleId) return [];
     try {
-      const response = await fetch('/api/article-criteria?articleId=' + encodeURIComponent(articleId) + catalogQuery());
-      if (!response.ok) return [];
-      const data = await response.json();
+      const data = await fetchCatalogJson(
+        '/api/article-criteria?articleId=' + encodeURIComponent(articleId) + catalogQuery(),
+        { signal, timeoutMs: Math.min(runtimeValue('catalogCriteriaTimeoutMs', 8000), 4500) }
+      );
       if (Array.isArray(data.criteria)) return data.criteria;
       if (Array.isArray(data.criteria?.array)) return data.criteria.array;
       return [];
     } catch (error) {
+      if (error?.name === 'AbortError') throw error;
       console.error('Article criteria error:', articleId, error);
       return [];
     }
@@ -384,22 +410,23 @@
     return null;
   }
 
-  async function filterByAxle(articles, requestedAxle) {
+  async function filterByAxle(articles, requestedAxle, signal) {
+    throwIfAborted(signal);
     if (!requestedAxle || !Array.isArray(articles) || !articles.length) {
       return { articles: Array.isArray(articles) ? articles.slice(0,20) : [], checked: 0, verified: 0 };
     }
     // Limit and parallelize criteria checks to keep the UI responsive.
     const candidates = articles.slice(0, 10);
     const checked = await Promise.all(candidates.map(async article => {
+      throwIfAborted(signal);
       const articleId = article.articleId || article.id;
       if (!articleId) return { article, axle: null };
-      const criteria = await Promise.race([
-        loadArticleCriteria(articleId),
-        new Promise(resolve => setTimeout(() => resolve([]), Math.min(runtimeValue('catalogCriteriaTimeoutMs', 8000), 4500)))
-      ]);
+      const criteria = await loadArticleCriteria(articleId, signal);
+      throwIfAborted(signal);
       const axle = criteriaAxle(criteria);
       return { article, axle };
     }));
+    throwIfAborted(signal);
     const verified = checked
       .filter(x => x.axle === requestedAxle)
       .map(x => ({ ...x.article, fittingPosition: x.axle === 'front' ? 'Front Axle' : 'Rear Axle', axleVerified: true }));
@@ -437,16 +464,19 @@
 
     // Prefer supplier diversity so the user sees useful alternatives, not duplicates.
     const diverse = [];
+    const selectedKeys = new Set();
     for (const article of unique) {
       const supplier = norm(supplierName(article));
       if (supplier && suppliers.has(supplier)) continue;
       if (supplier) suppliers.add(supplier);
+      selectedKeys.add(articleKey(article));
       diverse.push({ ...article, qualityLabel: qualityLabel(article) });
       if (diverse.length >= limit) return diverse;
     }
 
     for (const article of unique) {
-      if (diverse.includes(article)) continue;
+      if (selectedKeys.has(articleKey(article))) continue;
+      selectedKeys.add(articleKey(article));
       diverse.push({ ...article, qualityLabel: qualityLabel(article) });
       if (diverse.length >= limit) break;
     }
