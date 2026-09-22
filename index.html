@@ -47,7 +47,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
   <input id="file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.jpg,.jpeg,.png,.webp,.pdf" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
  </div>
  <div class="card">
-  <div class="grid"><div><label id="makeLabel">الشركة</label><select id="make"><option>Ford — فورد</option><option>Toyota — تويوتا</option><option>أخرى</option></select></div>
+  <div class="grid"><div><label id="makeLabel">الشركة</label><select id="make" disabled><option value="">جارٍ تحميل الشركات...</option></select><button id="retryMakes" class="secondary hidden" type="button" style="margin-top:8px;padding:10px;font-size:14px;min-height:40px">إعادة تحميل الشركات</button></div>
   <div><label id="modelLabel">الموديل</label><input id="model" value="Expedition" dir="ltr"></div></div>
   <label id="yearLabel">سنة الصنع</label><input id="year" type="number" value="2013" inputmode="numeric">
   <label><span id="vinLabel">رقم الهيكل VIN</span> <span style="font-weight:normal;color:#6b7773">(اختياري)</span></label><input id="vin" placeholder="يرفع دقة مطابقة القطع" dir="ltr" maxlength="17" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="formHint">
@@ -962,17 +962,88 @@ if('serviceWorker' in navigator){
  });
 }
 
-fetch('/api/vehicles').then(r=>{if(!r.ok)throw new Error('API '+r.status);return r.json()}).then(d=>{
+let manufacturersRun=0;
+let manufacturersController=null;
+function makeLoaderText(key){
+ const en=window.wafferLocale?.startsWith('en');
+ const values={
+   loading:en?'Loading makes...':'جارٍ تحميل الشركات...',
+   choose:en?'Choose make':'اختر الشركة',
+   failed:en?'Could not load makes':'تعذر تحميل الشركات',
+   retry:en?'Reload makes':'إعادة تحميل الشركات'
+ };
+ return values[key]||key;
+}
+async function loadManufacturers(){
  const m=document.getElementById('make');
- const previous=m.value;
- m.innerHTML='<option value="">اختر الشركة</option>';
- (d.manufacturers||[]).forEach(x=>m.add(new Option(x.manufacturerName,x.manufacturerId)));
- if(previous && Array.from(m.options).some(o=>o.value===previous))m.value=previous;
-}).catch(e=>{
- console.error('Manufacturers load error:',e);
- const m=document.getElementById('make');
- if(m.options.length<=1)m.innerHTML='<option value="">تعذر تحميل الشركات</option>';
-});
+ const retry=document.getElementById('retryMakes');
+ const run=++manufacturersRun;
+ manufacturersController?.abort();
+ const controller=new AbortController();
+ manufacturersController=controller;
+ const timer=setTimeout(
+   ()=>controller.abort(),
+   window.WAFFER_RUNTIME?.clientManufacturersTimeoutMs||12000
+ );
+ const initialValue=m.value;
+ const initialLabel=m.selectedOptions?.[0]?.textContent||'';
+ retry.classList.add('hidden');
+ retry.textContent=makeLoaderText('retry');
+ if(!initialValue){
+   m.replaceChildren(new Option(makeLoaderText('loading'),''));
+   m.disabled=true;
+ }
+ try{
+   let r,d;
+   try{
+     r=await fetch('/api/vehicles',{cache:'no-store',signal:controller.signal});
+     d=await r.json();
+   }finally{
+     clearTimeout(timer);
+   }
+   if(run!==manufacturersRun)return;
+   if(!r.ok)throw new Error(d?.error||('API '+r.status));
+   const manufacturers=Array.isArray(d?.manufacturers)?d.manufacturers:[];
+   if(!manufacturers.length)throw new Error('No manufacturers returned');
+
+   const currentValue=m.value||initialValue;
+   const currentLabel=m.selectedOptions?.[0]?.textContent||initialLabel;
+   m.replaceChildren(new Option(makeLoaderText('choose'),''));
+   manufacturers.forEach(x=>{
+     if(x?.manufacturerId!=null && x?.manufacturerName){
+       m.add(new Option(String(x.manufacturerName),String(x.manufacturerId)));
+     }
+   });
+   if(currentValue){
+     if(!Array.from(m.options).some(o=>o.value===String(currentValue)) && currentLabel){
+       m.add(new Option(currentLabel,String(currentValue)));
+     }
+     m.value=String(currentValue);
+   }
+   m.disabled=false;
+ }catch(e){
+   if(run!==manufacturersRun)return;
+   if(e?.name!=='AbortError')console.error('Manufacturers load error:',e);
+   const currentValue=m.value||initialValue;
+   const currentLabel=m.selectedOptions?.[0]?.textContent||initialLabel;
+   m.disabled=false;
+   if(currentValue){
+     if(!Array.from(m.options).some(o=>o.value===String(currentValue))){
+       m.add(new Option(currentLabel||String(currentValue),String(currentValue)));
+     }
+     m.value=String(currentValue);
+   }else{
+     m.replaceChildren(new Option(makeLoaderText('failed'),''));
+   }
+   retry.textContent=makeLoaderText('retry');
+   retry.classList.remove('hidden');
+ }finally{
+   clearTimeout(timer);
+   if(manufacturersController===controller)manufacturersController=null;
+ }
+}
+document.getElementById('retryMakes').addEventListener('click',()=>{void loadManufacturers();});
+void loadManufacturers();
 window.addEventListener('wafferPartsMatched', function(event){
  if(event.detail?.wafferRunId!=null && event.detail.wafferRunId!==window.wafferAnalysisRunId)return;
  if(!analysis)return;
@@ -1073,6 +1144,17 @@ function applyLocale(locale){
  document.getElementById('heroLead').textContent=t(locale,'heroLead');
  if(!document.getElementById('file').files[0])document.getElementById('fileText').textContent=t(locale,'upload');
  document.getElementById('makeLabel').textContent=t(locale,'make');
+ const makeSelect=document.getElementById('make');
+ const retryMakes=document.getElementById('retryMakes');
+ if(retryMakes)retryMakes.textContent=isAr?'إعادة تحميل الشركات':'Reload makes';
+ if(makeSelect?.options?.[0]?.value===''){
+   const failed=retryMakes && !retryMakes.classList.contains('hidden') && makeSelect.options.length===1;
+   makeSelect.options[0].textContent=makeSelect.disabled
+     ? (isAr?'جارٍ تحميل الشركات...':'Loading makes...')
+     : failed
+       ? (isAr?'تعذر تحميل الشركات':'Could not load makes')
+       : (isAr?'اختر الشركة':'Choose make');
+ }
  document.getElementById('modelLabel').textContent=t(locale,'model');
  document.getElementById('yearLabel').textContent=t(locale,'year');
  document.getElementById('vinLabel').textContent=t(locale,'vin');
