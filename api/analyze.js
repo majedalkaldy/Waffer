@@ -117,6 +117,11 @@ export default async function handler(req, res) {
 
     const normalized = {
       ...result,
+      engineContext: {
+        market,
+        locale,
+        currency
+      },
       transparency: clamp(result.transparency),
       identityConfidence: clamp(result.identityConfidence),
       compatibilityConfidence: clamp(result.compatibilityConfidence),
