@@ -378,6 +378,12 @@ async function checkSystemHealth(){
 }
 checkSystemHealth();
 
+if('serviceWorker' in navigator){
+ window.addEventListener('load',()=>{
+   navigator.serviceWorker.register('/sw.js').catch(e=>console.error('Service worker registration failed:',e));
+ });
+}
+
 fetch('/api/vehicles').then(r=>{if(!r.ok)throw new Error('API '+r.status);return r.json()}).then(d=>{
  const m=document.getElementById('make');
  const previous=m.value;
