@@ -74,7 +74,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
  <div class="card score"><span id="compatibilityLabel">ثقة التوافق</span><b id="rCompatibility">—</b><small>إمكان التحقق للسيارة المحددة</small></div>
  <div class="card score"><span id="priceConfidenceLabel">ثقة المقارنة السعرية</span><b id="rPrice">—</b><small>قابلية المقارنة دون تخمين</small></div></div>
  <div class="card"><h3 id="overallLabel">درجة الثقة الكلية</h3><div class="total"><b id="rOverall">—</b><small>تعكس قوة الأدلة المتاحة، وليست تقييمًا للورشة</small></div><div id="confidenceBreakdown" class="note" style="margin-top:10px"></div></div>
- <div class="card"><h3 id="findingsLabel">أبرز ما وجدناه</h3><div id="rConfidenceNote" class="note" style="margin-bottom:10px">درجات الثقة تقيس قوة الأدلة المتاحة وليست تقييمًا لجودة الورشة.</div><div id="rWarningsSummary" class="lock"></div><div id="rTestMeta" class="note" style="margin:8px 0"></div><div id="rVerificationSummary" class="lock"></div><div id="rDocQuality" class="lock"></div><div id="rCatalogCoverage" class="lock">🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.</div><div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
+ <div class="card"><h3 id="findingsLabel">أبرز ما وجدناه</h3><div id="rConfidenceNote" class="note" style="margin-bottom:10px">درجات الثقة تقيس قوة الأدلة المتاحة وليست تقييمًا لجودة الورشة.</div><div id="rWarningsSummary" class="lock"></div><div id="rTestMeta" class="note" style="margin:8px 0"></div><div id="rVerificationSummary" class="lock"></div><div id="rMvpGate" class="lock"></div><div id="rDocQuality" class="lock"></div><div id="rCatalogCoverage" class="lock">🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.</div><div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
   <div class="lock">🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون مطابقة القطعة ومصدر سعر موثوق.</div>
   <div id="catalogSummary" class="lock" role="status" aria-live="polite">🔎 حالة مطابقة الكتالوج: بانتظار التحليل.</div>
   <button id="detailsBtn" onclick="advanced()">عرض تفاصيل البنود</button><button id="workshopBtn" class="secondary" onclick="messageWorkshop()">أنشئ رسالة للورشة</button>
@@ -252,6 +252,22 @@ function render(){
    warningsSummary.textContent=total
      ? '⚠️ نقاط تحتاج انتباهًا قبل الموافقة: '+total+' ('+missing+' بيانات ناقصة، '+conflicts+' نقاط تحقق).'
      : '✓ لم يستخرج النظام نقاط نقص أو تعارض رئيسية من المستند.';
+ }
+ const mvpGate=document.getElementById('rMvpGate');
+ if(mvpGate){
+   const items=Array.isArray(analysis.items)?analysis.items:[];
+   const hasItems=items.length>0;
+   const overall=Number(analysis.overallConfidence)||0;
+   const docNamed=items.filter(i=>String(i.name||'').trim()).length;
+   const extractionOk=hasItems && docNamed/items.length>=0.7;
+   const en=window.wafferLocale?.startsWith('en');
+   const checks=[
+     [hasItems,en?'line items extracted':'تم استخراج بنود'],
+     [extractionOk,en?'document extraction usable':'استخراج المستند قابل للاستخدام'],
+     [overall>0,en?'confidence calculated':'تم حساب الثقة']
+   ];
+   const passed=checks.filter(x=>x[0]).length;
+   mvpGate.textContent=(en?'MVP analysis checks: ':'فحوصات تحليل MVP: ')+passed+'/'+checks.length+' • '+checks.map(x=>(x[0]?'✓ ':'✗ ')+x[1]).join(' • ');
  }
  const verificationSummary=document.getElementById('rVerificationSummary');
  if(verificationSummary){
