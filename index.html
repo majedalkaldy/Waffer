@@ -35,7 +35,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 <body><main class="app" id="appRoot">
 <section id="home">
  <div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:8px"><span id="marketLabel" class="note">السوق التجريبي الحالي: السعودية • العربية • SAR</span><select id="localeSelect" aria-label="اللغة / Language" style="width:auto;margin:0;padding:7px 9px;font-size:13px"><option value="ar-SA">العربية</option><option value="en-SA">English</option></select></div>
- <div id="systemStatus" class="note" style="text-align:center;margin-bottom:8px">جارٍ التحقق من جاهزية الخدمة...</div>
+ <div id="systemStatus" class="note" role="status" aria-live="polite" style="text-align:center;margin-bottom:8px">جارٍ التحقق من جاهزية الخدمة...</div>
  <div id="offlineStatus" class="alert hidden" style="text-align:center">لا يوجد اتصال بالإنترنت. يلزم الاتصال لتحليل العرض والتحقق من الكتالوج.</div>
  <div class="brand"><div class="logo">وفّر</div><div class="tag">افحص عرض صيانة سيارتك قبل أن تدفع</div></div>
  <button id="installBtn" class="secondary hidden" type="button" style="margin:0 0 12px">إضافة وفّر إلى الشاشة الرئيسية</button>
@@ -51,14 +51,14 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
   <label id="yearLabel">سنة الصنع</label><input id="year" type="number" value="2013" inputmode="numeric">
   <label><span id="vinLabel">رقم الهيكل VIN</span> <span style="font-weight:normal;color:#6b7773">(اختياري)</span></label><input id="vin" placeholder="يرفع دقة مطابقة القطع" dir="ltr" maxlength="17" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="formHint">
   <div id="vehicleInfo" class="vehicle-info hidden"></div>
-  <button id="analyzeBtn" onclick="start()">حلّل عرضي مجانًا ✨</button><div id="formHint" class="note" style="text-align:center;margin-top:8px"></div>
+  <button id="analyzeBtn" onclick="start()">حلّل عرضي مجانًا ✨</button><div id="formHint" class="note" role="status" aria-live="polite" style="text-align:center;margin-top:8px"></div>
   <div class="privacy" id="privacyText">🔒 يُرسل الملف للتحليل عبر الخادم ولا يظهر مفتاح API للزائر. لا يحفظ «وفّر» العرض في قاعدة بيانات في هذه النسخة.</div>
  </div>
 </section>
 
 <section id="loading" class="hidden">
  <div class="brand"><div class="logo">وفّر</div></div><h1 id="loadingTitle">جارٍ تحليل عرضك</h1>
- <div class="stage" id="loadingStage">المرحلة الحالية: <strong>قراءة عرض الصيانة</strong></div>
+ <div class="stage" id="loadingStage" role="status" aria-live="polite">المرحلة الحالية: <strong>قراءة عرض الصيانة</strong></div>
  <div class="note" id="elapsedTime" style="text-align:center;margin-top:6px">الوقت المنقضي: 0 ث</div>
  <div class="card"><ul class="steps">
   <li><span class="check">✓</span> قراءة عرض السعر</li><li><span class="check">✓</span> استخراج القطع والأسعار</li>
@@ -76,7 +76,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
  <div class="card"><h3 id="overallLabel">درجة الثقة الكلية</h3><div class="total"><b id="rOverall">—</b><small>تعكس قوة الأدلة المتاحة، وليست تقييمًا للورشة</small></div><div id="confidenceBreakdown" class="note" style="margin-top:10px"></div></div>
  <div class="card"><h3 id="findingsLabel">أبرز ما وجدناه</h3><div id="rConfidenceNote" class="note" style="margin-bottom:10px">درجات الثقة تقيس قوة الأدلة المتاحة وليست تقييمًا لجودة الورشة.</div><div id="rWarningsSummary" class="lock"></div><div id="rTestMeta" class="note" style="margin:8px 0"></div><div id="rDocQuality" class="lock"></div><div id="rCatalogCoverage" class="lock">🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.</div><div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
   <div class="lock">🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون مطابقة القطعة ومصدر سعر موثوق.</div>
-  <div id="catalogSummary" class="lock">🔎 حالة مطابقة الكتالوج: بانتظار التحليل.</div>
+  <div id="catalogSummary" class="lock" role="status" aria-live="polite">🔎 حالة مطابقة الكتالوج: بانتظار التحليل.</div>
   <button id="detailsBtn" onclick="advanced()">عرض تفاصيل البنود</button><button id="workshopBtn" class="secondary" onclick="messageWorkshop()">أنشئ رسالة للورشة</button>
  </div>
 </section>
