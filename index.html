@@ -50,12 +50,12 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
   <label><span id="vinLabel">رقم الهيكل VIN</span> <span style="font-weight:normal;color:#6b7773">(اختياري)</span></label><input id="vin" placeholder="يرفع دقة مطابقة القطع" dir="ltr" maxlength="17" autocomplete="off">
   <div id="vehicleInfo" class="vehicle-info hidden"></div>
   <button id="analyzeBtn" onclick="start()">حلّل عرضي مجانًا ✨</button>
-  <div class="privacy">🔒 يُرسل الملف للتحليل عبر الخادم ولا يظهر مفتاح API للزائر. لا يحفظ «وفّر» العرض في قاعدة بيانات في هذه النسخة.</div>
+  <div class="privacy" id="privacyText">🔒 يُرسل الملف للتحليل عبر الخادم ولا يظهر مفتاح API للزائر. لا يحفظ «وفّر» العرض في قاعدة بيانات في هذه النسخة.</div>
  </div>
 </section>
 
 <section id="loading" class="hidden">
- <div class="brand"><div class="logo">وفّر</div></div><h1>جارٍ تحليل عرضك</h1>
+ <div class="brand"><div class="logo">وفّر</div></div><h1 id="loadingTitle">جارٍ تحليل عرضك</h1>
  <div class="stage" id="loadingStage">المرحلة الحالية: <strong>قراءة عرض الصيانة</strong></div>
  <div class="card"><ul class="steps">
   <li><span class="check">✓</span> قراءة عرض السعر</li><li><span class="check">✓</span> استخراج القطع والأسعار</li>
@@ -80,17 +80,17 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 
 <section id="advanced" class="hidden">
  <div class="top"><span class="pill">نموذج تجريبي</span><h2 id="advancedTitle">التحليل المتقدم</h2></div>
- <div class="card"><h3>تفاصيل بنود العرض المقروءة</h3><div id="itemTypeSummary" class="note" style="margin-bottom:8px"></div>
+ <div class="card"><h3 id="detailsTitle">تفاصيل بنود العرض المقروءة</h3><div id="itemTypeSummary" class="note" style="margin-bottom:8px"></div>
  <div class="table-wrap"><table><thead><tr><th>البند</th><th>النوع</th><th>رقم القطعة</th><th>السعر</th><th>الهوية</th><th>التوافق</th><th>السعر</th><th>التداخل</th></tr></thead>
  <tbody id="itemsBody"></tbody></table></div>
  <p class="note">البيانات مستخرجة من العرض المرفوع. الحكم مبدئي ولا يمثل مقارنة سعرية نهائية قبل التحقق من هوية القطعة ومصدر السعر.</p></div>
  <div id="catalogMatches" class="card">
   <h3 id="catalogMatchLabel">🔎 مطابقة كتالوج القطع</h3>
-  <div class="note">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>
+  <div class="note" id="catalogWaitingText">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>
  </div>
  <div class="card"><h3 id="beforePayLabel">قبل أن تدفع</h3><div id="nextActions"></div><div id="decisionSummary" class="lock"></div><button id="shareSummaryBtn" class="secondary" type="button" onclick="shareSummary()">مشاركة ملخص النتيجة</button></div>
- <div class="card"><div class="price" id="confirmedSavingLabel">التوفير المؤكد: غير محسوب</div><p class="lead">لا يحسب «وفّر» التوفير قبل مطابقة هوية القطعة بمصدر سعر موثوق.</p><div id="priceReadiness" class="lock">💰 مقارنة الأسعار: بانتظار هوية قطعة قابلة للتحقق ومصدر سعر موثوق.</div>
- <button onclick="messageWorkshop()">أنشئ رسالة استكمال للورشة</button></div>
+ <div class="card"><div class="price" id="confirmedSavingLabel">التوفير المؤكد: غير محسوب</div><p class="lead" id="savingNote">لا يحسب «وفّر» التوفير قبل مطابقة هوية القطعة بمصدر سعر موثوق.</p><div id="priceReadiness" class="lock">💰 مقارنة الأسعار: بانتظار هوية قطعة قابلة للتحقق ومصدر سعر موثوق.</div>
+ <button id="workshopFollowupBtn" onclick="messageWorkshop()">أنشئ رسالة استكمال للورشة</button></div>
  <div class="nav"><button id="backBtn" class="secondary" onclick="show('result')">رجوع</button><button id="newAnalysisBtn" onclick="resetAnalysis()">تحليل عرض آخر</button></div>
 </section>
 
@@ -584,6 +584,13 @@ function applyLocale(locale){
  document.getElementById('catalogMatchLabel').textContent='🔎 '+t(locale,'catalogMatch');
  document.getElementById('beforePayLabel').textContent=t(locale,'beforePay');
  document.getElementById('confirmedSavingLabel').textContent=t(locale,'confirmedSaving');
+ document.getElementById('privacyText').textContent=t(locale,'privacy');
+ document.getElementById('loadingTitle').textContent=t(locale,'loadingTitle');
+ document.getElementById('detailsTitle').textContent=t(locale,'detailsTitle');
+ const waiting=document.getElementById('catalogWaitingText'); if(waiting)waiting.textContent=t(locale,'catalogWaiting');
+ document.getElementById('savingNote').textContent=t(locale,'savingNote');
+ if(!window.wafferPartMatches)document.getElementById('priceReadiness').textContent=t(locale,'priceWaiting');
+ document.getElementById('workshopFollowupBtn').textContent=t(locale,'workshopFollowup');
  window.wafferLocale=locale;
 }
 const savedLocale=localStorage.getItem('waffer-locale');
