@@ -20,13 +20,19 @@ export default async function handler(req, res) {
     const data = await response.json();
     if (!response.ok) return res.status(response.status).json(data);
 
-    const manufacturers = Array.isArray(data)
+    const manufacturers = (Array.isArray(data)
       ? data
       : Array.isArray(data?.manufacturers)
         ? data.manufacturers
-        : [];
+        : [])
+      .map(item => ({
+        manufacturerId: item?.manufacturerId ?? item?.manuId ?? item?.id ?? '',
+        manufacturerName: item?.manufacturerName ?? item?.manuName ?? item?.name ?? ''
+      }))
+      .filter(item => item.manufacturerId !== '' && item.manufacturerName)
+      .sort((a,b) => String(a.manufacturerName).localeCompare(String(b.manufacturerName)));
 
-    return res.status(200).json({ ...ctx, manufacturers });
+    return res.status(200).json({ ...ctx, count: manufacturers.length, manufacturers });
   } catch (error) {
     console.error('Vehicle manufacturers error:', error);
     return res.status(500).json({ error: 'Failed to fetch vehicle manufacturers' });
