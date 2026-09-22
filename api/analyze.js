@@ -115,8 +115,11 @@ export default async function handler(req, res) {
       return Number.isFinite(n) ? Math.max(0, Math.min(100, Math.round(n))) : 0;
     };
 
+    const requestId = globalThis.crypto?.randomUUID?.() || ('waffer-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8));
+
     const normalized = {
       ...result,
+      requestId,
       engineContext: {
         market,
         locale,
