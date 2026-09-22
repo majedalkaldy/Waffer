@@ -405,6 +405,15 @@
     return { articles: verified.slice(0,5), checked: checked.length, verified: verified.length };
   }
 
+  function qualityLabel(article) {
+    const supplier = norm(supplierName(article));
+    const product = norm(article?.articleProductName || article?.productName || '');
+    if (!supplier && !product) return 'غير مصنف';
+    // This is deliberately descriptive, not a claim of OEM status.
+    if (product.includes('oe') || product.includes('original equipment')) return 'مرشح OE — يحتاج تحقق';
+    return 'بديل كتالوج متوافق — يحتاج تحقق';
+  }
+
   function articleKey(article) {
     return norm(article?.articleNo || article?.articleNumber || article?.id || article?.articleId || '');
   }
@@ -431,13 +440,13 @@
       const supplier = norm(supplierName(article));
       if (supplier && suppliers.has(supplier)) continue;
       if (supplier) suppliers.add(supplier);
-      diverse.push(article);
+      diverse.push({ ...article, qualityLabel: qualityLabel(article) });
       if (diverse.length >= limit) return diverse;
     }
 
     for (const article of unique) {
       if (diverse.includes(article)) continue;
-      diverse.push(article);
+      diverse.push({ ...article, qualityLabel: qualityLabel(article) });
       if (diverse.length >= limit) break;
     }
     return diverse;
