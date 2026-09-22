@@ -76,7 +76,19 @@ export default async function handler(req, res) {
       const form = new FormData();
       form.append('purpose', 'user_data');
       form.append('file', new Blob([bytes], { type: 'application/pdf' }), safeFileName || 'quote.pdf');
-      const up = await fetch('https://api.openai.com/v1/files', { method: 'POST', headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` }, body: form });
+      const uploadController = new AbortController();
+      const uploadTimeout = setTimeout(() => uploadController.abort(), 15000);
+      let up;
+      try {
+        up = await fetch('https://api.openai.com/v1/files', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+          body: form,
+          signal: uploadController.signal
+        });
+      } finally {
+        clearTimeout(uploadTimeout);
+      }
       const uj = await up.json();
       if (!up.ok) throw new Error(uj?.error?.message || 'تعذر رفع PDF إلى خدمة التحليل');
       attachment = { type: 'input_file', file_id: uj.id };
