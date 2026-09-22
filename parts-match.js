@@ -301,15 +301,11 @@
   }
 
   const catalogContext = {
-    market: 'SA',
-    langId: 4,
-    countryFilterId: 63
+    market: 'SA'
   };
 
   function catalogQuery() {
-    return '&market=' + encodeURIComponent(catalogContext.market) +
-      '&langId=' + encodeURIComponent(catalogContext.langId) +
-      '&countryFilterId=' + encodeURIComponent(catalogContext.countryFilterId);
+    return '&market=' + encodeURIComponent(catalogContext.market);
   }
 
   async function loadProducts(vehicleId) {
@@ -461,6 +457,12 @@
     const startedAt = Date.now();
     const analysis =
       analysisArg || window.analysis;
+
+    catalogContext.market = String(
+      analysis?.engineContext?.market ||
+      window.analysis?.engineContext?.market ||
+      'SA'
+    ).toUpperCase();
 
     const vehicleId =
       window.wafferVehicleId;
