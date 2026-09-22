@@ -27,6 +27,8 @@ export default async function handler(req, res) {
       RUNTIME_CONFIG.catalogCriteriaTimeoutMs
     ].every(value => Number(value) > 0 && Number(value) <= Number(RUNTIME_CONFIG.catalogMatchTimeoutMs)),
     healthCatalogTimeout: Number(RUNTIME_CONFIG.healthCatalogTimeoutMs) > 0,
+    manufacturersTimeout: Number(RUNTIME_CONFIG.manufacturersTimeoutMs) > 0 &&
+      Number(RUNTIME_CONFIG.clientManufacturersTimeoutMs) > Number(RUNTIME_CONFIG.manufacturersTimeoutMs),
     saMarket: sa.supported === true && sa.market === 'SA' && sa.currency === 'SAR',
     unsupportedMarketRejected: unsupported.supported === false
   };
