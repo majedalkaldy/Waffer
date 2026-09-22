@@ -308,66 +308,92 @@
     return '&market=' + encodeURIComponent(catalogContext.market);
   }
 
-  async function loadProducts(vehicleId) {
-    const response = await fetch(
-      '/api/products?vehicleId=' +
-      encodeURIComponent(vehicleId) +
-      catalogQuery()
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data?.error ||
-        data?.message ||
-        'تعذر تحميل كتالوج القطع'
-      );
-    }
-
-    return Array.isArray(data.products)
-      ? data.products
-      : [];
+  function abortError(message = 'Operation cancelled') {
+    const error = new Error(message);
+    error.name = 'AbortError';
+    return error;
   }
 
-  async function loadArticles(vehicleId, productId) {
+  function throwIfAborted(signal) {
+    if (signal?.aborted) throw abortError();
+  }
+
+  async function fetchCatalogJson(url, { signal, timeoutMs }) {
+    throwIfAborted(signal);
+    const controller = new AbortController();
+    let timedOut = false;
+    const abortFromParent = () => controller.abort();
+
+    if (signal) signal.addEventListener('abort', abortFromParent, { once: true });
+    const timer = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, timeoutMs);
+
     try {
-      const response = await fetch(
+      const response = await fetch(url, { signal: controller.signal });
+      const data = await response.json();
+      if (!response.ok) {
+        const error = new Error(data?.error || data?.message || 'Catalog request failed');
+        error.code = 'CATALOG_UPSTREAM_ERROR';
+        throw error;
+      }
+      return data;
+    } catch (error) {
+      if (signal?.aborted) throw abortError();
+      if (controller.signal.aborted && timedOut) {
+        const timeoutError = new Error('Catalog request timed out');
+        timeoutError.code = 'CATALOG_TIMEOUT';
+        throw timeoutError;
+      }
+      throw error;
+    } finally {
+      clearTimeout(timer);
+      if (signal) signal.removeEventListener('abort', abortFromParent);
+    }
+  }
+
+  async function loadProducts(vehicleId, signal) {
+    const data = await fetchCatalogJson(
+      '/api/products?vehicleId=' +
+      encodeURIComponent(vehicleId) +
+      catalogQuery(),
+      { signal, timeoutMs: runtimeValue('catalogProductsTimeoutMs', 12000) }
+    );
+
+    return Array.isArray(data.products) ? data.products : [];
+  }
+
+  async function loadArticles(vehicleId, productId, signal) {
+    try {
+      const data = await fetchCatalogJson(
         '/api/articles?vehicleId=' +
         encodeURIComponent(vehicleId) +
         '&productId=' +
         encodeURIComponent(productId) +
-        catalogQuery()
+        catalogQuery(),
+        { signal, timeoutMs: runtimeValue('catalogArticlesTimeoutMs', 9000) }
       );
-
-      const data = await response.json();
-
-      if (!response.ok) return [];
-
-      return Array.isArray(data.articles)
-        ? data.articles
-        : [];
-
+      return Array.isArray(data.articles) ? data.articles : [];
     } catch (error) {
-      console.error(
-        'Article lookup error:',
-        error
-      );
-
+      if (error?.name === 'AbortError') throw error;
+      console.error('Article lookup error:', error);
       return [];
     }
   }
 
-  async function loadArticleCriteria(articleId) {
+  async function loadArticleCriteria(articleId, signal) {
     if (!articleId) return [];
     try {
-      const response = await fetch('/api/article-criteria?articleId=' + encodeURIComponent(articleId) + catalogQuery());
-      if (!response.ok) return [];
-      const data = await response.json();
+      const data = await fetchCatalogJson(
+        '/api/article-criteria?articleId=' + encodeURIComponent(articleId) + catalogQuery(),
+        { signal, timeoutMs: Math.min(runtimeValue('catalogCriteriaTimeoutMs', 8000), 4500) }
+      );
       if (Array.isArray(data.criteria)) return data.criteria;
       if (Array.isArray(data.criteria?.array)) return data.criteria.array;
       return [];
     } catch (error) {
+      if (error?.name === 'AbortError') throw error;
       console.error('Article criteria error:', articleId, error);
       return [];
     }
@@ -384,22 +410,23 @@
     return null;
   }
 
-  async function filterByAxle(articles, requestedAxle) {
+  async function filterByAxle(articles, requestedAxle, signal) {
+    throwIfAborted(signal);
     if (!requestedAxle || !Array.isArray(articles) || !articles.length) {
       return { articles: Array.isArray(articles) ? articles.slice(0,20) : [], checked: 0, verified: 0 };
     }
     // Limit and parallelize criteria checks to keep the UI responsive.
     const candidates = articles.slice(0, 10);
     const checked = await Promise.all(candidates.map(async article => {
+      throwIfAborted(signal);
       const articleId = article.articleId || article.id;
       if (!articleId) return { article, axle: null };
-      const criteria = await Promise.race([
-        loadArticleCriteria(articleId),
-        new Promise(resolve => setTimeout(() => resolve([]), Math.min(runtimeValue('catalogCriteriaTimeoutMs', 8000), 4500)))
-      ]);
+      const criteria = await loadArticleCriteria(articleId, signal);
+      throwIfAborted(signal);
       const axle = criteriaAxle(criteria);
       return { article, axle };
     }));
+    throwIfAborted(signal);
     const verified = checked
       .filter(x => x.axle === requestedAxle)
       .map(x => ({ ...x.article, fittingPosition: x.axle === 'front' ? 'Front Axle' : 'Rear Axle', axleVerified: true }));
@@ -437,26 +464,52 @@
 
     // Prefer supplier diversity so the user sees useful alternatives, not duplicates.
     const diverse = [];
+    const selectedKeys = new Set();
     for (const article of unique) {
       const supplier = norm(supplierName(article));
       if (supplier && suppliers.has(supplier)) continue;
       if (supplier) suppliers.add(supplier);
+      selectedKeys.add(articleKey(article));
       diverse.push({ ...article, qualityLabel: qualityLabel(article) });
       if (diverse.length >= limit) return diverse;
     }
 
     for (const article of unique) {
-      if (diverse.includes(article)) continue;
+      if (selectedKeys.has(articleKey(article))) continue;
+      selectedKeys.add(articleKey(article));
       diverse.push({ ...article, qualityLabel: qualityLabel(article) });
       if (diverse.length >= limit) break;
     }
     return diverse;
   }
 
-  async function matchWafferParts(analysisArg) {
+  async function matchWafferParts(analysisArg, options = {}) {
     const startedAt = Date.now();
-    const analysis =
-      analysisArg || window.analysis;
+    const analysis = analysisArg || window.analysis;
+    const signal = options?.signal;
+    const runId = options?.runId ?? null;
+
+    const isCurrent = () =>
+      !signal?.aborted &&
+      (runId == null || window.wafferAnalysisRunId === runId);
+
+    const ensureCurrent = () => {
+      throwIfAborted(signal);
+      if (runId != null && window.wafferAnalysisRunId !== runId) {
+        throw abortError('Stale analysis run');
+      }
+    };
+
+    const emitMatches = matches => {
+      if (!isCurrent()) return;
+      matches.wafferRunId = runId;
+      window.dispatchEvent(
+        new CustomEvent(
+          'wafferPartsMatched',
+          { detail: matches }
+        )
+      );
+    };
 
     catalogContext.market = String(
       analysis?.engineContext?.market ||
@@ -464,49 +517,32 @@
       'SA'
     ).toUpperCase();
 
-    const vehicleId =
-      window.wafferVehicleId;
-
-    const items =
-      Array.isArray(analysis?.items)
-        ? analysis.items
-        : [];
+    const vehicleId = window.wafferVehicleId;
+    const items = Array.isArray(analysis?.items) ? analysis.items : [];
 
     if (!analysis || !vehicleId || !items.length) {
-      window.wafferCatalogState = {
-        status: !vehicleId ? 'NO_VEHICLE_ID' : !items.length ? 'NO_ITEMS' : 'NO_ANALYSIS',
-        matched: 0,
-        totalItems: items.length
-      };
-      window.wafferCatalogState = {
-        status: 'FAILED',
-        matched: 0,
-        totalItems: items.length,
-        error: String(error?.message || error)
-      };
-
-      window.dispatchEvent(
-        new CustomEvent(
-          'wafferPartsMatched',
-          { detail: [] }
-        )
-      );
-
+      if (isCurrent()) {
+        window.wafferCatalogState = {
+          status: !analysis ? 'NO_ANALYSIS' : !vehicleId ? 'NO_VEHICLE_ID' : 'NO_ITEMS',
+          matched: 0,
+          totalItems: items.length,
+          runId
+        };
+        emitMatches([]);
+      }
       return [];
     }
 
     try {
-      const products =
-        await Promise.race([
-          loadProducts(vehicleId),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('انتهت مهلة تحميل كتالوج القطع')), runtimeValue('catalogProductsTimeoutMs', 12000))
-          )
-        ]);
+      ensureCurrent();
+      const products = await loadProducts(vehicleId, signal);
+      ensureCurrent();
 
       const matches = [];
 
       for (const item of items) {
+        ensureCurrent();
+
         if (item?.itemType && item.itemType !== 'part') {
           matches.push({
             workshopItem: item?.name || item?.description || item?.item || '',
@@ -541,8 +577,7 @@
           continue;
         }
 
-        const product =
-          bestProduct(itemName, products);
+        const product = bestProduct(itemName, products);
 
         if (!product) {
           matches.push({
@@ -553,26 +588,27 @@
             countArticles: 0,
             articles: []
           });
-
           continue;
         }
 
-        const allArticles =
-          await Promise.race([
-            loadArticles(
-              vehicleId,
-              product.productId
-            ),
-            new Promise(resolve => setTimeout(() => resolve([]), runtimeValue('catalogArticlesTimeoutMs', 9000)))
-          ]);
+        const allArticles = await loadArticles(
+          vehicleId,
+          product.productId,
+          signal
+        );
+        ensureCurrent();
 
         const requestedAxle =
           (product.requestedType === 'brake_pad' || product.requestedType === 'brake_disc')
             ? detectRequestedAxle(itemName)
             : null;
 
-        const filtered =
-          await filterByAxle(allArticles, requestedAxle);
+        const filtered = await filterByAxle(
+          allArticles,
+          requestedAxle,
+          signal
+        );
+        ensureCurrent();
 
         matches.push({
           workshopItem: itemName,
@@ -589,13 +625,14 @@
         });
       }
 
-      window.wafferPartMatches = matches;
-
+      ensureCurrent();
       const elapsedMs = Date.now() - startedAt;
       const partItems = items.filter(item => !item?.itemType || item.itemType === 'part');
       const skippedItems = matches.filter(x => x?.skipped).length;
       const axleRequested = matches.filter(x => x?.requestedAxle).length;
       const axleVerified = matches.filter(x => x?.requestedAxle && Number(x?.verifiedByAxle) > 0).length;
+
+      window.wafferPartMatches = matches;
       window.wafferCatalogState = {
         status: 'COMPLETED',
         matched: matches.filter(x => x && x.productId).length,
@@ -604,16 +641,11 @@
         skippedItems,
         axleRequested,
         axleVerified,
-        elapsedMs
+        elapsedMs,
+        runId
       };
       matches.forEach(match => { match.matchingElapsedMs = elapsedMs; });
-
-      window.dispatchEvent(
-        new CustomEvent(
-          'wafferPartsMatched',
-          { detail: matches }
-        )
-      );
+      emitMatches(matches);
 
       console.log(
         'Waffer parts matching completed:',
@@ -623,18 +655,23 @@
       return matches;
 
     } catch (error) {
+      if (error?.name === 'AbortError' || !isCurrent()) {
+        return [];
+      }
+
       console.error(
         'Waffer parts matching failed:',
         error
       );
 
-      window.dispatchEvent(
-        new CustomEvent(
-          'wafferPartsMatched',
-          { detail: [] }
-        )
-      );
-
+      window.wafferCatalogState = {
+        status: error?.code === 'CATALOG_TIMEOUT' ? 'TIMED_OUT' : 'FAILED',
+        matched: 0,
+        totalItems: items.length,
+        error: String(error?.message || error),
+        runId
+      };
+      emitMatches([]);
       return [];
     }
   }
