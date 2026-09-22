@@ -66,7 +66,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 
 <section id="result" class="hidden">
  <div class="top"><span class="pill">فحص AI</span><h2 id="resultTitle">نتيجة التحليل</h2></div>
- <div class="card"><div class="total"><span id="totalShownLabel">إجمالي العرض الظاهر</span><b id="rTotal">—</b></div><div id="rCalculatedTotal" class="note" style="text-align:center;margin-top:8px"></div><div id="rTaxLabor" class="note" style="text-align:center;margin-top:5px"></div><div id="rWarranty" class="note" style="text-align:center;margin-top:5px"></div><div class="status" id="rStatus">—</div></div>
+ <div class="card"><div class="total"><span id="totalShownLabel">إجمالي العرض الظاهر</span><b id="rTotal">—</b><small id="currencyContext">العملة: SAR</small></div><div id="rCalculatedTotal" class="note" style="text-align:center;margin-top:8px"></div><div id="rTaxLabor" class="note" style="text-align:center;margin-top:5px"></div><div id="rWarranty" class="note" style="text-align:center;margin-top:5px"></div><div class="status" id="rStatus">—</div></div>
  <div class="scores"><div class="card score"><span id="transparencyLabel">شفافية العرض</span><b id="rTransparency">—</b><small>اكتمال ووضوح البيانات</small></div>
  <div class="card score"><span id="identityLabel">ثقة هوية القطع</span><b id="rIdentity">—</b><small>رقم القطعة والمصنع والوصف</small></div>
  <div class="card score"><span id="compatibilityLabel">ثقة التوافق</span><b id="rCompatibility">—</b><small>إمكان التحقق للسيارة المحددة</small></div>
@@ -250,6 +250,10 @@ function render(){
      : '🚗 لم يتم التحقق من هوية السيارة عبر VIN؛ نتائج التوافق ستكون محدودة.';
  }
  document.getElementById('rTotal').textContent=analysis.total||'غير واضح';
+ const currencyContext=document.getElementById('currencyContext');
+ if(currencyContext){
+   currencyContext.textContent=(window.wafferLocale?.startsWith('en')?'Currency: ':'العملة: ')+(analysis?.engineContext?.currency||'SAR');
+ }
  const calc=document.getElementById('rCalculatedTotal');
  if(calc){
    const calculated=analysis.calculatedTotal;
