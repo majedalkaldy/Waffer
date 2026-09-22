@@ -500,6 +500,20 @@
       const matches = [];
 
       for (const item of items) {
+        if (item?.itemType && item.itemType !== 'part') {
+          matches.push({
+            workshopItem: item?.name || item?.description || item?.item || '',
+            skipped: true,
+            skipReason: 'NOT_A_PART',
+            productId: null,
+            productName: null,
+            matchScore: 0,
+            countArticles: 0,
+            articles: []
+          });
+          continue;
+        }
+
         const itemName =
           item?.name ||
           item?.description ||
