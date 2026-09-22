@@ -87,7 +87,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
   <h3>🔎 مطابقة كتالوج القطع</h3>
   <div class="note">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>
  </div>
- <div class="card"><h3>قبل أن تدفع</h3><div id="nextActions"></div><div id="decisionSummary" class="lock"></div></div>
+ <div class="card"><h3>قبل أن تدفع</h3><div id="nextActions"></div><div id="decisionSummary" class="lock"></div><button id="shareSummaryBtn" class="secondary" type="button" onclick="shareSummary()">مشاركة ملخص النتيجة</button></div>
  <div class="card"><div class="price">التوفير المؤكد: غير محسوب</div><p class="lead">لا يحسب «وفّر» التوفير قبل مطابقة هوية القطعة بمصدر سعر موثوق.</p><div id="priceReadiness" class="lock">💰 مقارنة الأسعار: بانتظار هوية قطعة قابلة للتحقق ومصدر سعر موثوق.</div>
  <button onclick="messageWorkshop()">أنشئ رسالة استكمال للورشة</button></div>
  <div class="nav"><button class="secondary" onclick="show('result')">رجوع</button><button onclick="resetAnalysis()">تحليل عرض آخر</button></div>
@@ -316,6 +316,25 @@ function resetAnalysis(){
  show('home');
 }
 async function copyMsg(){try{await navigator.clipboard.writeText(document.getElementById('message').innerText);alert('تم نسخ الرسالة')}catch(e){alert('حدد النص وانسخه يدويًا')}}
+async function shareSummary(){
+ if(!analysis)return;
+ const vehicle=formatVehicleForMessage()||'غير محددة';
+ const text=[
+   'وفّر — ملخص فحص عرض الصيانة',
+   'السيارة: '+vehicle,
+   'الإجمالي الظاهر: '+(analysis.total||'غير واضح'),
+   'درجة الثقة: '+(analysis.overallConfidence??0)+'/100',
+   'بيانات ناقصة: '+(Array.isArray(analysis.missing)?analysis.missing.length:0),
+   'نقاط تحقق: '+(Array.isArray(analysis.conflicts)?analysis.conflicts.length:0),
+   'التوفير المؤكد: غير محسوب دون مصدر سعر موثوق'
+ ].join('\n');
+ try{
+   if(navigator.share)await navigator.share({title:'وفّر — نتيجة الفحص',text});
+   else{await navigator.clipboard.writeText(text);alert('تم نسخ ملخص النتيجة');}
+ }catch(e){
+   if(e?.name!=='AbortError')console.error('Share error:',e);
+ }
+}
 const fileInput=document.getElementById('file');
 const uploadBox=document.getElementById('uploadBox');
 
