@@ -82,7 +82,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
   <div class="note">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>
  </div>
  <div class="card"><h3>قبل أن تدفع</h3><div id="nextActions"></div></div>
- <div class="card"><div class="price">التوفير المؤكد: غير محسوب</div><p class="lead">لا يحسب «وفّر» التوفير قبل مطابقة هوية القطعة بمصدر سعر موثوق.</p>
+ <div class="card"><div class="price">التوفير المؤكد: غير محسوب</div><p class="lead">لا يحسب «وفّر» التوفير قبل مطابقة هوية القطعة بمصدر سعر موثوق.</p><div id="priceReadiness" class="lock">💰 مقارنة الأسعار: بانتظار هوية قطعة قابلة للتحقق ومصدر سعر موثوق.</div>
  <button onclick="messageWorkshop()">أنشئ رسالة استكمال للورشة</button></div>
  <div class="nav"><button class="secondary" onclick="show('result')">رجوع</button><button onclick="show('home')">تحليل عرض آخر</button></div>
 </section>
@@ -273,6 +273,13 @@ window.addEventListener('wafferPartsMatched', function(event){
  if(!box)return;
 
  const matched=matches.filter(m=>m && m.productId);
+ const priceReadiness=document.getElementById('priceReadiness');
+ if(priceReadiness){
+   const withArticles=matched.filter(m=>Array.isArray(m.articles)&&m.articles.length);
+   priceReadiness.textContent=withArticles.length
+     ? '💰 تم التحقق من هوية بدائل لبعض البنود. يلزم الآن ربط مصدر أسعار موثوق لحساب نطاق السوق والتوفير.'
+     : '💰 لم تكتمل هوية قطعة قابلة للتسعير بعد؛ لن يعرض وفّر توفيرًا تقديريًا.';
+ }
  if(summary){
    summary.textContent=matched.length
      ? '✅ تمت مطابقة '+matched.length+' من بنود العرض مع كتالوج السيارة.'
