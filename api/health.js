@@ -40,6 +40,12 @@ export default async function handler(req, res) {
     service: 'waffer',
     version: 'mvp',
     defaults: { market: 'SA', locale: 'ar-SA', currency: 'SAR' },
+    capabilities: {
+      quoteAnalysis: configured.analysis,
+      vinAndCatalog: configured.catalog && upstream.catalog === 'reachable',
+      verifiedMarketPricing: false,
+      persistentAccounts: false
+    },
     configured,
     upstream,
     timestamp: new Date().toISOString()
