@@ -8,15 +8,23 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'A valid 17-character VIN is required' });
     }
 
-    const response = await fetch(
-      'https://auto-parts-catalog.apiprofile.com/api/v2/vin/tecdoc-vin-check/' + encodeURIComponent(vin),
-      {
-        headers: {
-          Accept: 'application/json',
-          'x-apiprofile-key': apiKey
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    let response;
+    try {
+      response = await fetch(
+        'https://auto-parts-catalog.apiprofile.com/api/v2/vin/tecdoc-vin-check/' + encodeURIComponent(vin),
+        {
+          headers: {
+            Accept: 'application/json',
+            'x-apiprofile-key': apiKey
+          },
+          signal: controller.signal
         }
-      }
-    );
+      );
+    } finally {
+      clearTimeout(timer);
+    }
 
     const text = await response.text();
     let data;
@@ -32,6 +40,7 @@ export default async function handler(req, res) {
     return res.status(200).json(data);
   } catch (error) {
     console.error('VIN API error:', error);
+    if (error?.name === 'AbortError') return res.status(504).json({ error: 'VIN lookup timed out' });
     return res.status(500).json({ error: 'Failed to check VIN' });
   }
 }
