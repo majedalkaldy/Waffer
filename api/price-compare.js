@@ -22,6 +22,7 @@ export default async function handler(req, res) {
     const price = Number(workshopPrice);
     const qty = Math.max(1, Number(quantity) || 1);
     const marketConfig = getMarketConfig({ market, locale, currency });
+    if (!marketConfig.supported) return res.status(400).json({ error: 'Unsupported market', code: 'UNSUPPORTED_MARKET', requestedMarket: marketConfig.requestedMarket });
     const normalizedMarket = marketConfig.market;
     const normalizedLocale = marketConfig.locale;
     const normalizedCurrency = marketConfig.currency;
