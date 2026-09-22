@@ -196,11 +196,16 @@ export default async function handler(req, res) {
     if (!itemCount) normalized.overallConfidence = Math.min(normalized.overallConfidence, 25);
 
     const requiredShape = ['total','status','transparency','identityConfidence','compatibilityConfidence','priceConfidence','overallConfidence','items'];
+    const invalidItemIndexes = normalized.items
+      .map((item, index) => ({ item, index }))
+      .filter(({ item }) => !item || typeof item !== 'object' || !String(item.name || '').trim())
+      .map(({ index }) => index);
     const missingShapeFields = requiredShape.filter(key => !(key in normalized));
 
     normalized.acceptance = {
-      schemaValid: missingShapeFields.length === 0,
+      schemaValid: missingShapeFields.length === 0 && invalidItemIndexes.length === 0,
       missingShapeFields,
+      invalidItemIndexes,
       hasItems: itemCount > 0,
       hasPrintedTotal: Boolean(String(normalized.total || '').trim()) && !/غير مذكور|غير واضح/i.test(String(normalized.total)),
       hasConfidence: normalized.overallConfidence > 0,
