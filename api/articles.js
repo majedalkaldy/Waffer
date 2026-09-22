@@ -1,12 +1,13 @@
-const DEFAULTS = { market: 'SA', langId: 4 };
+import { getMarketConfig } from '../lib/market-config.js';
 
 export default async function handler(req, res) {
   try {
     const apiKey = process.env.AUTOPARTS_API_KEY;
     const vehicleId = String(req.query.vehicleId || '').trim();
     const productId = String(req.query.productId || '').trim();
-    const market = String(req.query.market || DEFAULTS.market).toUpperCase();
-    const langId = Number(req.query.langId || DEFAULTS.langId);
+    const config = getMarketConfig(req.query);
+    const market = config.market;
+    const langId = config.catalog.langId;
 
     if (!apiKey) return res.status(500).json({ error: 'API key missing' });
     if (!/^\d+$/.test(vehicleId) || !/^\d+$/.test(productId)) {
