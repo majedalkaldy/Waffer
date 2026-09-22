@@ -2,5 +2,9 @@
   "name": "waffer",
   "version": "1.0.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "python tests/browser_smoke.py"
+  }
 }
