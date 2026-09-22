@@ -174,10 +174,7 @@ export default async function handler(req, res) {
             itemType: ['part','labor','service','fee'].includes(String(item?.itemType || '').toLowerCase())
               ? String(item.itemType).toLowerCase()
               : 'part',
-            identityConfidence: clamp(item?.identityConfidence),
-            itemType: ['part','labor','service','fee'].includes(String(item?.itemType || '').toLowerCase())
-              ? String(item.itemType).toLowerCase()
-              : 'part'
+            identityConfidence: clamp(item?.identityConfidence)
           }))
         : []
     };
