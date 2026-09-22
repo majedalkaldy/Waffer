@@ -53,7 +53,6 @@ export default async function handler(req, res) {
   const ok = configured.analysis && configured.catalog && upstream.catalog === 'reachable';
   const degraded = configured.analysis && (!configured.catalog || upstream.catalog !== 'reachable');
 
-  res.setHeader('Cache-Control', 'no-store');
   return res.status(ok ? 200 : 503).json({
     ok,
     status: ok ? 'ready' : degraded ? 'degraded' : 'unavailable',
