@@ -5,13 +5,10 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  res.setHeader('X-Content-Type-Options', 'nosniff');
   if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: 'OPENAI_API_KEY غير مضاف في Vercel.' });
 
   try {
     const { fileData, fileName, mimeType, vehicle = {} } = req.body || {};
-    res.setHeader('Cache-Control', 'no-store');
-
     const safeFileName = String(fileName || 'upload')
       .replace(/[\r\n\\/]/g, '_')
       .slice(0, 120);
