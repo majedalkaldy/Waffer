@@ -1,6 +1,10 @@
 (function () {
   'use strict';
 
+  function isEnglish() {
+    return String(window.wafferLocale || '').startsWith('en');
+  }
+
   let vinRequest = null;
   let vinRequestVin = '';
   let vinAbortController = null;
@@ -160,7 +164,7 @@
           result = await response.json();
         } catch (e) {
           throw new Error(
-            'استجابة VIN غير صالحة'
+            isEnglish() ? 'Invalid VIN provider response' : 'استجابة VIN غير صالحة'
           );
         }
 
@@ -168,7 +172,7 @@
           throw new Error(
             result?.message ||
             result?.error ||
-            'تعذر التحقق من رقم الهيكل'
+            isEnglish() ? 'Could not verify the VIN' : 'تعذر التحقق من رقم الهيكل'
           );
         }
 
@@ -264,7 +268,7 @@
 
         if (!vehicle) {
           throw new Error(
-            'تم فحص رقم الهيكل ولكن لم يتم العثور على سيارة مطابقة'
+            isEnglish() ? 'VIN checked, but no matching vehicle was found' : 'تم فحص رقم الهيكل ولكن لم يتم العثور على سيارة مطابقة'
           );
         }
 
@@ -310,7 +314,7 @@
 
         if (!vehicleId) {
           throw new Error(
-            'تم العثور على السيارة لكن Vehicle ID غير متوفر'
+            isEnglish() ? 'Vehicle found, but Vehicle ID is unavailable' : 'تم العثور على السيارة لكن Vehicle ID غير متوفر'
           );
         }
 
@@ -471,7 +475,7 @@
           ].filter(Boolean);
 
           vehicleInfo.textContent =
-            '✓ تم التعرف على السيارة' +
+            (isEnglish() ? '✓ Vehicle identified' : '✓ تم التعرف على السيارة') +
             (parts.length ? ': ' + parts.join(' — ') : '') +
             ' | Vehicle ID: ' + detail.vehicleId;
 
@@ -564,7 +568,7 @@
             );
 
             alert(
-              'تعذر التحقق من رقم الهيكل.\n' +
+              (isEnglish() ? 'Could not verify the VIN.\n' : 'تعذر التحقق من رقم الهيكل.\n') +
               (error?.message || '')
             );
 
