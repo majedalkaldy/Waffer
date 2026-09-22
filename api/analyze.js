@@ -105,7 +105,17 @@ export default async function handler(req, res) {
       missing: Array.isArray(result.missing) ? result.missing : [],
       conflicts: Array.isArray(result.conflicts) ? result.conflicts : [],
       nextActions: Array.isArray(result.nextActions) ? result.nextActions.slice(0, 5) : [],
-      items: Array.isArray(result.items) ? result.items.slice(0, 50) : []
+      items: Array.isArray(result.items)
+        ? result.items.slice(0, 50).map(item => ({
+            ...item,
+            name: String(item?.name || item?.description || item?.item || '').slice(0, 240),
+            partNumber: String(item?.partNumber || 'غير ظاهر').slice(0, 120),
+            manufacturer: String(item?.manufacturer || 'غير ظاهر').slice(0, 120),
+            quantity: String(item?.quantity || 'غير ظاهرة').slice(0, 80),
+            price: String(item?.price || '').slice(0, 120),
+            identityConfidence: clamp(item?.identityConfidence)
+          }))
+        : []
     };
 
     if (res.locals?.openaiFileId) {
