@@ -2,5 +2,8 @@
   "name": "waffer",
   "version": "1.0.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/check-static.mjs"
+  }
 }
