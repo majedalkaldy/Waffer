@@ -1144,6 +1144,17 @@ function applyLocale(locale){
  document.getElementById('heroLead').textContent=t(locale,'heroLead');
  if(!document.getElementById('file').files[0])document.getElementById('fileText').textContent=t(locale,'upload');
  document.getElementById('makeLabel').textContent=t(locale,'make');
+ const makeSelect=document.getElementById('make');
+ const retryMakes=document.getElementById('retryMakes');
+ if(retryMakes)retryMakes.textContent=isAr?'إعادة تحميل الشركات':'Reload makes';
+ if(makeSelect?.options?.[0]?.value===''){
+   const failed=retryMakes && !retryMakes.classList.contains('hidden') && makeSelect.options.length===1;
+   makeSelect.options[0].textContent=makeSelect.disabled
+     ? (isAr?'جارٍ تحميل الشركات...':'Loading makes...')
+     : failed
+       ? (isAr?'تعذر تحميل الشركات':'Could not load makes')
+       : (isAr?'اختر الشركة':'Choose make');
+ }
  document.getElementById('modelLabel').textContent=t(locale,'model');
  document.getElementById('yearLabel').textContent=t(locale,'year');
  document.getElementById('vinLabel').textContent=t(locale,'vin');
