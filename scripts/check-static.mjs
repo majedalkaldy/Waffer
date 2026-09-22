@@ -126,6 +126,24 @@ if (!failures.length) {
     failures.push('Runtime/market semantic checks failed: ' + error.message);
   }
 
+  try {
+    const { default: selfTestHandler } = await import('../api/self-test.js');
+    let statusCode = 200;
+    let body = null;
+    const headers = {};
+    const req = { method: 'GET', query: {} };
+    const res = {
+      setHeader(name, value) { headers[name] = value; },
+      status(code) { statusCode = code; return this; },
+      json(value) { body = value; return value; }
+    };
+    await selfTestHandler(req, res);
+    if (statusCode !== 200 || body?.ok !== true) failures.push('api/self-test.js did not pass deterministic smoke test');
+    if (headers.Allow !== 'GET') failures.push('api/self-test.js did not expose Allow: GET');
+  } catch (error) {
+    failures.push('Self-test handler execution failed: ' + error.message);
+  }
+
   const sw = read('sw.js');
   if (!sw.includes('/lib/i18n.js') || !sw.includes('/lib/runtime-config.js')) {
     failures.push('PWA shell missing localization/runtime modules');
