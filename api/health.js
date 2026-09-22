@@ -50,6 +50,12 @@ export default async function handler(req, res) {
     },
     configured,
     upstream,
+    limits: {
+      maxUploadBytes: 4194304,
+      supportedMimeTypes: ['image/jpeg','image/png','image/webp','application/pdf'],
+      catalogMatchTimeoutMs: 30000,
+      analysisTimeoutMs: 45000
+    },
     timestamp: new Date().toISOString()
   });
 }
