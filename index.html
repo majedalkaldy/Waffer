@@ -643,7 +643,8 @@ async function checkSystemHealth(){
      const ms=Number(d?.latency?.catalogMs);
      const latencyText=Number.isFinite(ms)?' • الكتالوج '+ms+'ms':'';
      const version=d?.version?' • '+d.version:'';
-     el.textContent='● الخدمة جاهزة'+latencyText+version;
+     const commit=d?.deployment?.commit?' • '+d.deployment.commit:'';
+     el.textContent='● الخدمة جاهزة'+latencyText+version+commit;
      el.style.color='#075b43';
    }else if(d.status==='degraded'){
      el.textContent='⚠ التحليل متاح، لكن خدمة الكتالوج محدودة حاليًا';
