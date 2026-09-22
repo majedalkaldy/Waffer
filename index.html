@@ -52,6 +52,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
   <label id="yearLabel">سنة الصنع</label><input id="year" type="number" value="2013" inputmode="numeric">
   <label><span id="vinLabel">رقم الهيكل VIN</span> <span style="font-weight:normal;color:#6b7773">(اختياري)</span></label><input id="vin" placeholder="يرفع دقة مطابقة القطع" dir="ltr" maxlength="17" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="formHint">
   <div id="vehicleInfo" class="vehicle-info hidden"></div>
+  <div id="vehicleCandidates" class="vehicle-info hidden"><label for="candidateSelect" id="candidateLabel">فئة السيارة المطابقة</label><select id="candidateSelect"><option value="">اختر فئة السيارة المطابقة</option></select></div>
   <button id="analyzeBtn" onclick="start()">حلّل عرضي مجانًا ✨</button><div id="formHint" class="note" role="status" aria-live="polite" style="text-align:center;margin-top:8px"></div>
   <div class="privacy" id="privacyText">🔒 يُرسل الملف للتحليل عبر الخادم ولا يظهر مفتاح API للزائر. لا يحفظ «وفّر» العرض في قاعدة بيانات في هذه النسخة.</div>
  </div>
@@ -249,7 +250,7 @@ async function start(){
  if(file.type==='application/pdf' && file.size>(window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024)){alert(en?'The PDF limit is '+uploadLimitMb()+' MB. Reduce the file size and try again.':'حد PDF الحالي '+uploadLimitMb()+'MB. صغّر الملف ثم حاول مجددًا.');return}
 
  const vin=String(document.getElementById('vin').value||'').trim().toUpperCase();
- const year=String(document.getElementById('year').value||'').trim();
+ let year=String(document.getElementById('year').value||'').trim();
  if(year && (!/^\d{4}$/.test(year) || Number(year)<1980 || Number(year)>new Date().getFullYear()+1)){
    alert(window.wafferLocale?.startsWith('en')?'Check the model year.':'تحقق من سنة الصنع.');
    return;
@@ -278,8 +279,15 @@ async function start(){
      }
      setStage('التحقق من رقم الهيكل VIN');
      const vehicleData=await window.ensureWafferVehicle();
+     if(vehicleData?.ambiguous){
+       throw new Error(en?'Choose the exact vehicle variant shown under the VIN field, then analyze again.':'اختر فئة السيارة الصحيحة الظاهرة أسفل رقم VIN ثم أعد التحليل.');
+     }
      if(!vehicleData || !vehicleData.vehicleId){
        throw new Error(en?'Could not determine Vehicle ID from the VIN.':'تعذر تحديد Vehicle ID من رقم الهيكل');
+     }
+     year=String(document.getElementById('year').value||'').trim();
+     if(year && (!/^\d{4}$/.test(year) || Number(year)<1980 || Number(year)>new Date().getFullYear()+1)){
+       throw new Error(en?'Check the model year returned for this VIN.':'تحقق من سنة الصنع التي أعادها رقم VIN.');
      }
    }
 
@@ -304,10 +312,12 @@ async function start(){
        fileName:upload.fileName,
        mimeType:upload.mimeType,
        vehicle:{
-         make:document.getElementById('make').value,
+         makeId:document.getElementById('make').value,
+         make:document.getElementById('make').selectedOptions?.[0]?.text||'',
          model:document.getElementById('model').value,
          year,
          vin,
+         vehicleId:window.wafferVehicleId||null,
          market:'SA',
          locale:window.wafferLocale||'ar-SA',
          currency:'SAR'
@@ -628,6 +638,11 @@ function resetAnalysis(){
 
  const vehicleInfo=document.getElementById('vehicleInfo');
  if(vehicleInfo){vehicleInfo.textContent='';vehicleInfo.classList.add('hidden');}
+
+ const vehicleCandidates=document.getElementById('vehicleCandidates');
+ if(vehicleCandidates)vehicleCandidates.classList.add('hidden');
+ const candidateSelect=document.getElementById('candidateSelect');
+ if(candidateSelect)candidateSelect.replaceChildren(new Option(window.wafferLocale?.startsWith('en')?'Choose the matching vehicle variant':'اختر فئة السيارة المطابقة',''));
 
  const catalogSummary=document.getElementById('catalogSummary');
  if(catalogSummary)catalogSummary.textContent='🔎 حالة مطابقة الكتالوج: بانتظار التحليل.';
