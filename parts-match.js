@@ -1,6 +1,11 @@
 (function () {
   'use strict';
 
+  function runtimeValue(key, fallback) {
+    const value = Number(window.WAFFER_RUNTIME?.[key]);
+    return Number.isFinite(value) && value > 0 ? value : fallback;
+  }
+
   function norm(s) {
     return String(s || '')
       .toLowerCase()
@@ -394,7 +399,7 @@
       if (!articleId) return { article, axle: null };
       const criteria = await Promise.race([
         loadArticleCriteria(articleId),
-        new Promise(resolve => setTimeout(() => resolve([]), 4500))
+        new Promise(resolve => setTimeout(() => resolve([]), Math.min(runtimeValue('catalogCriteriaTimeoutMs', 8000), 4500)))
       ]);
       const axle = criteriaAxle(criteria);
       return { article, axle };
@@ -493,7 +498,7 @@
         await Promise.race([
           loadProducts(vehicleId),
           new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('انتهت مهلة تحميل كتالوج القطع')), 12000)
+            setTimeout(() => reject(new Error('انتهت مهلة تحميل كتالوج القطع')), runtimeValue('catalogProductsTimeoutMs', 12000))
           )
         ]);
 
@@ -556,7 +561,7 @@
               vehicleId,
               product.productId
             ),
-            new Promise(resolve => setTimeout(() => resolve([]), 9000))
+            new Promise(resolve => setTimeout(() => resolve([]), runtimeValue('catalogArticlesTimeoutMs', 9000)))
           ]);
 
         const requestedAxle =
