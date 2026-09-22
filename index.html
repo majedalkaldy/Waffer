@@ -134,7 +134,7 @@ async function start(){
  const vin=String(document.getElementById('vin').value||'').trim().toUpperCase();
  const year=String(document.getElementById('year').value||'').trim();
  if(year && (!/^\d{4}$/.test(year) || Number(year)<1980 || Number(year)>new Date().getFullYear()+1)){
-   alert('تحقق من سنة الصنع.');
+   alert(window.wafferLocale?.startsWith('en')?'Check the model year.':'تحقق من سنة الصنع.');
    return;
  }
  analyzeBtn.disabled=true;
@@ -229,7 +229,7 @@ async function start(){
    }
  }catch(e){
    show('home');
-   alert('تعذر التحليل: '+(e.message||e));
+   alert((window.wafferLocale?.startsWith('en')?'Analysis failed: ':'تعذر التحليل: ')+(e.message||e));
  }finally{
    clearInterval(analysisTimer);
    analysisTimer=null;
