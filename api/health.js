@@ -59,6 +59,7 @@ export default async function handler(req, res) {
     status: ok ? 'ready' : degraded ? 'degraded' : 'unavailable',
     service: 'waffer',
     version: RUNTIME_CONFIG.engineVersion,
+    launchPhase: RUNTIME_CONFIG.launchPhase,
     deployment: {
       environment: process.env.VERCEL_ENV || null,
       commit: process.env.VERCEL_GIT_COMMIT_SHA ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 8) : null
