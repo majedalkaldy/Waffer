@@ -308,9 +308,15 @@ function render(){
  }
  if(analysis.acceptance?.schemaValid===false){
    const fields=(analysis.acceptance.missingShapeFields||[]).join(', ');
+   const invalid=(analysis.acceptance.invalidItemIndexes||[]);
    const en=window.wafferLocale?.startsWith('en');
    const box=document.getElementById('rDataIntegrity');
-   if(box)box.textContent=(en?'Result contract is incomplete. Missing: ':'عقد نتيجة التحليل غير مكتمل. الحقول الناقصة: ')+fields;
+   if(box){
+     const parts=[];
+     if(fields)parts.push((en?'missing fields: ':'حقول ناقصة: ')+fields);
+     if(invalid.length)parts.push((en?'invalid line items: ':'بنود غير صالحة: ')+invalid.map(i=>i+1).join(', '));
+     box.textContent=(en?'Result contract is incomplete — ':'عقد نتيجة التحليل غير مكتمل — ')+parts.join(' • ');
+   }
  }
  const dataIntegrity=document.getElementById('rDataIntegrity');
  if(dataIntegrity){
