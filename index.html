@@ -327,12 +327,16 @@ function formatVehicleForMessage(){
  return [document.getElementById('make')?.selectedOptions?.[0]?.text,document.getElementById('model')?.value,document.getElementById('year')?.value].filter(Boolean).join(' — ');
 }
 function resetAnalysis(){
+ clearInterval(analysisTimer);
+ analysisTimer=null;
  analysis=null;
  window.analysis=null;
  window.wafferPartMatches=null;
  window.wafferCatalogState=null;
  document.getElementById('file').value='';
- document.getElementById('fileText').textContent='ارفع صورة العرض أو ملف PDF';
+ document.getElementById('fileText').textContent=window.wafferLocale?.startsWith('en')?'Upload an estimate image or PDF':'ارفع صورة العرض أو ملف PDF';
+ const elapsed=document.getElementById('elapsedTime');
+ if(elapsed)elapsed.textContent=window.wafferLocale?.startsWith('en')?'Elapsed: 0 s':'الوقت المنقضي: 0 ث';
  document.getElementById('catalogSummary').textContent='🔎 حالة مطابقة الكتالوج: بانتظار التحليل.';
  const coverage=document.getElementById('rCatalogCoverage');
  if(coverage)coverage.textContent='🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.';
