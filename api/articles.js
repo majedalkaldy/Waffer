@@ -1,3 +1,4 @@
+import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { getMarketConfig } from '../lib/market-config.js';
 
 export default async function handler(req, res) {
@@ -25,7 +26,7 @@ export default async function handler(req, res) {
       '/lang-id/' + encodeURIComponent(langId);
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 9000);
+    const timer = setTimeout(() => controller.abort(), RUNTIME_CONFIG.catalogArticlesTimeoutMs);
     let response;
     try {
       response = await fetch(url, {
