@@ -74,7 +74,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
  <div class="card score"><span id="compatibilityLabel">ثقة التوافق</span><b id="rCompatibility">—</b><small>إمكان التحقق للسيارة المحددة</small></div>
  <div class="card score"><span id="priceConfidenceLabel">ثقة المقارنة السعرية</span><b id="rPrice">—</b><small>قابلية المقارنة دون تخمين</small></div></div>
  <div class="card"><h3 id="overallLabel">درجة الثقة الكلية</h3><div class="total"><b id="rOverall">—</b><small>تعكس قوة الأدلة المتاحة، وليست تقييمًا للورشة</small></div><div id="confidenceBreakdown" class="note" style="margin-top:10px"></div></div>
- <div class="card"><h3 id="findingsLabel">أبرز ما وجدناه</h3><div id="rConfidenceNote" class="note" style="margin-bottom:10px">درجات الثقة تقيس قوة الأدلة المتاحة وليست تقييمًا لجودة الورشة.</div><div id="rWarningsSummary" class="lock"></div><div id="rTestMeta" class="note" style="margin:8px 0"></div><div id="rVerificationSummary" class="lock"></div><div id="rMvpGate" class="lock"></div><div id="rDocQuality" class="lock"></div><div id="rCatalogCoverage" class="lock">🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.</div><div id="rCatalogGate" class="lock">🔎 فحص الكتالوج: بانتظار المطابقة.</div><div id="rAxleGate" class="lock"></div><div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
+ <div class="card"><h3 id="findingsLabel">أبرز ما وجدناه</h3><div id="rConfidenceNote" class="note" style="margin-bottom:10px">درجات الثقة تقيس قوة الأدلة المتاحة وليست تقييمًا لجودة الورشة.</div><div id="rWarningsSummary" class="lock"></div><div id="rTestMeta" class="note" style="margin:8px 0"></div><div id="rVerificationSummary" class="lock"></div><div id="rMvpGate" class="lock"></div><div id="rDocQuality" class="lock"></div><div id="rCatalogCoverage" class="lock">🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.</div><div id="rCatalogGate" class="lock">🔎 فحص الكتالوج: بانتظار المطابقة.</div><div id="rAxleGate" class="lock"></div><div id="rFieldTestSummary" class="lock"></div><div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
   <div class="lock">🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون مطابقة القطعة ومصدر سعر موثوق.</div>
   <div id="catalogSummary" class="lock" role="status" aria-live="polite">🔎 حالة مطابقة الكتالوج: بانتظار التحليل.</div>
   <button id="detailsBtn" onclick="advanced()">عرض تفاصيل البنود</button><button id="workshopBtn" class="secondary" onclick="messageWorkshop()">أنشئ رسالة للورشة</button>
@@ -400,6 +400,20 @@ function resetAnalysis(){
  const elapsed=document.getElementById('elapsedTime');
  if(elapsed)elapsed.textContent=window.wafferLocale?.startsWith('en')?'Elapsed: 0 s':'الوقت المنقضي: 0 ث';
  document.getElementById('catalogSummary').textContent='🔎 حالة مطابقة الكتالوج: بانتظار التحليل.';
+ const fieldTestSummary=document.getElementById('rFieldTestSummary');
+ if(fieldTestSummary){
+   const state=window.wafferCatalogState||{};
+   const hasVin=Boolean(window.wafferVehicle?.vehicleId);
+   const completed=state.status==='COMPLETED';
+   const underLimit=!state.elapsedMs||state.elapsedMs<=30000;
+   const axleOk=!state.axleRequested||state.axleVerified>0;
+   const checks=[hasVin,completed,underLimit,axleOk];
+   const passed=checks.filter(Boolean).length;
+   const en=window.wafferLocale?.startsWith('en');
+   fieldTestSummary.textContent=(en?'VIN + catalog field checks: ':'فحوصات VIN + الكتالوج: ')+passed+'/'+checks.length+
+     ' • '+(hasVin?'✓':'✗')+' VIN • '+(completed?'✓':'✗')+' '+(en?'catalog':'الكتالوج')+
+     ' • '+(underLimit?'✓':'✗')+' '+(en?'time':'الوقت')+' • '+(axleOk?'✓':'✗')+' Front/Rear';
+ }
  const axleGate=document.getElementById('rAxleGate');
  if(axleGate){
    const axleRequested=matches.filter(m=>m?.requestedAxle);
@@ -425,6 +439,8 @@ function resetAnalysis(){
  if(gate)gate.textContent='🔎 فحص الكتالوج: بانتظار المطابقة.';
  const axleGate=document.getElementById('rAxleGate');
  if(axleGate)axleGate.textContent='';
+ const fieldGate=document.getElementById('rFieldTestSummary');
+ if(fieldGate)fieldGate.textContent='';
  document.getElementById('catalogMatches').innerHTML='<h3>🔎 مطابقة كتالوج القطع</h3><div class="note">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>';
  const vehicleInfo=document.getElementById('vehicleInfo');
  if(vehicleInfo){vehicleInfo.textContent='';vehicleInfo.classList.add('hidden');}
