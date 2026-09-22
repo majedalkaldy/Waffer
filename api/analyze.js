@@ -111,6 +111,7 @@ export default async function handler(req, res) {
       const uploadController = new AbortController();
       const uploadTimeout = setTimeout(() => uploadController.abort(), RUNTIME_CONFIG.pdfUploadTimeoutMs);
       let up;
+      let uj;
       try {
         up = await fetch('https://api.openai.com/v1/files', {
           method: 'POST',
@@ -118,16 +119,33 @@ export default async function handler(req, res) {
           body: form,
           signal: uploadController.signal
         });
+        try {
+          uj = await up.json();
+        } catch {
+          return res.status(502).json({
+            error: 'استجابة رفع PDF من مزود التحليل غير صالحة.',
+            code: 'ANALYSIS_UPSTREAM_INVALID'
+          });
+        }
       } finally {
         clearTimeout(uploadTimeout);
       }
-      const uj = await up.json();
-      if (!up.ok) throw new Error(uj?.error?.message || 'تعذر رفع PDF إلى خدمة التحليل');
-      attachment = { type: 'input_file', file_id: uj.id };
-
-      // Best-effort cleanup is performed after analysis so uploaded PDFs are not retained unnecessarily.
-      res.locals = res.locals || {};
-      res.locals.openaiFileId = uj.id;
+      if (!up.ok) {
+        const status = up.status === 429 ? 429 : up.status >= 500 ? 502 : 500;
+        const code = up.status === 429 ? 'ANALYSIS_RATE_LIMITED' : 'ANALYSIS_UPSTREAM_ERROR';
+        return res.status(status).json({
+          error: uj?.error?.message || 'تعذر رفع PDF إلى خدمة التحليل',
+          code
+        });
+      }
+      if (!uj?.id) {
+        return res.status(502).json({
+          error: 'لم يُرجع مزود التحليل معرف ملف PDF صالحًا.',
+          code: 'ANALYSIS_UPSTREAM_INVALID'
+        });
+      }
+      openaiFileId = uj.id;
+      attachment = { type: 'input_file', file_id: openaiFileId };
     } else if (normalizedMimeType.startsWith('image/')) {
       attachment = { type: 'input_image', image_url: `data:${normalizedMimeType};base64,${base64}` };
     } else return res.status(415).json({ error: 'نوع الملف غير مدعوم.' });
