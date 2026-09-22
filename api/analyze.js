@@ -45,7 +45,7 @@ export default async function handler(req, res) {
 
 حلّل المستند وفق التسلسل: Identity → Compatibility → Price → Conflict → Confidence.
 أعد JSON فقط دون markdown بهذه البنية:
-{"total":"الإجمالي المطبوع حرفيًا أو غير مذكور","calculatedTotal":"مجموع الأسعار الظاهرة حسابيًا إن أمكن أو غير محسوب","tax":"الضريبة المطبوعة حرفيًا أو غير مذكورة","laborTotal":"إجمالي أجور العمل إن ظهر منفصلًا أو غير مذكور","status":"خلاصة قصيرة ومحايدة","transparency":0,"identityConfidence":0,"compatibilityConfidence":0,"priceConfidence":0,"overallConfidence":0,"missing":["..."],"conflicts":["..."],"nextActions":["..."],"items":[{"name":"","partNumber":"غير ظاهر","manufacturer":"غير ظاهر","quantity":"غير ظاهرة","price":"","identityConfidence":0,"compatibility":"غير قابل للتحقق|متوافق مبدئيًا|يحتاج تحقق","priceAssessment":"غير قابل للمقارنة|يحتاج مصدر سعر|قابل للمقارنة بعد التحقق","conflict":"لا يظهر|يحتاج تحقق|وصف مختصر","judgment":""}],"workshopMessage":"رسالة عربية مهذبة ومختصرة للورشة تطلب فقط البيانات الناقصة المهمة"}
+{"total":"الإجمالي المطبوع حرفيًا أو غير مذكور","calculatedTotal":"مجموع الأسعار الظاهرة حسابيًا إن أمكن أو غير محسوب","tax":"الضريبة المطبوعة حرفيًا أو غير مذكورة","laborTotal":"إجمالي أجور العمل إن ظهر منفصلًا أو غير مذكور","status":"خلاصة قصيرة ومحايدة","transparency":0,"identityConfidence":0,"compatibilityConfidence":0,"priceConfidence":0,"overallConfidence":0,"missing":["..."],"conflicts":["..."],"nextActions":["..."],"items":[{"name":"","partNumber":"غير ظاهر","manufacturer":"غير ظاهر","quantity":"غير ظاهرة","price":"","category":"part|labor|fluid|service|other","identityConfidence":0,"compatibility":"غير قابل للتحقق|متوافق مبدئيًا|يحتاج تحقق","priceAssessment":"غير قابل للمقارنة|يحتاج مصدر سعر|قابل للمقارنة بعد التحقق","conflict":"لا يظهر|يحتاج تحقق|وصف مختصر","judgment":""}],"workshopMessage":"رسالة عربية مهذبة ومختصرة للورشة تطلب فقط البيانات الناقصة المهمة"}
 
 قواعد إلزامية:
 - لا تخترع رقم قطعة أو مصنعًا أو كمية أو سعر سوق أو توافقًا.
@@ -125,6 +125,9 @@ export default async function handler(req, res) {
             manufacturer: String(item?.manufacturer || 'غير ظاهر').slice(0, 120),
             quantity: String(item?.quantity || 'غير ظاهرة').slice(0, 80),
             price: String(item?.price || '').slice(0, 120),
+            category: ['part','labor','fluid','service','other'].includes(String(item?.category || '').toLowerCase())
+              ? String(item.category).toLowerCase()
+              : 'other',
             identityConfidence: clamp(item?.identityConfidence)
           }))
         : []
