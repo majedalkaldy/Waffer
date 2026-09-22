@@ -642,7 +642,7 @@ window.addEventListener('wafferPartsMatched', function(event){
  const coverage=document.getElementById('rCatalogCoverage');
  if(coverage){
    const totalItems=Array.isArray(analysis?.items)?analysis.items.filter(i=>(i.itemType||'part')==='part').length:0;
-   const matchedCount=matched.length;
+   const matchedCount=matched.filter(m=>m?.productId).length;
    coverage.textContent=totalItems
      ? '🔎 تغطية التحقق من الكتالوج: '+matchedCount+' من '+totalItems+' بنود قطع ('+Math.round((matchedCount/totalItems)*100)+'%).'
      : '🔎 لا توجد بنود قطع واضحة تحتاج مطابقة كتالوج.';
