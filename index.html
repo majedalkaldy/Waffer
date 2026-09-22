@@ -170,8 +170,14 @@ async function start(){
      })
    });
 
-   const d=await resp.json();
+   let d;
+   try{d=await resp.json();}catch(parseError){
+     throw new Error('استجابة التحليل غير صالحة. حاول مرة أخرى.');
+   }
    if(!resp.ok)throw new Error(d.error||d.message||'تعذر التحليل');
+   if(!d || typeof d!=='object' || !Array.isArray(d.items)){
+     throw new Error('لم تُرجع خدمة التحليل نتيجة مكتملة.');
+   }
 
    analysis=d;
    window.analysis=d;
