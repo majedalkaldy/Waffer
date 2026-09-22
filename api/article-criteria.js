@@ -34,9 +34,9 @@ export default async function handler(req, res) {
     const text = await response.text();
     let data;
     try { data = JSON.parse(text); }
-    catch { return res.status(502).json({ error: 'Invalid response from parts catalog', status: response.status }); }
+    catch { return res.status(502).json({ error: 'Invalid response from parts catalog', code: 'CATALOG_INVALID_RESPONSE', status: response.status }); }
 
-    if (!response.ok) return res.status(response.status).json({ error: 'Article criteria lookup failed', details: data });
+    if (!response.ok) return res.status(response.status >= 500 ? 502 : response.status).json({ error: 'Article criteria lookup failed', code: 'CATALOG_UPSTREAM_ERROR', details: data });
 
     const criteria = Array.isArray(data) ? data : Array.isArray(data?.criteria) ? data.criteria : [];
     return res.status(200).json({
