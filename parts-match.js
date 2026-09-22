@@ -424,6 +424,7 @@
   }
 
   async function matchWafferParts(analysisArg) {
+    const startedAt = Date.now();
     const analysis =
       analysisArg || window.analysis;
 
@@ -513,6 +514,9 @@
       }
 
       window.wafferPartMatches = matches;
+
+      const elapsedMs = Date.now() - startedAt;
+      matches.forEach(match => { match.matchingElapsedMs = elapsedMs; });
 
       window.dispatchEvent(
         new CustomEvent(
