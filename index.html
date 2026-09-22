@@ -276,9 +276,19 @@ function render(){
    const verifiedVehicle=Boolean(window.wafferVehicle?.vehicleId);
    decision.textContent='ملخص قبل الموافقة: '+(verifiedVehicle?'هوية السيارة موثقة. ':'تحقق من هوية السيارة. ')+(missingCount?'بيانات ناقصة: '+missingCount+'. ':'')+(conflictCount?'نقاط تحتاج تحقق: '+conflictCount+'. ':'')+'لا تعتمد أي توفير مالي قبل ظهور مصدر سعر موثوق.';
  }
- document.getElementById('message').textContent=analysis.workshopMessage||'السلام عليكم، أرجو تزويدي بتفاصيل القطع وأرقامها والشركة المصنعة والكمية وأجرة العمل والضريبة والضمان قبل اعتماد العرض. وشكرًا.';
+ const generatedMessage=analysis.workshopMessage||'السلام عليكم، أرجو تزويدي بتفاصيل القطع وأرقامها والشركة المصنعة والكمية وأجرة العمل والضريبة والضمان قبل اعتماد العرض. وشكرًا.';
+ const vehicleLabel=formatVehicleForMessage();
+ document.getElementById('message').textContent=(vehicleLabel?'السيارة: '+vehicleLabel+'\n\n':'')+generatedMessage;
 }
-function advanced(){show('advanced')} function messageWorkshop(){show('msg')}
+function advanced(){show('advanced')}
+function messageWorkshop(){show('msg')}
+function formatVehicleForMessage(){
+ const v=window.wafferVehicle;
+ if(v?.vehicleId){
+   return [v.manufacturerName,v.modelName,v.vehicleDescription].filter(Boolean).join(' — ');
+ }
+ return [document.getElementById('make')?.selectedOptions?.[0]?.text,document.getElementById('model')?.value,document.getElementById('year')?.value].filter(Boolean).join(' — ');
+}
 function resetAnalysis(){
  analysis=null;
  window.analysis=null;
