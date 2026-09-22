@@ -65,7 +65,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
  <div class="card score">ثقة هوية القطع<b id="rIdentity">—</b><small>رقم القطعة والمصنع والوصف</small></div>
  <div class="card score">ثقة التوافق<b id="rCompatibility">—</b><small>إمكان التحقق للسيارة المحددة</small></div>
  <div class="card score">ثقة المقارنة السعرية<b id="rPrice">—</b><small>قابلية المقارنة دون تخمين</small></div></div>
- <div class="card"><h3>درجة الثقة الكلية</h3><div class="total"><b id="rOverall">—</b><small>تعكس قوة الأدلة المتاحة، وليست تقييمًا للورشة</small></div></div>
+ <div class="card"><h3>درجة الثقة الكلية</h3><div class="total"><b id="rOverall">—</b><small>تعكس قوة الأدلة المتاحة، وليست تقييمًا للورشة</small></div><div id="confidenceBreakdown" class="note" style="margin-top:10px"></div></div>
  <div class="card"><h3>أبرز ما وجدناه</h3><div id="rConfidenceNote" class="note" style="margin-bottom:10px">درجات الثقة تقيس قوة الأدلة المتاحة وليست تقييمًا لجودة الورشة.</div><div id="rDocQuality" class="lock"></div><div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
   <div class="lock">🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون مطابقة القطعة ومصدر سعر موثوق.</div>
   <div id="catalogSummary" class="lock">🔎 حالة مطابقة الكتالوج: بانتظار التحليل.</div>
@@ -259,6 +259,10 @@ function render(){
    }
  }
  document.getElementById('rStatus').textContent='⚠️ '+(analysis.status||'يحتاج مراجعة'); document.getElementById('rTransparency').textContent=(analysis.transparency??'—')+'/100'; document.getElementById('rIdentity').textContent=(analysis.identityConfidence??'—')+'/100'; document.getElementById('rCompatibility').textContent=(analysis.compatibilityConfidence??'—')+'/100'; document.getElementById('rPrice').textContent=(analysis.priceConfidence??'—')+'/100'; document.getElementById('rOverall').textContent=(analysis.overallConfidence??'—')+'/100';
+ const breakdown=document.getElementById('confidenceBreakdown');
+ if(breakdown){
+   breakdown.textContent='الشفافية '+(analysis.transparency??0)+'/100 • هوية القطع '+(analysis.identityConfidence??0)+'/100 • التوافق '+(analysis.compatibilityConfidence??0)+'/100 • قابلية مقارنة السعر '+(analysis.priceConfidence??0)+'/100';
+ }
  const alerts=[...(analysis.missing||[]).map(x=>'📋 '+x),...(analysis.conflicts||[]).map(x=>'⚙️ '+x)]; document.getElementById('rAlerts').innerHTML=(alerts.length?alerts:['لم تظهر ملاحظات رئيسية.']).map(x=>'<div class="alert">'+esc(x)+'</div>').join('');
  document.getElementById('itemsBody').innerHTML=(analysis.items||[]).map(i=>`<tr><td>${esc(i.name)}</td><td>${esc(({part:'قطعة',labor:'أجرة عمل',fluid:'سائل/زيت',service:'خدمة',other:'أخرى'})[i.category]||'أخرى')}</td><td>${esc(i.partNumber||'غير ظاهر')}</td><td>${esc(i.price)}</td><td>${esc(i.identityConfidence)}%</td><td>${esc(i.compatibility)}</td><td>${esc(i.priceAssessment)}</td><td>${esc(i.conflict)}</td></tr>`).join('')||'<tr><td colspan="8">لم تُستخرج بنود واضحة.</td></tr>'; document.getElementById('nextActions').innerHTML=(analysis.nextActions||[]).map((x,n)=>'<div class="alert">'+(n+1)+'. '+esc(x)+'</div>').join('')||'<div class="note">لا توجد خطوات إضافية مستخرجة.</div>'; 
  const priceBox=document.querySelector('#advanced .price');
