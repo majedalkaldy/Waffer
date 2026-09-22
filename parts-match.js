@@ -520,8 +520,8 @@
           item?.item ||
           '';
 
-        const category = String(item?.category || 'other').toLowerCase();
-        if (category === 'labor' || category === 'service') {
+        const itemType = String(item?.itemType || 'part').toLowerCase();
+        if (itemType !== 'part') {
           matches.push({
             workshopItem: itemName,
             productId: null,
