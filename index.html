@@ -106,7 +106,32 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 </section>
 </main>
 <script>
-const ids=['home','loading','result','advanced','msg']; let analysis=null; let analysisTimer=null;
+const ids=['home','loading','result','advanced','msg'];
+let analysis=null;
+let analysisTimer=null;
+let analysisRunId=0;
+let activeAnalysisController=null;
+let activeCatalogController=null;
+window.wafferAnalysisRunId=0;
+
+function beginAnalysisRun(){
+ analysisRunId+=1;
+ window.wafferAnalysisRunId=analysisRunId;
+ activeAnalysisController?.abort();
+ activeCatalogController?.abort();
+ activeAnalysisController=new AbortController();
+ activeCatalogController=null;
+ return analysisRunId;
+}
+function invalidateAnalysisRun(){
+ analysisRunId+=1;
+ window.wafferAnalysisRunId=analysisRunId;
+ activeAnalysisController?.abort();
+ activeCatalogController?.abort();
+ activeAnalysisController=null;
+ activeCatalogController=null;
+}
+function isCurrentAnalysisRun(runId){return runId===analysisRunId;}
 const debugMode=new URLSearchParams(location.search).get('debug')==='1';
 document.body.classList.toggle('debug-mode',debugMode);
 function show(id){
@@ -255,6 +280,15 @@ async function start(){
    alert(window.wafferLocale?.startsWith('en')?'Check the model year.':'تحقق من سنة الصنع.');
    return;
  }
+ const runId=beginAnalysisRun();
+ const analysisController=activeAnalysisController;
+ let analysisTimedOut=false;
+ const analysisTimeout=setTimeout(()=>{
+   analysisTimedOut=true;
+   analysisController.abort();
+ },window.WAFFER_RUNTIME?.clientAnalysisTimeoutMs||60000);
+ window.wafferPartMatches=null;
+ window.wafferCatalogState={status:'NOT_STARTED',runId};
  analyzeBtn.disabled=true;
  analyzeBtn.textContent=window.wafferLocale?.startsWith('en')?'Analyzing...':'جارٍ التحليل...';
  show('loading');
@@ -307,6 +341,7 @@ async function start(){
    const resp=await fetch('/api/analyze',{
      method:'POST',
      headers:{'Content-Type':'application/json'},
+     signal:analysisController.signal,
      body:JSON.stringify({
        fileData:upload.fileData,
        fileName:upload.fileName,
@@ -325,10 +360,13 @@ async function start(){
      })
    });
 
+   if(!isCurrentAnalysisRun(runId))return;
    let d;
    try{d=await resp.json();}catch(parseError){
+     if(analysisController.signal.aborted)throw parseError;
      throw new Error('استجابة التحليل غير صالحة. حاول مرة أخرى.');
    }
+   if(!isCurrentAnalysisRun(runId))return;
    if(!resp.ok){
      throw new Error(apiErrorMessage(d));
    }
@@ -336,6 +374,7 @@ async function start(){
      throw new Error(en?'The analysis service returned an incomplete result.':'لم تُرجع خدمة التحليل نتيجة مكتملة.');
    }
 
+   if(!isCurrentAnalysisRun(runId))return;
    analysis=d;
    window.analysis=d;
    setStage('إعداد النتيجة');
@@ -345,35 +384,58 @@ async function start(){
    const catalogSummary=document.getElementById('catalogSummary');
    if(window.wafferVehicleId && typeof window.matchWafferParts==='function'){
      if(catalogSummary)catalogSummary.textContent='🔎 جارٍ مطابقة البنود مع كتالوج السيارة...';
+     const catalogController=new AbortController();
+     activeCatalogController=catalogController;
+     let catalogTimedOut=false;
+     const catalogTimeout=setTimeout(()=>{
+       catalogTimedOut=true;
+       catalogController.abort();
+     },window.WAFFER_RUNTIME?.catalogMatchTimeoutMs||30000);
+     window.wafferCatalogState={status:'RUNNING',runId};
      try{
-       const matches=await Promise.race([
-         window.matchWafferParts(analysis),
-         new Promise((_,reject)=>setTimeout(()=>reject(new Error('CATALOG_TIMEOUT')),window.WAFFER_RUNTIME?.catalogMatchTimeoutMs||30000))
-       ]);
-       if(catalogSummary && Array.isArray(matches) && !matches.length){
+       const matches=await window.matchWafferParts(
+         analysis,
+         {signal:catalogController.signal,runId}
+       );
+       if(!isCurrentAnalysisRun(runId))return;
+       if(catalogSummary && catalogTimedOut){
+         catalogSummary.textContent='⚠️ استغرقت مطابقة الكتالوج وقتًا أطول من المتوقع. نتيجة تحليل العرض متاحة.';
+       }else if(catalogSummary && Array.isArray(matches) && !matches.length){
          catalogSummary.textContent='⚠️ اكتمل فحص الكتالوج ولم تظهر مطابقة مناسبة.';
        }
      }catch(matchError){
+       if(!isCurrentAnalysisRun(runId))return;
        console.error('Parts matching error:',matchError);
        if(catalogSummary){
-         catalogSummary.textContent=matchError?.message==='CATALOG_TIMEOUT'
+         catalogSummary.textContent=catalogTimedOut||matchError?.name==='AbortError'
            ? '⚠️ استغرقت مطابقة الكتالوج وقتًا أطول من المتوقع. نتيجة تحليل العرض متاحة.'
            : '⚠️ تعذر إكمال مطابقة الكتالوج. نتيجة تحليل العرض متاحة.';
        }
+     }finally{
+       clearTimeout(catalogTimeout);
+       if(activeCatalogController===catalogController)activeCatalogController=null;
      }
-   }else if(catalogSummary){
+   }else if(catalogSummary && isCurrentAnalysisRun(runId)){
      catalogSummary.textContent=vin
        ? '⚠️ تعذر تحديد السيارة للكتالوج.'
        : 'ℹ️ أدخل VIN لتفعيل مطابقة القطع مع السيارة.';
    }
  }catch(e){
+   if(!isCurrentAnalysisRun(runId))return;
    show('home');
-   alert((window.wafferLocale?.startsWith('en')?'Analysis failed: ':'تعذر التحليل: ')+(e.message||e));
+   const message=analysisTimedOut||e?.name==='AbortError'
+     ? (window.wafferLocale?.startsWith('en')?'Analysis timed out. Try again.':'انتهت مهلة التحليل. حاول مرة أخرى.')
+     : ((window.wafferLocale?.startsWith('en')?'Analysis failed: ':'تعذر التحليل: ')+(e.message||e));
+   alert(message);
  }finally{
-   clearInterval(analysisTimer);
-   analysisTimer=null;
-   analyzeBtn.disabled=false;
-   analyzeBtn.textContent=window.wafferLocale?.startsWith('en')?'Analyze my estimate':'حلّل عرضي مجانًا ✨';
+   clearTimeout(analysisTimeout);
+   if(activeAnalysisController===analysisController)activeAnalysisController=null;
+   if(isCurrentAnalysisRun(runId)){
+     clearInterval(analysisTimer);
+     analysisTimer=null;
+     analyzeBtn.disabled=false;
+     analyzeBtn.textContent=window.wafferLocale?.startsWith('en')?'Analyze my estimate':'حلّل عرضي مجانًا ✨';
+   }
  }
 }
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -613,6 +675,7 @@ function formatVehicleForMessage(){
  return [document.getElementById('make')?.selectedOptions?.[0]?.text,document.getElementById('model')?.value,document.getElementById('year')?.value].filter(Boolean).join(' — ');
 }
 function resetAnalysis(){
+ invalidateAnalysisRun();
  clearInterval(analysisTimer);
  analysisTimer=null;
  analysis=null;
@@ -624,6 +687,12 @@ function resetAnalysis(){
  window.wafferVehicleId='';
  window.wafferModelId='';
  window.wafferManufacturerId='';
+
+ const analyzeBtn=document.getElementById('analyzeBtn');
+ if(analyzeBtn){
+   analyzeBtn.disabled=false;
+   analyzeBtn.textContent=window.wafferLocale?.startsWith('en')?'Analyze my estimate':'حلّل عرضي مجانًا ✨';
+ }
 
  const file=document.getElementById('file');
  if(file)file.value='';
@@ -879,6 +948,8 @@ fetch('/api/vehicles').then(r=>{if(!r.ok)throw new Error('API '+r.status);return
  if(m.options.length<=1)m.innerHTML='<option value="">تعذر تحميل الشركات</option>';
 });
 window.addEventListener('wafferPartsMatched', function(event){
+ if(event.detail?.wafferRunId!=null && event.detail.wafferRunId!==window.wafferAnalysisRunId)return;
+ if(!analysis)return;
  const matches=Array.isArray(event.detail)?event.detail:[];
  const items=Array.isArray(analysis?.items)?analysis.items:[];
 
