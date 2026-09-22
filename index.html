@@ -70,7 +70,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
  <div class="card score">ثقة التوافق<b id="rCompatibility">—</b><small>إمكان التحقق للسيارة المحددة</small></div>
  <div class="card score">ثقة المقارنة السعرية<b id="rPrice">—</b><small>قابلية المقارنة دون تخمين</small></div></div>
  <div class="card"><h3>درجة الثقة الكلية</h3><div class="total"><b id="rOverall">—</b><small>تعكس قوة الأدلة المتاحة، وليست تقييمًا للورشة</small></div><div id="confidenceBreakdown" class="note" style="margin-top:10px"></div></div>
- <div class="card"><h3>أبرز ما وجدناه</h3><div id="rConfidenceNote" class="note" style="margin-bottom:10px">درجات الثقة تقيس قوة الأدلة المتاحة وليست تقييمًا لجودة الورشة.</div><div id="rWarningsSummary" class="lock"></div><div id="rDocQuality" class="lock"></div><div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
+ <div class="card"><h3>أبرز ما وجدناه</h3><div id="rConfidenceNote" class="note" style="margin-bottom:10px">درجات الثقة تقيس قوة الأدلة المتاحة وليست تقييمًا لجودة الورشة.</div><div id="rWarningsSummary" class="lock"></div><div id="rDocQuality" class="lock"></div><div id="rCatalogCoverage" class="lock">🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.</div><div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
   <div class="lock">🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون مطابقة القطعة ومصدر سعر موثوق.</div>
   <div id="catalogSummary" class="lock">🔎 حالة مطابقة الكتالوج: بانتظار التحليل.</div>
   <button onclick="advanced()">عرض تفاصيل البنود</button><button class="secondary" onclick="messageWorkshop()">أنشئ رسالة للورشة</button>
@@ -310,6 +310,8 @@ function resetAnalysis(){
  document.getElementById('file').value='';
  document.getElementById('fileText').textContent='ارفع صورة العرض أو ملف PDF';
  document.getElementById('catalogSummary').textContent='🔎 حالة مطابقة الكتالوج: بانتظار التحليل.';
+ const coverage=document.getElementById('rCatalogCoverage');
+ if(coverage)coverage.textContent='🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.';
  document.getElementById('catalogMatches').innerHTML='<h3>🔎 مطابقة كتالوج القطع</h3><div class="note">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>';
  const vehicleInfo=document.getElementById('vehicleInfo');
  if(vehicleInfo){vehicleInfo.textContent='';vehicleInfo.classList.add('hidden');}
@@ -473,6 +475,14 @@ window.addEventListener('wafferPartsMatched', function(event){
 
  const matched=matches.filter(m=>m && m.productId);
  const elapsed=matches.find(m=>Number.isFinite(m?.matchingElapsedMs))?.matchingElapsedMs;
+ const coverage=document.getElementById('rCatalogCoverage');
+ if(coverage){
+   const totalItems=Array.isArray(analysis?.items)?analysis.items.filter(i=>(i.itemType||'part')==='part').length:0;
+   const matchedCount=matched.length;
+   coverage.textContent=totalItems
+     ? '🔎 تغطية التحقق من الكتالوج: '+matchedCount+' من '+totalItems+' بنود قطع ('+Math.round((matchedCount/totalItems)*100)+'%).'
+     : '🔎 لا توجد بنود قطع واضحة تحتاج مطابقة كتالوج.';
+ }
  const priceReadiness=document.getElementById('priceReadiness');
  if(priceReadiness){
    const withArticles=matched.filter(m=>Array.isArray(m.articles)&&m.articles.length);
