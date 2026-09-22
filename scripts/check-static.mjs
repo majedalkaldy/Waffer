@@ -176,6 +176,10 @@ if (!failures.length) {
       if (!/name="robots"\s+content="noindex,nofollow"/i.test(indexHtml)) failures.push('Field-test phase must include noindex,nofollow');
     }
     if (!(RUNTIME_CONFIG.maxUploadBytes > 0)) failures.push('Runtime upload limit must be positive');
+    const estimatedJsonPayload = Math.ceil(RUNTIME_CONFIG.maxUploadBytes * 4 / 3) + 128 * 1024;
+    if (!(estimatedJsonPayload < RUNTIME_CONFIG.functionPayloadLimitBytes)) {
+      failures.push('Configured binary upload limit can exceed Vercel request payload ceiling after Base64 overhead');
+    }
     if (!RUNTIME_CONFIG.supportedMimeTypes.includes('application/pdf')) failures.push('PDF support missing from runtime config');
     if (!(sa.supported && sa.market === 'SA' && sa.currency === 'SAR')) failures.push('Saudi market configuration is invalid');
     if (saEnglish.locale !== 'en-SA') failures.push('Supported Saudi English locale is unavailable');
