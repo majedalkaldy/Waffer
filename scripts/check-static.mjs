@@ -1,4 +1,8 @@
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import vm from 'node:vm';
+import { execFileSync } from 'node:child_process';
 
 const required = [
   'index.html',
@@ -28,7 +32,35 @@ for (const path of required) {
 }
 
 if (!failures.length) {
+  const jsFiles = required.filter(file => /\.js$|\.mjs$/.test(file));
+  for (const file of jsFiles) {
+    try {
+      execFileSync(process.execPath, ['--check', file], { stdio: 'pipe' });
+    } catch (error) {
+      failures.push(`JavaScript syntax error in ${file}: ${String(error.stderr || error.message).trim()}`);
+    }
+  }
+
   const index = read('index.html');
+
+  const inlineScripts = [...index.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/gi)]
+    .filter(match => !/\bsrc\s*=/.test(match[1] || ''));
+  for (const [scriptIndex, match] of inlineScripts.entries()) {
+    const attrs = match[1] || '';
+    const source = match[2] || '';
+    try {
+      if (/type\s*=\s*["']module["']/i.test(attrs)) {
+        const temp = path.join(os.tmpdir(), `waffer-inline-${scriptIndex}.mjs`);
+        fs.writeFileSync(temp, source);
+        execFileSync(process.execPath, ['--check', temp], { stdio: 'pipe' });
+        fs.unlinkSync(temp);
+      } else {
+        new vm.Script(source);
+      }
+    } catch (error) {
+      failures.push(`Inline script syntax error #${scriptIndex + 1}: ${String(error.stderr || error.message).trim()}`);
+    }
+  }
   const ids = [...index.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
   const idCounts = new Map();
   for (const id of ids) idCounts.set(id, (idCounts.get(id) || 0) + 1);
