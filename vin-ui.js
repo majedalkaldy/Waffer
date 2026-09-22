@@ -424,6 +424,24 @@
         window.wafferVehicle =
           detail;
 
+        const vehicleInfo =
+          document.getElementById('vehicleInfo');
+
+        if (vehicleInfo) {
+          const parts = [
+            detail.manufacturerName,
+            detail.modelName,
+            detail.vehicleDescription
+          ].filter(Boolean);
+
+          vehicleInfo.textContent =
+            '✓ تم التعرف على السيارة' +
+            (parts.length ? ': ' + parts.join(' — ') : '') +
+            ' | Vehicle ID: ' + detail.vehicleId;
+
+          vehicleInfo.classList.remove('hidden');
+        }
+
         // إرسال حدث لبقية نظام وفر
         window.dispatchEvent(
           new CustomEvent(
