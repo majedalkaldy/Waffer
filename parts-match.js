@@ -483,10 +483,33 @@
     return diverse;
   }
 
-  async function matchWafferParts(analysisArg) {
+  async function matchWafferParts(analysisArg, options = {}) {
     const startedAt = Date.now();
-    const analysis =
-      analysisArg || window.analysis;
+    const analysis = analysisArg || window.analysis;
+    const signal = options?.signal;
+    const runId = options?.runId ?? null;
+
+    const isCurrent = () =>
+      !signal?.aborted &&
+      (runId == null || window.wafferAnalysisRunId === runId);
+
+    const ensureCurrent = () => {
+      throwIfAborted(signal);
+      if (runId != null && window.wafferAnalysisRunId !== runId) {
+        throw abortError('Stale analysis run');
+      }
+    };
+
+    const emitMatches = matches => {
+      if (!isCurrent()) return;
+      matches.wafferRunId = runId;
+      window.dispatchEvent(
+        new CustomEvent(
+          'wafferPartsMatched',
+          { detail: matches }
+        )
+      );
+    };
 
     catalogContext.market = String(
       analysis?.engineContext?.market ||
@@ -494,49 +517,32 @@
       'SA'
     ).toUpperCase();
 
-    const vehicleId =
-      window.wafferVehicleId;
-
-    const items =
-      Array.isArray(analysis?.items)
-        ? analysis.items
-        : [];
+    const vehicleId = window.wafferVehicleId;
+    const items = Array.isArray(analysis?.items) ? analysis.items : [];
 
     if (!analysis || !vehicleId || !items.length) {
-      window.wafferCatalogState = {
-        status: !vehicleId ? 'NO_VEHICLE_ID' : !items.length ? 'NO_ITEMS' : 'NO_ANALYSIS',
-        matched: 0,
-        totalItems: items.length
-      };
-      window.wafferCatalogState = {
-        status: 'FAILED',
-        matched: 0,
-        totalItems: items.length,
-        error: String(error?.message || error)
-      };
-
-      window.dispatchEvent(
-        new CustomEvent(
-          'wafferPartsMatched',
-          { detail: [] }
-        )
-      );
-
+      if (isCurrent()) {
+        window.wafferCatalogState = {
+          status: !analysis ? 'NO_ANALYSIS' : !vehicleId ? 'NO_VEHICLE_ID' : 'NO_ITEMS',
+          matched: 0,
+          totalItems: items.length,
+          runId
+        };
+        emitMatches([]);
+      }
       return [];
     }
 
     try {
-      const products =
-        await Promise.race([
-          loadProducts(vehicleId),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('انتهت مهلة تحميل كتالوج القطع')), runtimeValue('catalogProductsTimeoutMs', 12000))
-          )
-        ]);
+      ensureCurrent();
+      const products = await loadProducts(vehicleId, signal);
+      ensureCurrent();
 
       const matches = [];
 
       for (const item of items) {
+        ensureCurrent();
+
         if (item?.itemType && item.itemType !== 'part') {
           matches.push({
             workshopItem: item?.name || item?.description || item?.item || '',
@@ -571,8 +577,7 @@
           continue;
         }
 
-        const product =
-          bestProduct(itemName, products);
+        const product = bestProduct(itemName, products);
 
         if (!product) {
           matches.push({
@@ -583,26 +588,27 @@
             countArticles: 0,
             articles: []
           });
-
           continue;
         }
 
-        const allArticles =
-          await Promise.race([
-            loadArticles(
-              vehicleId,
-              product.productId
-            ),
-            new Promise(resolve => setTimeout(() => resolve([]), runtimeValue('catalogArticlesTimeoutMs', 9000)))
-          ]);
+        const allArticles = await loadArticles(
+          vehicleId,
+          product.productId,
+          signal
+        );
+        ensureCurrent();
 
         const requestedAxle =
           (product.requestedType === 'brake_pad' || product.requestedType === 'brake_disc')
             ? detectRequestedAxle(itemName)
             : null;
 
-        const filtered =
-          await filterByAxle(allArticles, requestedAxle);
+        const filtered = await filterByAxle(
+          allArticles,
+          requestedAxle,
+          signal
+        );
+        ensureCurrent();
 
         matches.push({
           workshopItem: itemName,
@@ -619,13 +625,14 @@
         });
       }
 
-      window.wafferPartMatches = matches;
-
+      ensureCurrent();
       const elapsedMs = Date.now() - startedAt;
       const partItems = items.filter(item => !item?.itemType || item.itemType === 'part');
       const skippedItems = matches.filter(x => x?.skipped).length;
       const axleRequested = matches.filter(x => x?.requestedAxle).length;
       const axleVerified = matches.filter(x => x?.requestedAxle && Number(x?.verifiedByAxle) > 0).length;
+
+      window.wafferPartMatches = matches;
       window.wafferCatalogState = {
         status: 'COMPLETED',
         matched: matches.filter(x => x && x.productId).length,
@@ -634,16 +641,11 @@
         skippedItems,
         axleRequested,
         axleVerified,
-        elapsedMs
+        elapsedMs,
+        runId
       };
       matches.forEach(match => { match.matchingElapsedMs = elapsedMs; });
-
-      window.dispatchEvent(
-        new CustomEvent(
-          'wafferPartsMatched',
-          { detail: matches }
-        )
-      );
+      emitMatches(matches);
 
       console.log(
         'Waffer parts matching completed:',
@@ -653,18 +655,23 @@
       return matches;
 
     } catch (error) {
+      if (error?.name === 'AbortError' || !isCurrent()) {
+        return [];
+      }
+
       console.error(
         'Waffer parts matching failed:',
         error
       );
 
-      window.dispatchEvent(
-        new CustomEvent(
-          'wafferPartsMatched',
-          { detail: [] }
-        )
-      );
-
+      window.wafferCatalogState = {
+        status: error?.code === 'CATALOG_TIMEOUT' ? 'TIMED_OUT' : 'FAILED',
+        matched: 0,
+        totalItems: items.length,
+        error: String(error?.message || error),
+        runId
+      };
+      emitMatches([]);
       return [];
     }
   }
