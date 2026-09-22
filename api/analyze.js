@@ -113,8 +113,17 @@ export default async function handler(req, res) {
     } finally {
       clearTimeout(timeout);
     }
-    const data = await rr.json();
-    if (!rr.ok) throw new Error(data?.error?.message || 'فشل التحليل');
+    let data;
+    try {
+      data = await rr.json();
+    } catch {
+      return res.status(502).json({ error: 'استجابة خدمة التحليل غير صالحة.', code: 'ANALYSIS_UPSTREAM_INVALID' });
+    }
+    if (!rr.ok) {
+      const status = rr.status === 429 ? 429 : rr.status >= 500 ? 502 : 500;
+      const code = rr.status === 429 ? 'ANALYSIS_RATE_LIMITED' : 'ANALYSIS_UPSTREAM_ERROR';
+      return res.status(status).json({ error: data?.error?.message || 'فشل التحليل', code });
+    }
     const text = data.output_text || (data.output || []).flatMap(o => o.content || []).find(c => c.type === 'output_text')?.text || '';
     const cleaned = text.replace(/^```json\s*/i, '').replace(/```\s*$/,'').trim();
     const result = JSON.parse(cleaned);
