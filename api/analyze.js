@@ -58,11 +58,19 @@ export default async function handler(req, res) {
       attachment = { type: 'input_image', image_url: `data:${mimeType};base64,${base64}` };
     } else return res.status(415).json({ error: 'نوع الملف غير مدعوم.' });
 
-    const rr = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-5.6-luna', input: [{ role: 'user', content: [{ type: 'input_text', text: prompt }, attachment] }], max_output_tokens: 2500 })
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000);
+    let rr;
+    try {
+      rr = await fetch('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'gpt-5.6-luna', input: [{ role: 'user', content: [{ type: 'input_text', text: prompt }, attachment] }], max_output_tokens: 2500 }),
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
     const data = await rr.json();
     if (!rr.ok) throw new Error(data?.error?.message || 'فشل التحليل');
     const text = data.output_text || (data.output || []).flatMap(o => o.content || []).find(c => c.type === 'output_text')?.text || '';
@@ -93,6 +101,9 @@ export default async function handler(req, res) {
     return res.status(200).json(normalized);
   } catch (e) {
     console.error('Waffer analyze error:', e);
+    if (e?.name === 'AbortError') {
+      return res.status(504).json({ error: 'استغرق التحليل وقتًا أطول من المتوقع. حاول مرة أخرى.', code: 'ANALYSIS_TIMEOUT' });
+    }
     return res.status(500).json({ error: 'تعذر إكمال التحليل الآن. تحقق من إعداد الخدمة أو حاول مرة أخرى لاحقًا.', code: 'ANALYSIS_FAILED' });
   }
 }
