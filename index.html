@@ -374,6 +374,8 @@ async function start(){
      throw new Error(en?'The analysis service returned an incomplete result.':'لم تُرجع خدمة التحليل نتيجة مكتملة.');
    }
 
+   clearTimeout(analysisTimeout);
+   if(activeAnalysisController===analysisController)activeAnalysisController=null;
    if(!isCurrentAnalysisRun(runId))return;
    analysis=d;
    window.analysis=d;
