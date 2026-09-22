@@ -256,16 +256,18 @@ function render(){
  const releaseReadiness=document.getElementById('rReleaseReadiness');
  if(releaseReadiness){
    const items=Array.isArray(analysis.items)?analysis.items:[];
-   const hasItems=items.length>0;
-   const hasTotal=Boolean(String(analysis.total||'').trim());
+   const acceptance=analysis.acceptance||{};
+   const hasItems=acceptance.hasItems??(items.length>0);
+   const hasTotal=acceptance.hasPrintedTotal??Boolean(String(analysis.total||'').trim());
    const confidence=Number(analysis.overallConfidence)||0;
-   const critical=[hasItems,hasTotal,confidence>0];
+   const hasConfidence=acceptance.hasConfidence??(confidence>0);
+   const critical=[hasItems,hasTotal,hasConfidence];
    const passed=critical.filter(Boolean).length;
    const en=window.wafferLocale?.startsWith('en');
    releaseReadiness.textContent=(en?'Core analysis readiness: ':'جاهزية التحليل الأساسي: ')+passed+'/'+critical.length+
      ' • '+(hasItems?'✓':'✗')+' '+(en?'items':'البنود')+
      ' • '+(hasTotal?'✓':'✗')+' '+(en?'total':'الإجمالي')+
-     ' • '+(confidence>0?'✓':'✗')+' '+(en?'confidence':'الثقة');
+     ' • '+(hasConfidence?'✓':'✗')+' '+(en?'confidence':'الثقة');
  }
  const mvpGate=document.getElementById('rMvpGate');
  if(mvpGate){
