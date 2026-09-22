@@ -21,7 +21,14 @@ export default async function handler(req, res) {
     catalog: Boolean(process.env.AUTOPARTS_API_KEY)
   };
 
-  const upstream = { catalog: 'not_checked' };
+  const upstream = {
+    analysis: configured.analysis ? 'configured_not_probed' : 'not_configured',
+    catalog: configured.catalog ? 'not_checked' : 'not_configured'
+  };
+  const verification = {
+    analysis: configured.analysis ? 'configuration_only' : 'unavailable',
+    catalog: configured.catalog ? 'live_probe' : 'unavailable'
+  };
   const latency = { catalogMs: null };
   const catalogStartedAt = Date.now();
 
@@ -74,18 +81,24 @@ export default async function handler(req, res) {
     },
     capabilities: {
       quoteAnalysis: configured.analysis,
+      quoteAnalysisVerified: false,
       vinAndCatalog: configured.catalog && upstream.catalog === 'reachable',
       verifiedMarketPricing: false,
       persistentAccounts: false
     },
     configured,
+    verification,
     upstream,
     latency,
     limits: {
       maxUploadBytes: RUNTIME_CONFIG.maxUploadBytes,
       supportedMimeTypes: RUNTIME_CONFIG.supportedMimeTypes,
       catalogMatchTimeoutMs: RUNTIME_CONFIG.catalogMatchTimeoutMs,
-      analysisTimeoutMs: RUNTIME_CONFIG.analysisTimeoutMs
+      analysisTimeoutMs: RUNTIME_CONFIG.analysisTimeoutMs,
+      clientAnalysisTimeoutMs: RUNTIME_CONFIG.clientAnalysisTimeoutMs,
+      pdfUploadTimeoutMs: RUNTIME_CONFIG.pdfUploadTimeoutMs,
+      pdfCleanupTimeoutMs: RUNTIME_CONFIG.pdfCleanupTimeoutMs,
+      healthCatalogTimeoutMs: RUNTIME_CONFIG.healthCatalogTimeoutMs
     },
     timestamp: new Date().toISOString()
   });

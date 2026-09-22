@@ -17,7 +17,16 @@ export default async function handler(req, res) {
       RUNTIME_CONFIG.supportedMimeTypes.includes('application/pdf') &&
       RUNTIME_CONFIG.supportedMimeTypes.some(type => type.startsWith('image/')),
     analysisTimeout: Number(RUNTIME_CONFIG.analysisTimeoutMs) > Number(RUNTIME_CONFIG.pdfUploadTimeoutMs),
+    clientAnalysisTimeout: Number(RUNTIME_CONFIG.clientAnalysisTimeoutMs) > Number(RUNTIME_CONFIG.analysisTimeoutMs),
+    pdfCleanupTimeout: Number(RUNTIME_CONFIG.pdfCleanupTimeoutMs) > 0 &&
+      Number(RUNTIME_CONFIG.pdfCleanupTimeoutMs) <= 10000,
     catalogTimeout: Number(RUNTIME_CONFIG.catalogMatchTimeoutMs) > 0,
+    catalogSubTimeouts: [
+      RUNTIME_CONFIG.catalogProductsTimeoutMs,
+      RUNTIME_CONFIG.catalogArticlesTimeoutMs,
+      RUNTIME_CONFIG.catalogCriteriaTimeoutMs
+    ].every(value => Number(value) > 0 && Number(value) <= Number(RUNTIME_CONFIG.catalogMatchTimeoutMs)),
+    healthCatalogTimeout: Number(RUNTIME_CONFIG.healthCatalogTimeoutMs) > 0,
     saMarket: sa.supported === true && sa.market === 'SA' && sa.currency === 'SAR',
     unsupportedMarketRejected: unsupported.supported === false
   };
