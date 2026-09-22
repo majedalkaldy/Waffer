@@ -168,6 +168,15 @@ export default async function handler(req, res) {
     }
     if (!itemCount) normalized.overallConfidence = Math.min(normalized.overallConfidence, 25);
 
+    normalized.acceptance = {
+      hasItems: itemCount > 0,
+      hasPrintedTotal: Boolean(String(normalized.total || '').trim()) && !/غير مذكور|غير واضح/i.test(String(normalized.total)),
+      hasConfidence: normalized.overallConfidence > 0,
+      hasVin,
+      identifiedParts: identifiedCount,
+      itemCount
+    };
+
     if (res.locals?.openaiFileId) {
       fetch('https://api.openai.com/v1/files/' + encodeURIComponent(res.locals.openaiFileId), {
         method: 'DELETE',
