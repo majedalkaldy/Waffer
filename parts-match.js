@@ -370,7 +370,12 @@
     // Limit and parallelize criteria checks to keep the UI responsive.
     const candidates = articles.slice(0, 10);
     const checked = await Promise.all(candidates.map(async article => {
-      const criteria = await loadArticleCriteria(article.articleId || article.id);
+      const articleId = article.articleId || article.id;
+      if (!articleId) return { article, axle: null };
+      const criteria = await Promise.race([
+        loadArticleCriteria(articleId),
+        new Promise(resolve => setTimeout(() => resolve([]), 4500))
+      ]);
       const axle = criteriaAxle(criteria);
       return { article, axle };
     }));
@@ -405,7 +410,12 @@
 
     try {
       const products =
-        await loadProducts(vehicleId);
+        await Promise.race([
+          loadProducts(vehicleId),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('انتهت مهلة تحميل كتالوج القطع')), 12000)
+          )
+        ]);
 
       const matches = [];
 
@@ -433,10 +443,13 @@
         }
 
         const allArticles =
-          await loadArticles(
-            vehicleId,
-            product.productId
-          );
+          await Promise.race([
+            loadArticles(
+              vehicleId,
+              product.productId
+            ),
+            new Promise(resolve => setTimeout(() => resolve([]), 9000))
+          ]);
 
         const requestedAxle =
           (product.requestedType === 'brake_pad' || product.requestedType === 'brake_disc')
