@@ -29,6 +29,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 </head>
 <body><main class="app">
 <section id="home">
+ <div id="systemStatus" class="note" style="text-align:center;margin-bottom:8px">جارٍ التحقق من جاهزية الخدمة...</div>
  <div class="brand"><div class="logo">وفّر</div><div class="tag">افحص عرض صيانة سيارتك قبل أن تدفع</div></div>
  <h1>هل عرض الورشة واضح ومعقول؟</h1>
  <p class="lead">ارفع صورة أو PDF لعرض الصيانة. سيقرأ «وفّر» البنود والأسعار ويحدد المعلومات الناقصة ونقاط التحقق قبل الموافقة.</p>
@@ -217,6 +218,25 @@ fileInput.addEventListener('change',e=>{
  const f=e.target.files&&e.target.files[0];
  document.getElementById('fileText').textContent=f?'تم اختيار: '+f.name:'ارفع صورة العرض أو ملف PDF';
 });
+async function checkSystemHealth(){
+ const el=document.getElementById('systemStatus');
+ try{
+   const r=await fetch('/api/health',{cache:'no-store'});
+   const d=await r.json();
+   if(d.ok){
+     el.textContent='● الخدمة جاهزة';
+     el.style.color='#075b43';
+   }else{
+     el.textContent='⚠ بعض خدمات التحليل غير جاهزة';
+     el.style.color='#a85b00';
+   }
+ }catch(e){
+   el.textContent='⚠ تعذر التحقق من حالة الخدمة';
+   el.style.color='#a85b00';
+ }
+}
+checkSystemHealth();
+
 fetch('/api/vehicles').then(r=>{if(!r.ok)throw new Error('API '+r.status);return r.json()}).then(d=>{const m=document.getElementById('make');m.innerHTML='<option value="">اختر الشركة</option>';(d.manufacturers||[]).forEach(x=>m.add(new Option(x.manufacturerName,x.manufacturerId)));}).catch(e=>{console.error(e);document.getElementById('make').innerHTML='<option value="">تعذر تحميل الشركات</option>';});
 window.addEventListener('wafferPartsMatched', function(event){
  const matches=Array.isArray(event.detail)?event.detail:[];
