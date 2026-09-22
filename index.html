@@ -30,6 +30,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 <body><main class="app">
 <section id="home">
  <div id="systemStatus" class="note" style="text-align:center;margin-bottom:8px">جارٍ التحقق من جاهزية الخدمة...</div>
+ <div id="offlineStatus" class="alert hidden" style="text-align:center">لا يوجد اتصال بالإنترنت. يلزم الاتصال لتحليل العرض والتحقق من الكتالوج.</div>
  <div class="brand"><div class="logo">وفّر</div><div class="tag">افحص عرض صيانة سيارتك قبل أن تدفع</div></div>
  <h1>هل عرض الورشة واضح ومعقول؟</h1>
  <p class="lead">ارفع صورة أو PDF لعرض الصيانة. سيقرأ «وفّر» البنود والأسعار ويحدد المعلومات الناقصة ونقاط التحقق قبل الموافقة.</p>
@@ -99,6 +100,7 @@ const ids=['home','loading','result','advanced','msg']; let analysis=null;
 function show(id){ids.forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));scrollTo(0,0)}
 function fileToDataURL(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)})}
 async function start(){
+ if(!navigator.onLine){alert('لا يوجد اتصال بالإنترنت حاليًا.');return;}
  const analyzeBtn=document.getElementById('analyzeBtn');
  if(analyzeBtn.disabled)return;
  const file=document.getElementById('file').files[0];
@@ -238,6 +240,15 @@ fileInput.addEventListener('change',e=>{
  const f=e.target.files&&e.target.files[0];
  document.getElementById('fileText').textContent=f?'تم اختيار: '+f.name:'ارفع صورة العرض أو ملف PDF';
 });
+function updateNetworkStatus(){
+ const box=document.getElementById('offlineStatus');
+ if(!box)return;
+ box.classList.toggle('hidden',navigator.onLine);
+}
+window.addEventListener('online',()=>{updateNetworkStatus();checkSystemHealth();});
+window.addEventListener('offline',updateNetworkStatus);
+updateNetworkStatus();
+
 async function checkSystemHealth(){
  const el=document.getElementById('systemStatus');
  try{
