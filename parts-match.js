@@ -497,6 +497,20 @@
           item?.item ||
           '';
 
+        const category = String(item?.category || 'other').toLowerCase();
+        if (category === 'labor' || category === 'service') {
+          matches.push({
+            workshopItem: itemName,
+            productId: null,
+            productName: null,
+            matchScore: 0,
+            skippedReason: 'NON_PART_ITEM',
+            countArticles: 0,
+            articles: []
+          });
+          continue;
+        }
+
         const product =
           bestProduct(itemName, products);
 
