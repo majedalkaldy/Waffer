@@ -179,9 +179,20 @@ export default async function handler(req, res) {
     }
     const text = data.output_text || (data.output || []).flatMap(o => o.content || []).find(c => c.type === 'output_text')?.text || '';
     const cleaned = text.replace(/^```json\s*/i, '').replace(/```\s*$/,'').trim();
-    const result = JSON.parse(cleaned);
+    let result;
+    try {
+      result = JSON.parse(cleaned);
+    } catch {
+      return res.status(502).json({
+        error: 'تعذر قراءة JSON الناتج من خدمة التحليل.',
+        code: 'ANALYSIS_UPSTREAM_INVALID'
+      });
+    }
     if (!result || typeof result !== 'object' || Array.isArray(result)) {
-      throw new Error('Invalid analysis result');
+      return res.status(502).json({
+        error: 'أعادت خدمة التحليل بنية نتيجة غير صالحة.',
+        code: 'ANALYSIS_UPSTREAM_INVALID'
+      });
     }
 
     const requestId = globalThis.crypto?.randomUUID?.() || ('waffer-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8));
