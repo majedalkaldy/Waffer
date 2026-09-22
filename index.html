@@ -74,7 +74,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
  <div class="card score"><span id="compatibilityLabel">ثقة التوافق</span><b id="rCompatibility">—</b><small>إمكان التحقق للسيارة المحددة</small></div>
  <div class="card score"><span id="priceConfidenceLabel">ثقة المقارنة السعرية</span><b id="rPrice">—</b><small>قابلية المقارنة دون تخمين</small></div></div>
  <div class="card"><h3 id="overallLabel">درجة الثقة الكلية</h3><div class="total"><b id="rOverall">—</b><small>تعكس قوة الأدلة المتاحة، وليست تقييمًا للورشة</small></div><div id="confidenceBreakdown" class="note" style="margin-top:10px"></div></div>
- <div class="card"><h3 id="findingsLabel">أبرز ما وجدناه</h3><div id="rConfidenceNote" class="note" style="margin-bottom:10px">درجات الثقة تقيس قوة الأدلة المتاحة وليست تقييمًا لجودة الورشة.</div><div id="rWarningsSummary" class="lock"></div><div id="rTestMeta" class="note diagnostic" style="margin:8px 0"></div><div id="rRequestId" class="note diagnostic" style="margin:4px 0"></div><div id="rEngineMeta" class="note diagnostic" style="margin:4px 0"></div><div id="rVerificationSummary" class="lock"></div><div id="rMvpGate" class="lock diagnostic"></div><div id="rReleaseReadiness" class="lock diagnostic"></div><div id="rDataIntegrity" class="lock diagnostic"></div><div id="rVersionIntegrity" class="lock diagnostic"></div><div id="rOverallGate" class="lock diagnostic"></div><div id="rManualTestPrompt" class="lock diagnostic"></div><div id="rDocQuality" class="lock"></div><div id="rCatalogCoverage" class="lock">🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.</div><div id="rCatalogGate" class="lock diagnostic">🔎 فحص الكتالوج: بانتظار المطابقة.</div><div id="rAxleGate" class="lock diagnostic"></div><div id="rFieldTestSummary" class="lock diagnostic"></div><div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
+ <div class="card"><h3 id="findingsLabel">أبرز ما وجدناه</h3><div id="rConfidenceNote" class="note" style="margin-bottom:10px">درجات الثقة تقيس قوة الأدلة المتاحة وليست تقييمًا لجودة الورشة.</div><div id="rWarningsSummary" class="lock"></div><div id="rTestMeta" class="note diagnostic" style="margin:8px 0"></div><div id="rRequestId" class="note diagnostic" style="margin:4px 0"></div><div id="rEngineMeta" class="note diagnostic" style="margin:4px 0"></div><div id="rVerificationSummary" class="lock"></div><div id="rMvpGate" class="lock diagnostic"></div><div id="rReleaseReadiness" class="lock diagnostic"></div><div id="rDataIntegrity" class="lock diagnostic"></div><div id="rVersionIntegrity" class="lock diagnostic"></div><div id="rOverallGate" class="lock diagnostic"></div><div id="rManualTestPrompt" class="lock diagnostic"></div><div id="rDocQuality" class="lock"></div><div id="rCatalogCoverage" class="lock">🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.</div><div id="rCatalogGate" class="lock diagnostic">🔎 فحص الكتالوج: بانتظار المطابقة.</div><div id="rAxleGate" class="lock diagnostic"></div><div id="rFieldTestSummary" class="lock diagnostic"></div><button id="debugExportBtn" class="secondary diagnostic" type="button" onclick="exportDebugReport()">تصدير تقرير الاختبار</button><div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
   <div class="lock">🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون مطابقة القطعة ومصدر سعر موثوق.</div>
   <div id="catalogSummary" class="lock" role="status" aria-live="polite">🔎 حالة مطابقة الكتالوج: بانتظار التحليل.</div>
   <button id="detailsBtn" onclick="advanced()">عرض تفاصيل البنود</button><button id="workshopBtn" class="secondary" onclick="messageWorkshop()">أنشئ رسالة للورشة</button>
@@ -539,6 +539,46 @@ function resetAnalysis(){
  show('home');
 }
 async function copyMsg(){try{await navigator.clipboard.writeText(document.getElementById('message').innerText);alert('تم نسخ الرسالة')}catch(e){alert('حدد النص وانسخه يدويًا')}}
+function exportDebugReport(){
+ if(!analysis)return;
+ const vehicle=window.wafferVehicle||{};
+ const report={
+   exportedAt:new Date().toISOString(),
+   requestId:analysis.requestId||null,
+   engineVersion:analysis.engineVersion||null,
+   completedAt:analysis.completedAt||null,
+   engineContext:analysis.engineContext||null,
+   acceptance:analysis.acceptance||null,
+   catalogState:window.wafferCatalogState||null,
+   vehicle:{
+     vehicleId:vehicle.vehicleId||window.wafferVehicleId||null,
+     manufacturerName:vehicle.manufacturerName||null,
+     modelName:vehicle.modelName||null,
+     vehicleDescription:vehicle.vehicleDescription||null
+   },
+   analysisSummary:{
+     total:analysis.total||null,
+     calculatedTotal:analysis.calculatedTotal||null,
+     transparency:analysis.transparency??null,
+     identityConfidence:analysis.identityConfidence??null,
+     compatibilityConfidence:analysis.compatibilityConfidence??null,
+     priceConfidence:analysis.priceConfidence??null,
+     overallConfidence:analysis.overallConfidence??null,
+     itemCount:Array.isArray(analysis.items)?analysis.items.length:0,
+     missingCount:Array.isArray(analysis.missing)?analysis.missing.length:0,
+     conflictCount:Array.isArray(analysis.conflicts)?analysis.conflicts.length:0
+   }
+ };
+ const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');
+ a.href=url;
+ a.download='waffer-test-'+(analysis.requestId||Date.now())+'.json';
+ document.body.appendChild(a);
+ a.click();
+ a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),0);
+}
 async function shareSummary(){
  if(!analysis)return;
  const vehicle=formatVehicleForMessage()||'غير محددة';
@@ -830,6 +870,8 @@ function applyLocale(locale){
  document.getElementById('savingNote').textContent=t(locale,'savingNote');
  if(!window.wafferPartMatches)document.getElementById('priceReadiness').textContent=t(locale,'priceWaiting');
  document.getElementById('workshopFollowupBtn').textContent=t(locale,'workshopFollowup');
+ const debugExport=document.getElementById('debugExportBtn');
+ if(debugExport)debugExport.textContent=locale.startsWith('en')?'Export test report':'تصدير تقرير الاختبار';
  window.wafferLocale=locale;
  updateFormHint();
 }
