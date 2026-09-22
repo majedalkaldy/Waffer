@@ -126,6 +126,10 @@ function show(id){
 }
 function fileToDataURL(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)})}
 
+function uploadLimitMb(){
+ return Math.round(((window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024)/1024/1024)*10)/10;
+}
+
 function dataUrlBytes(dataUrl){
  const base64=String(dataUrl||'').split(',')[1]||'';
  return Math.floor(base64.length*3/4);
@@ -186,7 +190,7 @@ async function prepareUploadPayload(file){
  const limit=window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024;
  if(file.type==='application/pdf'){
    if(file.size>limit){
-     throw new Error(window.wafferLocale?.startsWith('en')?'The PDF is larger than 4 MB. Reduce its size and try again.':'حجم ملف PDF أكبر من 4MB. صغّر الملف ثم حاول مجددًا.');
+     throw new Error(window.wafferLocale?.startsWith('en')?'The PDF is larger than '+uploadLimitMb()+' MB. Reduce its size and try again.':'حجم ملف PDF أكبر من '+uploadLimitMb()+'MB. صغّر الملف ثم حاول مجددًا.');
    }
    return {fileData:await fileToDataURL(file),fileName:file.name,mimeType:file.type,optimized:false,originalBytes:file.size,uploadBytes:file.size};
  }
@@ -207,7 +211,7 @@ async function start(){
  const file=document.getElementById('file').files[0];
  const en=window.wafferLocale?.startsWith('en');
  if(!file){alert(en?'Select an image or PDF first.':'اختر صورة أو PDF أولًا');return}
- if(file.type==='application/pdf' && file.size>(window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024)){alert(en?'The PDF limit is 4 MB. Reduce the file size and try again.':'حد PDF الحالي 4MB. صغّر الملف ثم حاول مجددًا.');return}
+ if(file.type==='application/pdf' && file.size>(window.WAFFER_RUNTIME?.maxUploadBytes||4*1024*1024)){alert(en?'The PDF limit is '+uploadLimitMb()+' MB. Reduce the file size and try again.':'حد PDF الحالي '+uploadLimitMb()+'MB. صغّر الملف ثم حاول مجددًا.');return}
 
  const vin=String(document.getElementById('vin').value||'').trim().toUpperCase();
  const year=String(document.getElementById('year').value||'').trim();
@@ -725,7 +729,7 @@ fileInput.addEventListener('change',e=>{
    fileInput.value='';
    text.textContent=window.wafferLocale?.startsWith('en')?'Upload an estimate image or PDF':'ارفع صورة العرض أو ملف PDF';
    updateFormHint();
-   alert(window.wafferLocale?.startsWith('en')?'The PDF is larger than 4 MB. Reduce its size and try again.':'حجم ملف PDF أكبر من 4MB. صغّر الملف ثم حاول مجددًا.');
+   alert(window.wafferLocale?.startsWith('en')?'The PDF is larger than '+uploadLimitMb()+' MB. Reduce its size and try again.':'حجم ملف PDF أكبر من '+uploadLimitMb()+'MB. صغّر الملف ثم حاول مجددًا.');
    return;
  }
  const sizeText=(f.size/1024/1024).toFixed(2)+' MB';
