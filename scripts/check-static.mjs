@@ -155,6 +155,28 @@ if (!failures.length) {
   const runtime = read('lib/runtime-config.js');
   if (!runtime.includes("engineVersion: 'mvp-2026-09'")) failures.push('Unexpected engine version');
   if (!runtime.includes('maxUploadBytes')) failures.push('Runtime upload limit missing');
+  if (!runtime.includes('clientAnalysisTimeoutMs')) failures.push('Client analysis timeout is missing');
+
+  if (!index.includes('signal:analysisController.signal')) {
+    failures.push('Analysis request is not abortable from the client');
+  }
+  if (!index.includes('{signal:catalogController.signal,runId}')) {
+    failures.push('Catalog matcher is not bound to the active analysis run');
+  }
+  if (!index.includes('event.detail?.wafferRunId') || !index.includes('window.wafferAnalysisRunId')) {
+    failures.push('Stale catalog event guard is missing');
+  }
+  if (/Promise\.race\(\[\s*window\.matchWafferParts/.test(index)) {
+    failures.push('Catalog timeout still races without cancelling the underlying matcher');
+  }
+  if (!matcher.includes('fetch(url, { signal: controller.signal })') ||
+      !matcher.includes("signal.addEventListener('abort'")) {
+    failures.push('Catalog upstream requests are not abortable');
+  }
+  const matcherPrecondition = matcher.match(/if \(!analysis \|\| !vehicleId \|\| !items\.length\) \{([\s\S]*?)\n    \}\n\n    try/);
+  if (matcherPrecondition?.[1]?.includes('error?.message')) {
+    failures.push('Catalog precondition references an undefined error variable');
+  }
 
   try {
     const { UI_STRINGS } = await import('../lib/i18n.js');
@@ -188,6 +210,9 @@ if (!failures.length) {
 
     if (RUNTIME_CONFIG.engineVersion !== 'mvp-2026-09') failures.push('Runtime engine version mismatch');
     if (RUNTIME_CONFIG.launchPhase !== 'field-test') failures.push('Unexpected launch phase');
+    if (!(RUNTIME_CONFIG.clientAnalysisTimeoutMs > RUNTIME_CONFIG.analysisTimeoutMs)) {
+      failures.push('Client analysis timeout must exceed the server analysis timeout');
+    }
 
     const robots = read('robots.txt');
     const indexHtml = read('index.html');
