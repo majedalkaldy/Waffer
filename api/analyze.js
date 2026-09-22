@@ -1,5 +1,6 @@
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { getMarketConfig } from '../lib/market-config.js';
+import { normalizeAnalysisResult } from '../lib/analysis-normalizer.js';
 
 export default async function handler(req, res) {
   res.setHeader('Allow', 'POST');
@@ -132,85 +133,19 @@ export default async function handler(req, res) {
       throw new Error('Invalid analysis result');
     }
 
-    const clamp = value => {
-      const n = Number(value);
-      return Number.isFinite(n) ? Math.max(0, Math.min(100, Math.round(n))) : 0;
-    };
-
     const requestId = globalThis.crypto?.randomUUID?.() || ('waffer-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8));
     const completedAt = new Date().toISOString();
 
-    const normalized = {
-      ...result,
-      requestId,
-      completedAt,
+    const normalized = normalizeAnalysisResult({
+      result,
+      safeVehicle,
+      market,
+      locale,
+      currency,
       engineVersion: RUNTIME_CONFIG.engineVersion,
-      engineContext: {
-        market,
-        locale,
-        currency
-      },
-      transparency: clamp(result.transparency),
-      identityConfidence: clamp(result.identityConfidence),
-      compatibilityConfidence: clamp(result.compatibilityConfidence),
-      priceConfidence: clamp(result.priceConfidence),
-      overallConfidence: clamp(result.overallConfidence),
-      missing: Array.isArray(result.missing) ? result.missing : [],
-      conflicts: Array.isArray(result.conflicts) ? result.conflicts : [],
-      warranty: String(result.warranty || 'غير مذكور').slice(0, 300),
-      nextActions: Array.isArray(result.nextActions) ? result.nextActions.slice(0, 5) : [],
-      items: Array.isArray(result.items)
-        ? result.items.slice(0, 50).filter(item => {
-            const name = String(item?.name || item?.description || item?.item || '').trim();
-            const price = String(item?.price || '').trim();
-            return Boolean(name || price);
-          }).map(item => ({
-            ...item,
-            name: String(item?.name || item?.description || item?.item || '').slice(0, 240),
-            partNumber: String(item?.partNumber || 'غير ظاهر').slice(0, 120),
-            manufacturer: String(item?.manufacturer || 'غير ظاهر').slice(0, 120),
-            quantity: String(item?.quantity || 'غير ظاهرة').slice(0, 80),
-            price: String(item?.price || '').slice(0, 120),
-            itemType: ['part','labor','service','fee'].includes(String(item?.itemType || '').toLowerCase())
-              ? String(item.itemType).toLowerCase()
-              : 'part',
-            identityConfidence: clamp(item?.identityConfidence)
-          }))
-        : []
-    };
-
-    // Confidence cannot exceed the evidence available in the source document.
-    const hasVin = /^[A-HJ-NPR-Z0-9]{17}$/.test(safeVehicle.vin);
-    const itemCount = normalized.items.length;
-    const identifiedCount = normalized.items.filter(item =>
-      item.partNumber && !/غير ظاهر|غير متوفر/i.test(item.partNumber)
-    ).length;
-
-    if (!hasVin) normalized.compatibilityConfidence = Math.min(normalized.compatibilityConfidence, 45);
-    if (!identifiedCount) {
-      normalized.identityConfidence = Math.min(normalized.identityConfidence, 40);
-      normalized.priceConfidence = Math.min(normalized.priceConfidence, 15);
-    }
-    if (!itemCount) normalized.overallConfidence = Math.min(normalized.overallConfidence, 25);
-
-    const requiredShape = ['total','status','transparency','identityConfidence','compatibilityConfidence','priceConfidence','overallConfidence','items'];
-    const invalidItemIndexes = normalized.items
-      .map((item, index) => ({ item, index }))
-      .filter(({ item }) => !item || typeof item !== 'object' || !String(item.name || '').trim())
-      .map(({ index }) => index);
-    const missingShapeFields = requiredShape.filter(key => !(key in normalized));
-
-    normalized.acceptance = {
-      schemaValid: missingShapeFields.length === 0 && invalidItemIndexes.length === 0,
-      missingShapeFields,
-      invalidItemIndexes,
-      hasItems: itemCount > 0,
-      hasPrintedTotal: Boolean(String(normalized.total || '').trim()) && !/غير مذكور|غير واضح/i.test(String(normalized.total)),
-      hasConfidence: normalized.overallConfidence > 0,
-      hasVin,
-      identifiedParts: identifiedCount,
-      itemCount
-    };
+      requestId,
+      completedAt
+    });
 
     if (res.locals?.openaiFileId) {
       fetch('https://api.openai.com/v1/files/' + encodeURIComponent(res.locals.openaiFileId), {
