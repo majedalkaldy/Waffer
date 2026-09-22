@@ -106,7 +106,11 @@ export default async function handler(req, res) {
       conflicts: Array.isArray(result.conflicts) ? result.conflicts : [],
       nextActions: Array.isArray(result.nextActions) ? result.nextActions.slice(0, 5) : [],
       items: Array.isArray(result.items)
-        ? result.items.slice(0, 50).map(item => ({
+        ? result.items.slice(0, 50).filter(item => {
+            const name = String(item?.name || item?.description || item?.item || '').trim();
+            const price = String(item?.price || '').trim();
+            return Boolean(name || price);
+          }).map(item => ({
             ...item,
             name: String(item?.name || item?.description || item?.item || '').slice(0, 240),
             partNumber: String(item?.partNumber || 'غير ظاهر').slice(0, 120),
@@ -117,6 +121,20 @@ export default async function handler(req, res) {
           }))
         : []
     };
+
+    // Confidence cannot exceed the evidence available in the source document.
+    const hasVin = /^[A-HJ-NPR-Z0-9]{17}$/.test(String(vehicle.vin || '').toUpperCase());
+    const itemCount = normalized.items.length;
+    const identifiedCount = normalized.items.filter(item =>
+      item.partNumber && !/غير ظاهر|غير متوفر/i.test(item.partNumber)
+    ).length;
+
+    if (!hasVin) normalized.compatibilityConfidence = Math.min(normalized.compatibilityConfidence, 45);
+    if (!identifiedCount) {
+      normalized.identityConfidence = Math.min(normalized.identityConfidence, 40);
+      normalized.priceConfidence = Math.min(normalized.priceConfidence, 15);
+    }
+    if (!itemCount) normalized.overallConfidence = Math.min(normalized.overallConfidence, 25);
 
     if (res.locals?.openaiFileId) {
       fetch('https://api.openai.com/v1/files/' + encodeURIComponent(res.locals.openaiFileId), {
