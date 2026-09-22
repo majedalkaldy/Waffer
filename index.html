@@ -485,8 +485,9 @@ async function shareSummary(){
    'درجة الثقة: '+(analysis.overallConfidence??0)+'/100',
    'بيانات ناقصة: '+(Array.isArray(analysis.missing)?analysis.missing.length:0),
    'نقاط تحقق: '+(Array.isArray(analysis.conflicts)?analysis.conflicts.length:0),
-   'التوفير المؤكد: غير محسوب دون مصدر سعر موثوق'
- ].join('\n');
+   'التوفير المؤكد: غير محسوب دون مصدر سعر موثوق',
+   analysis.requestId?('معرف التحليل: '+analysis.requestId):''
+ ].filter(Boolean).join('\n');
  try{
    if(navigator.share)await navigator.share({title:'وفّر — نتيجة الفحص',text});
    else{await navigator.clipboard.writeText(text);alert('تم نسخ ملخص النتيجة');}
