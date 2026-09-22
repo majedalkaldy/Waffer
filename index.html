@@ -76,7 +76,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 <section id="advanced" class="hidden">
  <div class="top"><span class="pill">نموذج تجريبي</span><h2>التحليل المتقدم</h2></div>
  <div class="card"><h3>تفاصيل القطع المقروءة</h3>
- <div class="table-wrap"><table><thead><tr><th>البند</th><th>رقم القطعة</th><th>السعر</th><th>الهوية</th><th>التوافق</th><th>السعر</th><th>التداخل</th></tr></thead>
+ <div class="table-wrap"><table><thead><tr><th>البند</th><th>النوع</th><th>رقم القطعة</th><th>السعر</th><th>الهوية</th><th>التوافق</th><th>السعر</th><th>التداخل</th></tr></thead>
  <tbody id="itemsBody"></tbody></table></div>
  <p class="note">البيانات مستخرجة من العرض المرفوع. الحكم مبدئي ولا يمثل مقارنة سعرية نهائية قبل التحقق من هوية القطعة ومصدر السعر.</p></div>
  <div id="catalogMatches" class="card">
@@ -248,7 +248,7 @@ function render(){
  }
  document.getElementById('rStatus').textContent='⚠️ '+(analysis.status||'يحتاج مراجعة'); document.getElementById('rTransparency').textContent=(analysis.transparency??'—')+'/100'; document.getElementById('rIdentity').textContent=(analysis.identityConfidence??'—')+'/100'; document.getElementById('rCompatibility').textContent=(analysis.compatibilityConfidence??'—')+'/100'; document.getElementById('rPrice').textContent=(analysis.priceConfidence??'—')+'/100'; document.getElementById('rOverall').textContent=(analysis.overallConfidence??'—')+'/100';
  const alerts=[...(analysis.missing||[]).map(x=>'📋 '+x),...(analysis.conflicts||[]).map(x=>'⚙️ '+x)]; document.getElementById('rAlerts').innerHTML=(alerts.length?alerts:['لم تظهر ملاحظات رئيسية.']).map(x=>'<div class="alert">'+esc(x)+'</div>').join('');
- document.getElementById('itemsBody').innerHTML=(analysis.items||[]).map(i=>`<tr><td>${esc(i.name)}</td><td>${esc(i.partNumber||'غير ظاهر')}</td><td>${esc(i.price)}</td><td>${esc(i.identityConfidence)}%</td><td>${esc(i.compatibility)}</td><td>${esc(i.priceAssessment)}</td><td>${esc(i.conflict)}</td></tr>`).join('')||'<tr><td colspan="7">لم تُستخرج بنود واضحة.</td></tr>'; document.getElementById('nextActions').innerHTML=(analysis.nextActions||[]).map((x,n)=>'<div class="alert">'+(n+1)+'. '+esc(x)+'</div>').join('')||'<div class="note">لا توجد خطوات إضافية مستخرجة.</div>'; 
+ document.getElementById('itemsBody').innerHTML=(analysis.items||[]).map(i=>`<tr><td>${esc(i.name)}</td><td>${esc(({part:'قطعة',labor:'أجرة عمل',fluid:'سائل/زيت',service:'خدمة',other:'أخرى'})[i.category]||'أخرى')}</td><td>${esc(i.partNumber||'غير ظاهر')}</td><td>${esc(i.price)}</td><td>${esc(i.identityConfidence)}%</td><td>${esc(i.compatibility)}</td><td>${esc(i.priceAssessment)}</td><td>${esc(i.conflict)}</td></tr>`).join('')||'<tr><td colspan="8">لم تُستخرج بنود واضحة.</td></tr>'; document.getElementById('nextActions').innerHTML=(analysis.nextActions||[]).map((x,n)=>'<div class="alert">'+(n+1)+'. '+esc(x)+'</div>').join('')||'<div class="note">لا توجد خطوات إضافية مستخرجة.</div>'; 
  document.getElementById('message').textContent=analysis.workshopMessage||'السلام عليكم، أرجو تزويدي بتفاصيل القطع وأرقامها والشركة المصنعة والكمية وأجرة العمل والضريبة والضمان قبل اعتماد العرض. وشكرًا.';
 }
 function advanced(){show('advanced')} function messageWorkshop(){show('msg')}
