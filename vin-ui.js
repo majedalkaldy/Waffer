@@ -355,7 +355,7 @@
               pick(manufacturer, ['manuId','manufacturerId','id']) ?? ''
             );
             const optionText = String(
-              pick(manufacturer, ['manuName','manufacturerName','name']) ?? 'الشركة المحددة من VIN'
+              pick(manufacturer, ['manuName','manufacturerName','name']) ?? (isEnglish() ? 'VIN identified make' : 'الشركة المحددة من VIN')
             );
             if (optionValue) {
               option = new Option(optionText, optionValue);
