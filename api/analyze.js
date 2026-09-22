@@ -3,6 +3,27 @@ import { getMarketConfig } from '../lib/market-config.js';
 import { normalizeAnalysisResult } from '../lib/analysis-normalizer.js';
 import { validateBase64Upload } from '../lib/upload-validation.js';
 
+async function cleanupOpenAIFile(fileId, apiKey) {
+  if (!fileId || !apiKey) return;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), RUNTIME_CONFIG.pdfCleanupTimeoutMs);
+  try {
+    const response = await fetch(
+      'https://api.openai.com/v1/files/' + encodeURIComponent(fileId),
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${apiKey}` },
+        signal: controller.signal
+      }
+    );
+    if (!response.ok) console.error('PDF cleanup failed with status:', response.status);
+  } catch (error) {
+    if (error?.name !== 'AbortError') console.error('PDF cleanup error:', error);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Allow', 'POST');
   res.setHeader('Cache-Control', 'no-store');
@@ -10,6 +31,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: 'OPENAI_API_KEY غير مضاف في Vercel.' });
 
+  let openaiFileId = null;
   try {
     const { fileData, fileName, mimeType, vehicle = {} } = req.body || {};
     const safeFileName = String(fileName || 'upload')
@@ -89,6 +111,7 @@ export default async function handler(req, res) {
       const uploadController = new AbortController();
       const uploadTimeout = setTimeout(() => uploadController.abort(), RUNTIME_CONFIG.pdfUploadTimeoutMs);
       let up;
+      let uj;
       try {
         up = await fetch('https://api.openai.com/v1/files', {
           method: 'POST',
@@ -96,16 +119,34 @@ export default async function handler(req, res) {
           body: form,
           signal: uploadController.signal
         });
+        try {
+          uj = await up.json();
+        } catch (error) {
+          if (error?.name === 'AbortError') throw error;
+          return res.status(502).json({
+            error: 'استجابة رفع PDF من مزود التحليل غير صالحة.',
+            code: 'ANALYSIS_UPSTREAM_INVALID'
+          });
+        }
       } finally {
         clearTimeout(uploadTimeout);
       }
-      const uj = await up.json();
-      if (!up.ok) throw new Error(uj?.error?.message || 'تعذر رفع PDF إلى خدمة التحليل');
-      attachment = { type: 'input_file', file_id: uj.id };
-
-      // Best-effort cleanup is performed after analysis so uploaded PDFs are not retained unnecessarily.
-      res.locals = res.locals || {};
-      res.locals.openaiFileId = uj.id;
+      if (!up.ok) {
+        const status = up.status === 429 ? 429 : up.status >= 500 ? 502 : 500;
+        const code = up.status === 429 ? 'ANALYSIS_RATE_LIMITED' : 'ANALYSIS_UPSTREAM_ERROR';
+        return res.status(status).json({
+          error: uj?.error?.message || 'تعذر رفع PDF إلى خدمة التحليل',
+          code
+        });
+      }
+      if (!uj?.id) {
+        return res.status(502).json({
+          error: 'لم يُرجع مزود التحليل معرف ملف PDF صالحًا.',
+          code: 'ANALYSIS_UPSTREAM_INVALID'
+        });
+      }
+      openaiFileId = uj.id;
+      attachment = { type: 'input_file', file_id: openaiFileId };
     } else if (normalizedMimeType.startsWith('image/')) {
       attachment = { type: 'input_image', image_url: `data:${normalizedMimeType};base64,${base64}` };
     } else return res.status(415).json({ error: 'نوع الملف غير مدعوم.' });
@@ -113,6 +154,7 @@ export default async function handler(req, res) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), RUNTIME_CONFIG.analysisTimeoutMs);
     let rr;
+    let data;
     try {
       rr = await fetch('https://api.openai.com/v1/responses', {
         method: 'POST',
@@ -120,14 +162,17 @@ export default async function handler(req, res) {
         body: JSON.stringify({ model: 'gpt-5.6-luna', input: [{ role: 'user', content: [{ type: 'input_text', text: prompt }, attachment] }], max_output_tokens: 2500 }),
         signal: controller.signal
       });
+      try {
+        data = await rr.json();
+      } catch (error) {
+        if (error?.name === 'AbortError') throw error;
+        return res.status(502).json({
+          error: 'استجابة خدمة التحليل غير صالحة.',
+          code: 'ANALYSIS_UPSTREAM_INVALID'
+        });
+      }
     } finally {
       clearTimeout(timeout);
-    }
-    let data;
-    try {
-      data = await rr.json();
-    } catch {
-      return res.status(502).json({ error: 'استجابة خدمة التحليل غير صالحة.', code: 'ANALYSIS_UPSTREAM_INVALID' });
     }
     if (!rr.ok) {
       const status = rr.status === 429 ? 429 : rr.status >= 500 ? 502 : 500;
@@ -136,9 +181,20 @@ export default async function handler(req, res) {
     }
     const text = data.output_text || (data.output || []).flatMap(o => o.content || []).find(c => c.type === 'output_text')?.text || '';
     const cleaned = text.replace(/^```json\s*/i, '').replace(/```\s*$/,'').trim();
-    const result = JSON.parse(cleaned);
+    let result;
+    try {
+      result = JSON.parse(cleaned);
+    } catch {
+      return res.status(502).json({
+        error: 'تعذر قراءة JSON الناتج من خدمة التحليل.',
+        code: 'ANALYSIS_UPSTREAM_INVALID'
+      });
+    }
     if (!result || typeof result !== 'object' || Array.isArray(result)) {
-      throw new Error('Invalid analysis result');
+      return res.status(502).json({
+        error: 'أعادت خدمة التحليل بنية نتيجة غير صالحة.',
+        code: 'ANALYSIS_UPSTREAM_INVALID'
+      });
     }
 
     const requestId = globalThis.crypto?.randomUUID?.() || ('waffer-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8));
@@ -155,25 +211,14 @@ export default async function handler(req, res) {
       completedAt
     });
 
-    if (res.locals?.openaiFileId) {
-      fetch('https://api.openai.com/v1/files/' + encodeURIComponent(res.locals.openaiFileId), {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` }
-      }).catch(error => console.error('PDF cleanup error:', error));
-    }
-
     return res.status(200).json(normalized);
   } catch (e) {
-    if (res.locals?.openaiFileId) {
-      fetch('https://api.openai.com/v1/files/' + encodeURIComponent(res.locals.openaiFileId), {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` }
-      }).catch(error => console.error('PDF cleanup error:', error));
-    }
     console.error('Waffer analyze error:', e);
     if (e?.name === 'AbortError') {
       return res.status(504).json({ error: 'استغرق التحليل وقتًا أطول من المتوقع. حاول مرة أخرى.', code: 'ANALYSIS_TIMEOUT' });
     }
     return res.status(500).json({ error: 'تعذر إكمال التحليل الآن. تحقق من إعداد الخدمة أو حاول مرة أخرى لاحقًا.', code: 'ANALYSIS_FAILED' });
+  } finally {
+    await cleanupOpenAIFile(openaiFileId, process.env.OPENAI_API_KEY);
   }
 }
