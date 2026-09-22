@@ -87,6 +87,7 @@ if (!failures.length) {
   const analyze = read('api/analyze.js');
   const matcher = read('parts-match.js');
   const vinUi = read('vin-ui.js');
+  const vehiclesApi = read('api/vehicles.js');
   const health = read('api/health.js');
 
   if (vinUi.includes('vehicles[0]')) {
@@ -158,6 +159,31 @@ if (!failures.length) {
   if (!runtime.includes('maxUploadBytes')) failures.push('Runtime upload limit missing');
   if (!runtime.includes('clientAnalysisTimeoutMs')) failures.push('Client analysis timeout is missing');
   if (!runtime.includes('pdfCleanupTimeoutMs')) failures.push('PDF cleanup timeout is missing');
+  if (!runtime.includes('clientManufacturersTimeoutMs')) failures.push('Client manufacturers timeout is missing');
+
+  const manufacturersLoaderStart = index.indexOf('async function loadManufacturers(){');
+  const manufacturersLoaderEnd = index.indexOf("window.addEventListener('wafferPartsMatched'", manufacturersLoaderStart);
+  const manufacturersLoader = manufacturersLoaderStart >= 0 && manufacturersLoaderEnd > manufacturersLoaderStart
+    ? index.slice(manufacturersLoaderStart, manufacturersLoaderEnd)
+    : '';
+  if (!index.includes('id="retryMakes"') || !manufacturersLoader.includes('manufacturersController?.abort()')) {
+    failures.push('Manufacturers loader is not recoverable/abortable');
+  }
+  if (!manufacturersLoader.includes('d=await r.json()') ||
+      manufacturersLoader.indexOf('d=await r.json()') > manufacturersLoader.indexOf('clearTimeout(timer)')) {
+    failures.push('Client manufacturers timeout does not cover response body consumption');
+  }
+  if (index.includes('<option>Ford — فورد</option>') || index.includes('<option>Toyota — تويوتا</option>')) {
+    failures.push('Static placeholder makes can masquerade as catalog-loaded manufacturers');
+  }
+  const vehiclesBodyRead = vehiclesApi.indexOf('data = await response.json()');
+  const vehiclesTimeoutClear = vehiclesApi.indexOf('clearTimeout(timer)');
+  if (!(vehiclesBodyRead >= 0 && vehiclesTimeoutClear > vehiclesBodyRead)) {
+    failures.push('Manufacturers API timeout does not cover response body consumption');
+  }
+  if (!vehiclesApi.includes("code: 'CATALOG_TIMEOUT'")) {
+    failures.push('Manufacturers API timeout is not classified explicitly');
+  }
 
   if (!health.includes("analysis: configured.analysis ? 'configured_not_probed' : 'not_configured'") ||
       !health.includes("analysis: configured.analysis ? 'configuration_only' : 'unavailable'")) {
@@ -263,6 +289,9 @@ if (!failures.length) {
     }
     if (!(RUNTIME_CONFIG.pdfCleanupTimeoutMs > 0 && RUNTIME_CONFIG.pdfCleanupTimeoutMs <= 10000)) {
       failures.push('PDF cleanup timeout must be positive and bounded');
+    }
+    if (!(RUNTIME_CONFIG.clientManufacturersTimeoutMs > RUNTIME_CONFIG.manufacturersTimeoutMs)) {
+      failures.push('Client manufacturers timeout must exceed server manufacturers timeout');
     }
 
     const robots = read('robots.txt');
