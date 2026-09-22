@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     if (!apiKey) return res.status(500).json({ error: 'API key missing' });
     if (!/^\d+$/.test(vehicleId)) return res.status(400).json({ error: 'Invalid vehicleId' });
 
-    const url = 'https://auto-parts-catalog.apiprofile.com/api/v2/category/type-id/1/list-products-names' +
+    const url = 'https://auto-parts-catalog.apiprofile.com/api/v2/category/type-id/' + encodeURIComponent(config.catalog.typeId) + '/list-products-names' +
       '?vehicleId=' + encodeURIComponent(vehicleId) +
       '&langId=' + encodeURIComponent(langId);
 
