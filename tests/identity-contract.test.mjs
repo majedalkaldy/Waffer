@@ -91,3 +91,63 @@ test('price comparison becomes ready only with usable part and vehicle identity'
   assert.equal(res.body?.marketPrice?.source, null);
   assert.equal(res.body?.saving?.status, 'NOT_CALCULATED');
 });
+
+
+test('price comparison rejects whitespace-only part identity', async () => {
+  const res = responseRecorder();
+
+  await priceCompareHandler({
+    method: 'POST',
+    body: {
+      partName: '   ',
+      partNumber: '   ',
+      market: 'SA'
+    }
+  }, res);
+
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body?.code, 'PART_IDENTITY_REQUIRED');
+});
+
+test('price comparison rejects a non-numeric workshop price', async () => {
+  const res = responseRecorder();
+
+  await priceCompareHandler({
+    method: 'POST',
+    body: {
+      partName: 'Brake pad',
+      partNumber: 'BRK-12345',
+      workshopPrice: 'not-a-number',
+      quantity: 2,
+      market: 'SA',
+      vehicle: { vehicleId: 9445 }
+    }
+  }, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body?.workshop?.unitPrice, null);
+  assert.equal(res.body?.workshop?.totalPrice, null);
+  assert.equal(res.body?.inputValidation?.workshopPrice, 'INVALID_OR_MISSING');
+});
+
+test('price comparison defaults invalid quantity to one and keeps a finite total', async () => {
+  const res = responseRecorder();
+
+  await priceCompareHandler({
+    method: 'POST',
+    body: {
+      partName: 'Brake pad',
+      partNumber: 'BRK-12345',
+      workshopPrice: 300,
+      quantity: -7,
+      market: 'SA',
+      vehicle: { vehicleId: 9445 }
+    }
+  }, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body?.part?.quantity, 1);
+  assert.equal(res.body?.workshop?.unitPrice, 300);
+  assert.equal(res.body?.workshop?.totalPrice, 300);
+  assert.equal(res.body?.inputValidation?.quantity, 'DEFAULTED_TO_1');
+});
