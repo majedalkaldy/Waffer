@@ -443,7 +443,11 @@
   }
 
   function articleKey(article) {
-    return norm(article?.articleNo || article?.articleNumber || article?.id || article?.articleId || '');
+    const number = norm(article?.articleNo || article?.articleNumber || '');
+    const supplier = norm(supplierName(article));
+    if (number) return (supplier || 'unknown-supplier') + '|' + number;
+    const id = norm(article?.articleId || article?.id || '');
+    return id ? 'id|' + id : '';
   }
 
   function supplierName(article) {
