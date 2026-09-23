@@ -52,6 +52,9 @@ const required = [
   'lib/analysis-abuse-guard.js',
   'tests/analysis-abuse-guard.test.mjs',
   'tests/analyze-guard-integration.test.mjs',
+  'lib/catalog-abuse-guard.js',
+  'tests/catalog-abuse-guard.test.mjs',
+  'tests/catalog-guard-integration.test.mjs',
   'tests/runtime-resilience.test.mjs',
   'lib/catalog-health-probe.js',
   'tests/catalog-health-probe.test.mjs',
@@ -120,6 +123,7 @@ if (!failures.length) {
 
   const analyze = read('api/analyze.js');
   const abuseGuard = read('lib/analysis-abuse-guard.js');
+  const catalogAbuseGuard = read('lib/catalog-abuse-guard.js');
   const matcher = read('parts-match.js');
   const vinUi = read('vin-ui.js');
   const vehiclesApi = read('api/vehicles.js');
@@ -192,6 +196,24 @@ if (!failures.length) {
   if (!index.includes('ANALYSIS_CLIENT_RATE_LIMITED') ||
       !index.includes('ANALYSIS_CROSS_SITE_BLOCKED')) {
     failures.push('Client UI is missing abuse-guard error messages');
+  }
+
+  if (!catalogAbuseGuard.includes("code:'CATALOG_CLIENT_RATE_LIMITED'") ||
+      !catalogAbuseGuard.includes("fetchSite === 'cross-site'") ||
+      !catalogAbuseGuard.includes("update('waffer-catalog|' + ip)")) {
+    failures.push('Catalog abuse guard contract is incomplete');
+  }
+  for (const [source,label] of [
+    [vehiclesApi,'api/vehicles.js'],
+    [productsApi,'api/products.js'],
+    [articlesApi,'api/articles.js'],
+    [criteriaApi,'api/article-criteria.js'],
+    [vinApi,'api/vin.js']
+  ]) {
+    if (!source.includes("from '../lib/catalog-abuse-guard.js'") ||
+        !source.includes('enforceCatalogRequestGuard(req, res, RUNTIME_CONFIG)')) {
+      failures.push(label + ' is missing the catalog abuse guard');
+    }
   }
 
   if (vinUi.includes('vehicles[0]')) {
@@ -384,6 +406,12 @@ if (!failures.length) {
       !runtime.includes('analysisRateLimitHourlyWindowMs') ||
       !runtime.includes('analysisRateLimitHourlyMax')) {
     failures.push('Analysis rate-limit configuration is missing');
+  }
+  if (!runtime.includes('catalogRateLimitBurstWindowMs') ||
+      !runtime.includes('catalogRateLimitBurstMax') ||
+      !runtime.includes('catalogRateLimitHourlyWindowMs') ||
+      !runtime.includes('catalogRateLimitHourlyMax')) {
+    failures.push('Catalog rate-limit configuration is missing');
   }
   if (!runtime.includes('pdfCleanupTimeoutMs')) failures.push('PDF cleanup timeout is missing');
   if (!runtime.includes('clientManufacturersTimeoutMs')) failures.push('Client manufacturers timeout is missing');
@@ -634,6 +662,12 @@ if (!failures.length) {
           RUNTIME_CONFIG.analysisRateLimitHourlyWindowMs > RUNTIME_CONFIG.analysisRateLimitBurstWindowMs &&
           RUNTIME_CONFIG.analysisRateLimitHourlyMax >= RUNTIME_CONFIG.analysisRateLimitBurstMax)) {
       failures.push('Analysis rate-limit configuration is invalid');
+    }
+    if (!(RUNTIME_CONFIG.catalogRateLimitBurstWindowMs > 0 &&
+          RUNTIME_CONFIG.catalogRateLimitBurstMax > 0 &&
+          RUNTIME_CONFIG.catalogRateLimitHourlyWindowMs > RUNTIME_CONFIG.catalogRateLimitBurstWindowMs &&
+          RUNTIME_CONFIG.catalogRateLimitHourlyMax >= RUNTIME_CONFIG.catalogRateLimitBurstMax)) {
+      failures.push('Catalog rate-limit configuration is invalid');
     }
     if (!(RUNTIME_CONFIG.pdfCleanupTimeoutMs > 0 && RUNTIME_CONFIG.pdfCleanupTimeoutMs <= 10000)) {
       failures.push('PDF cleanup timeout must be positive and bounded');
