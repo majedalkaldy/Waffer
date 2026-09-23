@@ -40,6 +40,7 @@ const required = [
   'scripts/check-launch-gate.mjs',
   'docs/FIELD_TEST_RESULTS.json',
   'docs/FIELD_TEST_AUTOMATION.json',
+  'docs/LIVE_SMOKE_RESULTS.json',
   'docs/LAUNCH_READINESS.md',
   'lib/total-check.js',
   'tests/field-scenarios-synthetic.test.mjs',
@@ -365,6 +366,21 @@ if (!failures.length) {
     if (!readinessDoc.includes(requiredBoundary)) {
       failures.push('Launch readiness document is missing boundary: ' + requiredBoundary);
     }
+  }
+
+  const liveSmoke = JSON.parse(read('docs/LIVE_SMOKE_RESULTS.json'));
+  if (Number(liveSmoke?.fieldTestImpact?.passesGranted) !== 0) {
+    failures.push('Live smoke evidence must never grant field-test PASS results');
+  }
+  if (liveSmoke?.checks?.selfTest?.httpStatus !== 200 ||
+      liveSmoke?.checks?.selfTest?.ok !== true ||
+      liveSmoke?.checks?.health?.httpStatus !== 200 ||
+      liveSmoke?.checks?.health?.status !== 'ready') {
+    failures.push('Live smoke evidence must record successful production self-test and health checks');
+  }
+  if (liveSmoke?.checks?.branchProtection?.protected !== false ||
+      liveSmoke?.checks?.branchProtection?.result !== 'ACTION_REQUIRED') {
+    failures.push('Live smoke evidence must truthfully record unprotected main branch');
   }
 
   const launchResults = JSON.parse(read('docs/FIELD_TEST_RESULTS.json'));
