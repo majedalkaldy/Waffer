@@ -111,6 +111,10 @@ export default async function handler(req, res) {
       catalogProductsTimeoutMs: RUNTIME_CONFIG.catalogProductsTimeoutMs,
       catalogArticlesTimeoutMs: RUNTIME_CONFIG.catalogArticlesTimeoutMs,
       catalogCriteriaTimeoutMs: RUNTIME_CONFIG.catalogCriteriaTimeoutMs,
+      catalogDataCdnCacheSeconds: RUNTIME_CONFIG.catalogDataCdnCacheSeconds,
+      catalogDataCdnStaleSeconds: RUNTIME_CONFIG.catalogDataCdnStaleSeconds,
+      catalogCriteriaCdnCacheSeconds: RUNTIME_CONFIG.catalogCriteriaCdnCacheSeconds,
+      catalogCriteriaCdnStaleSeconds: RUNTIME_CONFIG.catalogCriteriaCdnStaleSeconds,
       healthCatalogTimeoutMs: RUNTIME_CONFIG.healthCatalogTimeoutMs,
       healthCatalogCacheMs: RUNTIME_CONFIG.healthCatalogCacheMs
     },
