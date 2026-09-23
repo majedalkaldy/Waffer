@@ -47,7 +47,8 @@ const required = [
   'tests/image-optimization.test.mjs',
   'lib/analysis-prompt.js',
   'tests/analysis-prompt.test.mjs',
-  'tests/normalizer-locale.test.mjs'
+  'tests/normalizer-locale.test.mjs',
+  'tests/price-localization.test.mjs'
 ];
 
 const failures = [];
@@ -132,6 +133,11 @@ if (!failures.length) {
   if (/Boolean\(String\(partNumber/.test(priceCompare) ||
       /Boolean\(vehicle\.vehicleId \|\| vehicle\.vin\)/.test(priceCompare)) {
     failures.push('Price comparison still accepts unverified identity placeholders');
+  }
+  if (!priceCompare.includes("requestedLocale.toLowerCase().startsWith('en')") ||
+      !priceCompare.includes('Market price and savings were not calculated') ||
+      !priceCompare.includes('لم يتم احتساب سعر السوق أو التوفير')) {
+    failures.push('Price comparison human-readable localization contract is incomplete');
   }
   if (!priceCompare.includes("code: 'PART_IDENTITY_REQUIRED'") ||
       !priceCompare.includes("workshopPrice: priceValid ? 'VALID' : 'INVALID_OR_MISSING'") ||
