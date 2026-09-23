@@ -55,6 +55,7 @@ const required = [
   'tests/runtime-resilience.test.mjs',
   'lib/catalog-health-probe.js',
   'tests/catalog-health-probe.test.mjs',
+  'tests/manufacturers-cdn-cache.test.mjs',
   'docs/VERCEL_FIREWALL_PLAN.md'
 ];
 
@@ -365,6 +366,10 @@ if (!failures.length) {
   }
   if (!runtime.includes('pdfCleanupTimeoutMs')) failures.push('PDF cleanup timeout is missing');
   if (!runtime.includes('clientManufacturersTimeoutMs')) failures.push('Client manufacturers timeout is missing');
+  if (!runtime.includes('manufacturersCdnCacheSeconds') ||
+      !runtime.includes('manufacturersCdnStaleSeconds')) {
+    failures.push('Manufacturer CDN cache configuration is missing');
+  }
   if (!runtime.includes('clientVinTimeoutMs')) failures.push('Client VIN timeout is missing');
   if (!runtime.includes('healthCatalogCacheMs')) failures.push('Catalog health cache duration is missing');
 
@@ -417,6 +422,14 @@ if (!failures.length) {
   }
   if (!vehiclesApi.includes("code: 'CATALOG_TIMEOUT'")) {
     failures.push('Manufacturers API timeout is not classified explicitly');
+  }
+  const manufacturerCacheHeader = vehiclesApi.indexOf("'Vercel-CDN-Cache-Control'");
+  const manufacturerUpstreamGuard = vehiclesApi.indexOf('if (!response.ok)');
+  if (!(manufacturerCacheHeader > manufacturerUpstreamGuard)) {
+    failures.push('Manufacturer CDN cache header must only be applied after successful upstream validation');
+  }
+  if (index.includes("fetch('/api/vehicles',{cache:'no-store'")) {
+    failures.push('Manufacturer client request still bypasses the Vercel CDN cache');
   }
 
   if (!health.includes("analysis: configured.analysis ? 'configured_not_probed' : 'not_configured'") ||
@@ -601,6 +614,10 @@ if (!failures.length) {
     }
     if (!(RUNTIME_CONFIG.clientManufacturersTimeoutMs > RUNTIME_CONFIG.manufacturersTimeoutMs)) {
       failures.push('Client manufacturers timeout must exceed server manufacturers timeout');
+    }
+    if (!(RUNTIME_CONFIG.manufacturersCdnCacheSeconds > 0 &&
+          RUNTIME_CONFIG.manufacturersCdnStaleSeconds >= RUNTIME_CONFIG.manufacturersCdnCacheSeconds)) {
+      failures.push('Manufacturer CDN cache configuration is invalid');
     }
     if (!(RUNTIME_CONFIG.clientVinTimeoutMs > RUNTIME_CONFIG.vinTimeoutMs)) {
       failures.push('Client VIN timeout must exceed server VIN timeout');
