@@ -1,5 +1,6 @@
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { getMarketConfig } from '../lib/market-config.js';
+import { probeCatalogHealth } from '../lib/catalog-health-probe.js';
 
 export default async function handler(req, res) {
   res.setHeader('Allow', 'GET');
@@ -30,32 +31,24 @@ export default async function handler(req, res) {
     catalog: configured.catalog ? 'live_probe' : 'unavailable'
   };
   const latency = { catalogMs: null };
-  const catalogStartedAt = Date.now();
+  const probe = {
+    catalogCache: configured.catalog ? 'not_checked' : 'none',
+    catalogCheckedAt: null,
+    catalogAgeMs: null
+  };
 
   if (configured.catalog) {
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), RUNTIME_CONFIG.healthCatalogTimeoutMs);
-      try {
-        const response = await fetch(
-          'https://auto-parts-catalog.apiprofile.com/api/v2/manufacturers/list/type-id/' + encodeURIComponent(marketConfig.catalog.typeId),
-          {
-            headers: {
-              Accept: 'application/json',
-              'x-apiprofile-key': process.env.AUTOPARTS_API_KEY
-            },
-            signal: controller.signal
-          }
-        );
-        upstream.catalog = response.ok ? 'reachable' : 'error';
-        latency.catalogMs = Date.now() - catalogStartedAt;
-      } finally {
-        clearTimeout(timer);
-      }
-    } catch {
-      upstream.catalog = 'unreachable';
-      latency.catalogMs = Date.now() - catalogStartedAt;
-    }
+    const catalogProbe = await probeCatalogHealth({
+      marketConfig,
+      apiKey: process.env.AUTOPARTS_API_KEY,
+      timeoutMs: RUNTIME_CONFIG.healthCatalogTimeoutMs,
+      cacheMs: RUNTIME_CONFIG.healthCatalogCacheMs
+    });
+    upstream.catalog = catalogProbe.upstream;
+    latency.catalogMs = catalogProbe.latencyMs;
+    probe.catalogCache = catalogProbe.cache;
+    probe.catalogCheckedAt = catalogProbe.checkedAt;
+    probe.catalogAgeMs = catalogProbe.ageMs;
   }
 
   const ok = configured.analysis && configured.catalog && upstream.catalog === 'reachable';
@@ -90,6 +83,7 @@ export default async function handler(req, res) {
     verification,
     upstream,
     latency,
+    probe,
     limits: {
       maxUploadBytes: RUNTIME_CONFIG.maxUploadBytes,
       supportedMimeTypes: RUNTIME_CONFIG.supportedMimeTypes,
@@ -110,7 +104,8 @@ export default async function handler(req, res) {
       catalogProductsTimeoutMs: RUNTIME_CONFIG.catalogProductsTimeoutMs,
       catalogArticlesTimeoutMs: RUNTIME_CONFIG.catalogArticlesTimeoutMs,
       catalogCriteriaTimeoutMs: RUNTIME_CONFIG.catalogCriteriaTimeoutMs,
-      healthCatalogTimeoutMs: RUNTIME_CONFIG.healthCatalogTimeoutMs
+      healthCatalogTimeoutMs: RUNTIME_CONFIG.healthCatalogTimeoutMs,
+      healthCatalogCacheMs: RUNTIME_CONFIG.healthCatalogCacheMs
     },
     timestamp: new Date().toISOString()
   });
