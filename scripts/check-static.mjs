@@ -46,7 +46,8 @@ const required = [
   'lib/image-optimization.js',
   'tests/image-optimization.test.mjs',
   'lib/analysis-prompt.js',
-  'tests/analysis-prompt.test.mjs'
+  'tests/analysis-prompt.test.mjs',
+  'tests/normalizer-locale.test.mjs'
 ];
 
 const failures = [];
@@ -396,6 +397,17 @@ if (!failures.length) {
     failures.push('Health status is not localized for Arabic and English');
   }
 
+  const normalizerSource = read('lib/analysis-normalizer.js');
+  if (!normalizerSource.includes("const isEnglish = String(locale || '').toLowerCase().startsWith('en')") ||
+      !normalizerSource.includes("partNumber: 'not visible'") ||
+      !normalizerSource.includes("partNumber: 'غير ظاهر'")) {
+    failures.push('Analysis normalizer locale-aware fallback contract is incomplete');
+  }
+  if (!index.includes('window.wafferHasUsablePartNumber=hasUsablePartNumber') ||
+      index.includes("!/غير ظاهر|غير متوفر/i.test(String(i.partNumber))")) {
+    failures.push('Result evidence UI must use shared part-identity rules instead of locale-specific regexes');
+  }
+
   const analysisPrompt = read('lib/analysis-prompt.js');
   if (!analyze.includes("from '../lib/analysis-prompt.js'") ||
       !analyze.includes('buildAnalysisPrompt({')) {
@@ -733,8 +745,9 @@ if (!failures.length) {
   if (!sw.includes('/lib/i18n.js') ||
       !sw.includes('/lib/runtime-config.js') ||
       !sw.includes('/lib/total-check.js') ||
-      !sw.includes('/lib/image-optimization.js')) {
-    failures.push('PWA shell missing localization/runtime/total-check/image-optimization modules');
+      !sw.includes('/lib/image-optimization.js') ||
+      !sw.includes('/lib/identity.js')) {
+    failures.push('PWA shell missing localization/runtime/total-check/image-optimization/identity modules');
   }
 
   try {
