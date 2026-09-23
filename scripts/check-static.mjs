@@ -32,7 +32,8 @@ const required = [
   'tests/api-timeouts.test.mjs',
   'tests/analyze-cleanup.test.mjs',
   'tests/identity-contract.test.mjs',
-  'tests/catalog-shortlist.test.mjs'
+  'tests/catalog-shortlist.test.mjs',
+  'tests/pipeline-contract.test.mjs'
 ];
 
 const failures = [];
@@ -205,6 +206,17 @@ if (!failures.length) {
   }
   if (!ciWorkflow.includes('contents: read')) {
     failures.push('GitHub Actions CI permissions are not explicitly read-only');
+  }
+  const pipelineTest = read('tests/pipeline-contract.test.mjs');
+  for (const requiredSignal of [
+    "assert.equal(analysis.acceptance.schemaValid, true)",
+    "assert.equal(matches[0].requestedAxle, 'front')",
+    "assert.equal(matches[1].skipped, true)",
+    "assert.equal(priceRes.body.saving.status, 'NOT_CALCULATED')"
+  ]) {
+    if (!pipelineTest.includes(requiredSignal)) {
+      failures.push('Pipeline contract test is missing critical assertion: ' + requiredSignal);
+    }
   }
 
   const runtime = read('lib/runtime-config.js');
