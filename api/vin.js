@@ -1,4 +1,5 @@
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
+import { enforceCatalogRequestGuard } from '../lib/catalog-abuse-guard.js';
 export default async function handler(req, res) {
   res.setHeader('Allow', 'GET');
   res.setHeader('Cache-Control', 'no-store');
@@ -12,6 +13,7 @@ export default async function handler(req, res) {
     if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) {
       return res.status(400).json({ error: 'A valid 17-character VIN is required' });
     }
+    if (!enforceCatalogRequestGuard(req, res, RUNTIME_CONFIG)) return;
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), RUNTIME_CONFIG.vinTimeoutMs);
