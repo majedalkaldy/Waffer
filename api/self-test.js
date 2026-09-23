@@ -46,6 +46,8 @@ export default async function handler(req, res) {
     healthCatalogTimeout: Number(RUNTIME_CONFIG.healthCatalogTimeoutMs) > 0,
     healthCatalogCache: Number(RUNTIME_CONFIG.healthCatalogCacheMs) >=
       Number(RUNTIME_CONFIG.healthCatalogTimeoutMs),
+    priceProviderTimeout: Number(RUNTIME_CONFIG.priceProviderTimeoutMs) > 0 &&
+      Number(RUNTIME_CONFIG.priceProviderTimeoutMs) <= 15000,
     manufacturersTimeout: Number(RUNTIME_CONFIG.manufacturersTimeoutMs) > 0 &&
       Number(RUNTIME_CONFIG.clientManufacturersTimeoutMs) > Number(RUNTIME_CONFIG.manufacturersTimeoutMs),
     manufacturersCdnCache: Number(RUNTIME_CONFIG.manufacturersCdnCacheSeconds) > 0 &&
