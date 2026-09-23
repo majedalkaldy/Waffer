@@ -1,5 +1,6 @@
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { getMarketConfig } from '../lib/market-config.js';
+import { enforceCatalogRequestGuard } from '../lib/catalog-abuse-guard.js';
 
 export default async function handler(req, res) {
   res.setHeader('Allow', 'GET');
@@ -20,6 +21,7 @@ export default async function handler(req, res) {
     if (!/^\d+$/.test(vehicleId) || !/^\d+$/.test(productId)) {
       return res.status(400).json({ error: 'Valid vehicleId and productId are required' });
     }
+    if (!enforceCatalogRequestGuard(req, res, RUNTIME_CONFIG)) return;
 
     const url = 'https://auto-parts-catalog.apiprofile.com/api/v2/articles/list-by-product/type-id/' + encodeURIComponent(config.catalog.typeId) + '/vehicle-id/' +
       encodeURIComponent(vehicleId) + '/product-id/' + encodeURIComponent(productId) +

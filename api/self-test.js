@@ -28,6 +28,12 @@ export default async function handler(req, res) {
     pdfCleanupTimeout: Number(RUNTIME_CONFIG.pdfCleanupTimeoutMs) > 0 &&
       Number(RUNTIME_CONFIG.pdfCleanupTimeoutMs) <= 10000,
     catalogTimeout: Number(RUNTIME_CONFIG.catalogMatchTimeoutMs) > 0,
+    catalogRateLimit: Number(RUNTIME_CONFIG.catalogRateLimitBurstWindowMs) > 0 &&
+      Number(RUNTIME_CONFIG.catalogRateLimitBurstMax) > 0 &&
+      Number(RUNTIME_CONFIG.catalogRateLimitHourlyWindowMs) >
+        Number(RUNTIME_CONFIG.catalogRateLimitBurstWindowMs) &&
+      Number(RUNTIME_CONFIG.catalogRateLimitHourlyMax) >=
+        Number(RUNTIME_CONFIG.catalogRateLimitBurstMax),
     catalogSubTimeouts: [
       RUNTIME_CONFIG.catalogProductsTimeoutMs,
       RUNTIME_CONFIG.catalogArticlesTimeoutMs,
