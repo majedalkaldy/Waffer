@@ -519,7 +519,7 @@ if (!failures.length) {
   const manufacturersLoaderStart = app.indexOf('async function loadManufacturers(){');
   const manufacturersLoaderEnd = app.indexOf("window.addEventListener('wafferPartsMatched'", manufacturersLoaderStart);
   const manufacturersLoader = manufacturersLoaderStart >= 0 && manufacturersLoaderEnd > manufacturersLoaderStart
-    ? index.slice(manufacturersLoaderStart, manufacturersLoaderEnd)
+    ? app.slice(manufacturersLoaderStart, manufacturersLoaderEnd)
     : '';
   if (!index.includes('id="retryMakes"') || !manufacturersLoader.includes('manufacturersController?.abort()')) {
     failures.push('Manufacturers loader is not recoverable/abortable');
@@ -582,7 +582,7 @@ if (!failures.length) {
   const healthFunctionStart = app.indexOf('async function checkSystemHealth(){');
   const healthFunctionEnd = app.indexOf('checkSystemHealth();', healthFunctionStart);
   const healthClient = healthFunctionStart >= 0 && healthFunctionEnd > healthFunctionStart
-    ? index.slice(healthFunctionStart, healthFunctionEnd)
+    ? app.slice(healthFunctionStart, healthFunctionEnd)
     : '';
   if (!healthClient.includes('d=await r.json()') ||
       healthClient.indexOf('d=await r.json()') > healthClient.indexOf('clearTimeout(timer)')) {
