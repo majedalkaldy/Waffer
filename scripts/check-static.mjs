@@ -38,7 +38,10 @@ const required = [
   'tests/runtime-localization.test.mjs',
   'lib/launch-readiness.js',
   'scripts/check-launch-gate.mjs',
-  'docs/FIELD_TEST_RESULTS.json'
+  'docs/FIELD_TEST_RESULTS.json',
+  'docs/FIELD_TEST_AUTOMATION.json',
+  'lib/total-check.js',
+  'tests/field-scenarios-synthetic.test.mjs'
 ];
 
 const failures = [];
@@ -227,6 +230,22 @@ if (!failures.length) {
     }
   }
 
+  const automationCoverage = JSON.parse(read('docs/FIELD_TEST_AUTOMATION.json'));
+  if (!Array.isArray(automationCoverage?.scenarios) || automationCoverage.scenarios.length !== 10) {
+    failures.push('Automated field-test coverage tracker must contain exactly ten scenarios');
+  } else {
+    const allowedCoverage = new Set(['COVERED','PARTIAL','NOT_AUTOMATED']);
+    const coverageIds = automationCoverage.scenarios.map(item => Number(item?.id));
+    if (new Set(coverageIds).size !== 10 || ![1,2,3,4,5,6,7,8,9,10].every(id => coverageIds.includes(id))) {
+      failures.push('Automated field-test coverage tracker must contain unique scenario ids 1..10');
+    }
+    for (const scenario of automationCoverage.scenarios) {
+      if (!allowedCoverage.has(String(scenario?.coverage || ''))) {
+        failures.push('Invalid automated field-test coverage for scenario ' + scenario?.id);
+      }
+    }
+  }
+
   const launchResults = JSON.parse(read('docs/FIELD_TEST_RESULTS.json'));
   if (!Array.isArray(launchResults?.scenarios) || launchResults.scenarios.length !== 10) {
     failures.push('Field-test results tracker must contain exactly ten scenarios');
@@ -253,6 +272,17 @@ if (!failures.length) {
     if (index.includes(legacyRuntimeText)) {
       failures.push('Unlocalized core runtime text remains: ' + legacyRuntimeText);
     }
+  }
+
+  const totalCheckModule = read('lib/total-check.js');
+  if (!totalCheckModule.includes('export function compareDisplayedTotals')) {
+    failures.push('Shared displayed-total comparison helper is missing');
+  }
+  if (!index.includes("window.wafferCompareDisplayedTotals=compareDisplayedTotals")) {
+    failures.push('UI does not expose the shared total comparison helper');
+  }
+  if (index.includes("printed.match(/[\\d,.]+/)")) {
+    failures.push('Legacy inline total parsing remains in the UI');
   }
 
   const runtime = read('lib/runtime-config.js');
@@ -654,8 +684,10 @@ if (!failures.length) {
   }
 
   const sw = read('sw.js');
-  if (!sw.includes('/lib/i18n.js') || !sw.includes('/lib/runtime-config.js')) {
-    failures.push('PWA shell missing localization/runtime modules');
+  if (!sw.includes('/lib/i18n.js') ||
+      !sw.includes('/lib/runtime-config.js') ||
+      !sw.includes('/lib/total-check.js')) {
+    failures.push('PWA shell missing localization/runtime/total-check modules');
   }
 
   try {
