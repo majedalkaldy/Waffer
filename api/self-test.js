@@ -33,6 +33,15 @@ export default async function handler(req, res) {
       RUNTIME_CONFIG.catalogArticlesTimeoutMs,
       RUNTIME_CONFIG.catalogCriteriaTimeoutMs
     ].every(value => Number(value) > 0 && Number(value) <= Number(RUNTIME_CONFIG.catalogMatchTimeoutMs)),
+    catalogRateLimit: Number(RUNTIME_CONFIG.catalogRateLimitBurstMax) > 0 &&
+      Number(RUNTIME_CONFIG.catalogRateLimitHourlyMax) >= Number(RUNTIME_CONFIG.catalogRateLimitBurstMax) &&
+      Number(RUNTIME_CONFIG.catalogRateLimitHourlyWindowMs) > Number(RUNTIME_CONFIG.catalogRateLimitBurstWindowMs),
+    vinRateLimit: Number(RUNTIME_CONFIG.vinRateLimitBurstMax) > 0 &&
+      Number(RUNTIME_CONFIG.vinRateLimitHourlyMax) >= Number(RUNTIME_CONFIG.vinRateLimitBurstMax) &&
+      Number(RUNTIME_CONFIG.vinRateLimitHourlyWindowMs) > Number(RUNTIME_CONFIG.vinRateLimitBurstWindowMs),
+    manufacturersRateLimit: Number(RUNTIME_CONFIG.manufacturersRateLimitBurstMax) > 0 &&
+      Number(RUNTIME_CONFIG.manufacturersRateLimitHourlyMax) >= Number(RUNTIME_CONFIG.manufacturersRateLimitBurstMax) &&
+      Number(RUNTIME_CONFIG.manufacturersRateLimitHourlyWindowMs) > Number(RUNTIME_CONFIG.manufacturersRateLimitBurstWindowMs),
     healthCatalogTimeout: Number(RUNTIME_CONFIG.healthCatalogTimeoutMs) > 0,
     healthCatalogCache: Number(RUNTIME_CONFIG.healthCatalogCacheMs) >=
       Number(RUNTIME_CONFIG.healthCatalogTimeoutMs),
