@@ -1,0 +1,59 @@
+{
+  "purpose": "Live production smoke evidence only. This is not field-test evidence and must not change docs/FIELD_TEST_RESULTS.json statuses.",
+  "recordedAt": "2026-09-23T21:57:41.581Z",
+  "environment": "production",
+  "deploymentCommit": "c1b5dded15d6a906493f7bafa9904e822639cc85",
+  "deploymentCommitShort": "c1b5dded",
+  "checks": {
+    "vercelDeployment": {
+      "status": "READY",
+      "result": "PASS"
+    },
+    "githubCi": {
+      "workflow": "Waffer CI",
+      "runNumber": 140,
+      "status": "completed",
+      "conclusion": "success",
+      "result": "PASS"
+    },
+    "selfTest": {
+      "path": "/api/self-test",
+      "httpStatus": 200,
+      "ok": true,
+      "failed": [],
+      "result": "PASS"
+    },
+    "health": {
+      "path": "/api/health",
+      "httpStatus": 200,
+      "ok": true,
+      "status": "ready",
+      "launchPhase": "field-test",
+      "analysisVerification": "configuration_only",
+      "catalogVerification": "live_probe",
+      "catalogUpstream": "reachable",
+      "catalogLatencyMs": 680,
+      "verifiedMarketPricing": false,
+      "result": "PASS"
+    },
+    "runtimeErrors": {
+      "window": "2h",
+      "count": 0,
+      "result": "PASS"
+    },
+    "branchProtection": {
+      "branch": "main",
+      "protected": false,
+      "requiredStatusChecks": false,
+      "result": "ACTION_REQUIRED"
+    },
+    "manufacturerCdnLiveVerification": {
+      "result": "NOT_VERIFIED",
+      "reason": "Deployment-level HTTP probe was intercepted by Vercel SSO before reaching /api/vehicles. CDN behavior remains covered by automated tests, but no live HIT/MISS claim is recorded."
+    }
+  },
+  "fieldTestImpact": {
+    "passesGranted": 0,
+    "note": "Operational smoke evidence does not satisfy any of the ten manual field-test scenarios by itself."
+  }
+}
