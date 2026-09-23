@@ -332,6 +332,25 @@ if (!failures.length) {
     failures.push('Catalog precondition references an undefined error variable');
   }
 
+  const i18nSource = read('lib/i18n.js');
+  const arLocaleStart = i18nSource.indexOf("'ar-SA': {");
+  const enLocaleStart = i18nSource.indexOf("'en-SA': {");
+  const localeEnd = i18nSource.indexOf('\n  }\n};', enLocaleStart);
+  const duplicateLocaleKeys = (block, locale) => {
+    const keys = [...block.matchAll(/^\s{4}([A-Za-z_$][\w$]*)\s*:/gm)].map(match => match[1]);
+    const counts = new Map();
+    for (const key of keys) counts.set(key, (counts.get(key) || 0) + 1);
+    for (const [key, count] of counts) {
+      if (count > 1) failures.push(`Duplicate i18n key "${key}" in ${locale}`);
+    }
+  };
+  if (arLocaleStart < 0 || enLocaleStart < 0 || localeEnd < 0) {
+    failures.push('Could not locate localization source blocks for duplicate-key checks');
+  } else {
+    duplicateLocaleKeys(i18nSource.slice(arLocaleStart, enLocaleStart), 'ar-SA');
+    duplicateLocaleKeys(i18nSource.slice(enLocaleStart, localeEnd), 'en-SA');
+  }
+
   try {
     const { UI_STRINGS } = await import('../lib/i18n.js');
     const locales = Object.keys(UI_STRINGS);
