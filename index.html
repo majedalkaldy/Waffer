@@ -112,15 +112,29 @@ let analysisTimer=null;
 let analysisRunId=0;
 let activeAnalysisController=null;
 let activeCatalogController=null;
+let activePricingController=null;
+let pricingPromise=null;
+let pricingPromiseRunId=0;
+let pricingCompletedRunId=0;
 window.wafferAnalysisRunId=0;
+window.wafferVerifiedMarketPricing=false;
+window.wafferPricingResults=[];
+window.wafferPricingSummary=null;
 
 function beginAnalysisRun(){
  analysisRunId+=1;
  window.wafferAnalysisRunId=analysisRunId;
  activeAnalysisController?.abort();
  activeCatalogController?.abort();
+ activePricingController?.abort();
  activeAnalysisController=new AbortController();
  activeCatalogController=null;
+ activePricingController=null;
+ pricingPromise=null;
+ pricingPromiseRunId=0;
+ pricingCompletedRunId=0;
+ window.wafferPricingResults=[];
+ window.wafferPricingSummary=null;
  return analysisRunId;
 }
 function invalidateAnalysisRun(){
@@ -128,8 +142,15 @@ function invalidateAnalysisRun(){
  window.wafferAnalysisRunId=analysisRunId;
  activeAnalysisController?.abort();
  activeCatalogController?.abort();
+ activePricingController?.abort();
  activeAnalysisController=null;
  activeCatalogController=null;
+ activePricingController=null;
+ pricingPromise=null;
+ pricingPromiseRunId=0;
+ pricingCompletedRunId=0;
+ window.wafferPricingResults=[];
+ window.wafferPricingSummary=null;
 }
 function isCurrentAnalysisRun(runId){return runId===analysisRunId;}
 const debugMode=new URLSearchParams(location.search).get('debug')==='1';
@@ -393,6 +414,7 @@ async function start(){
    setStage(ui('إعداد النتيجة','Preparing the result'));
    render();
    show('result');
+   void refreshVerifiedPricing(runId);
 
    const catalogSummary=document.getElementById('catalogSummary');
    if(window.wafferVehicleId && typeof window.matchWafferParts==='function'){
@@ -697,6 +719,141 @@ function formatVehicleForMessage(){
  }
  return [document.getElementById('make')?.selectedOptions?.[0]?.text,document.getElementById('model')?.value,document.getElementById('year')?.value].filter(Boolean).join(' — ');
 }
+function currentPricingVehicle(){
+ const v=window.wafferVehicle||{};
+ return {
+   vehicleId:v.vehicleId||window.wafferVehicleId||null,
+   make:v.manufacturerName||document.getElementById('make')?.selectedOptions?.[0]?.text||null,
+   model:v.modelName||document.getElementById('model')?.value||null,
+   year:v.year||document.getElementById('year')?.value||null,
+   vin:v.vin||document.getElementById('vin')?.value||null
+ };
+}
+
+function renderPricingSummary(){
+ const label=document.getElementById('confirmedSavingLabel');
+ const note=document.getElementById('savingNote');
+ const readiness=document.getElementById('priceReadiness');
+ if(!label||!note||!readiness)return;
+
+ const summary=window.wafferPricingSummary;
+ if(!window.wafferVerifiedMarketPricing){
+   label.textContent=ui('التوفير المؤكد: غير محسوب','Confirmed savings: not calculated');
+   note.textContent=ui('لا يحسب «وفّر» التوفير قبل مطابقة هوية القطعة بمصدر سعر موثوق.','Waffer does not calculate savings until part identity is matched to a trusted price source.');
+   readiness.textContent=ui('💰 مقارنة الأسعار: بانتظار مصدر سعر موثوق ومفعّل.','💰 Price comparison is waiting for an enabled trusted price source.');
+   return;
+ }
+
+ if(!summary){
+   label.textContent=ui('التوفير المؤكد: غير محسوب','Confirmed savings: not calculated');
+   note.textContent=ui('مصدر السعر الموثوق متصل؛ سيتم فحص البنود المؤهلة فقط.','A trusted price source is connected; only eligible items will be checked.');
+   readiness.textContent=ui('💰 بانتظار بنود تحمل رقم قطعة صالح وهوية سيارة قابلة للتحقق.','💰 Waiting for items with a usable part number and verifiable vehicle identity.');
+   return;
+ }
+
+ const money=Number(summary.verifiedSaving||0).toFixed(2)+' '+summary.currency;
+ if(summary.verifiedOfferCount>0){
+   label.textContent=ui('التوفير المؤكد من عروض موثقة: ','Confirmed savings from verified offers: ')+money;
+   note.textContent=ui('يُحسب هذا الرقم فقط من عروض شراء موثقة ومتاحة ومطابقة للقطعة والسيارة.','This amount is calculated only from verified, in-stock offers matched to the part and vehicle.');
+ }else{
+   label.textContent=ui('التوفير المؤكد: غير محسوب','Confirmed savings: not calculated');
+   note.textContent=ui('قد تتوفر بيانات نطاق سوق، لكن لا يُحسب التوفير دون عرض شراء موثّق.','Market-range data may be available, but savings require a verified purchase offer.');
+ }
+ readiness.textContent=ui(
+   '💰 فُحصت '+summary.checkedItems+' بنود؛ عروض موثقة: '+summary.verifiedOfferCount+'، نطاقات سوق: '+summary.marketRangeCount+'.',
+   '💰 Checked '+summary.checkedItems+' items; verified offers: '+summary.verifiedOfferCount+', market ranges: '+summary.marketRangeCount+'.'
+ );
+}
+window.wafferRenderPricingSummary=renderPricingSummary;
+
+async function refreshVerifiedPricing(runId=analysisRunId){
+ if(!isCurrentAnalysisRun(runId)||!analysis)return;
+ if(!window.wafferVerifiedMarketPricing){
+   renderPricingSummary();
+   return;
+ }
+ if(pricingCompletedRunId===runId)return;
+ if(pricingPromise && pricingPromiseRunId===runId)return pricingPromise;
+ if(typeof window.wafferSelectPriceableItems!=='function' ||
+    typeof window.wafferBuildPriceComparePayload!=='function' ||
+    typeof window.wafferSummarizeVerifiedPricing!=='function'){
+   return;
+ }
+
+ const vehicle=currentPricingVehicle();
+ const selected=window.wafferSelectPriceableItems(analysis,vehicle,{maxItems:10});
+ if(!selected.length){
+   window.wafferPricingResults=[];
+   window.wafferPricingSummary=window.wafferSummarizeVerifiedPricing([],analysis?.engineContext?.currency||'SAR');
+   pricingCompletedRunId=runId;
+   renderPricingSummary();
+   return;
+ }
+
+ activePricingController?.abort();
+ const controller=new AbortController();
+ activePricingController=controller;
+ pricingPromiseRunId=runId;
+ const readiness=document.getElementById('priceReadiness');
+ if(readiness)readiness.textContent=ui('💰 جارٍ التحقق من الأسعار الموثقة للبنود المؤهلة...','💰 Checking trusted pricing for eligible items...');
+
+ pricingPromise=(async()=>{
+   const entries=[];
+   const context=analysis?.engineContext||{};
+   for(let offset=0;offset<selected.length;offset+=2){
+     if(!isCurrentAnalysisRun(runId)||controller.signal.aborted)return;
+     const batch=selected.slice(offset,offset+2);
+     const batchResults=await Promise.all(batch.map(async({item,index})=>{
+       const payload=window.wafferBuildPriceComparePayload({
+         item,
+         vehicle,
+         market:context.market||'SA',
+         locale:context.locale||window.wafferLocale||'ar-SA',
+         currency:context.currency||'SAR'
+       });
+       if(!payload)return null;
+       try{
+         const response=await fetch('/api/price-compare',{
+           method:'POST',
+           headers:{'Content-Type':'application/json'},
+           body:JSON.stringify(payload),
+           signal:controller.signal
+         });
+         let data=null;
+         try{data=await response.json();}catch(e){}
+         return {index,ok:response.ok,data};
+       }catch(error){
+         if(controller.signal.aborted)throw error;
+         return {index,ok:false,data:null};
+       }
+     }));
+     entries.push(...batchResults.filter(Boolean));
+   }
+
+   if(!isCurrentAnalysisRun(runId)||controller.signal.aborted)return;
+   window.wafferPricingResults=entries;
+   window.wafferPricingSummary=window.wafferSummarizeVerifiedPricing(
+     entries,
+     analysis?.engineContext?.currency||'SAR'
+   );
+   pricingCompletedRunId=runId;
+   renderPricingSummary();
+ })().catch(error=>{
+   if(!controller.signal.aborted){
+     console.error('Verified pricing error:',error);
+     const readiness=document.getElementById('priceReadiness');
+     if(readiness)readiness.textContent=ui('⚠️ تعذر إكمال التحقق من الأسعار حاليًا.','⚠️ Trusted pricing could not be completed right now.');
+   }
+ }).finally(()=>{
+   if(activePricingController===controller)activePricingController=null;
+   if(pricingPromiseRunId===runId){
+     pricingPromise=null;
+     pricingPromiseRunId=0;
+   }
+ });
+ return pricingPromise;
+}
+
 function resetAnalysis(){
  invalidateAnalysisRun();
  clearInterval(analysisTimer);
@@ -710,6 +867,14 @@ function resetAnalysis(){
  window.wafferVehicleId='';
  window.wafferModelId='';
  window.wafferManufacturerId='';
+ window.wafferPricingResults=[];
+ window.wafferPricingSummary=null;
+ pricingCompletedRunId=0;
+ pricingPromise=null;
+ pricingPromiseRunId=0;
+ activePricingController?.abort();
+ activePricingController=null;
+ renderPricingSummary();
 
  const analyzeBtn=document.getElementById('analyzeBtn');
  if(analyzeBtn){
@@ -774,6 +939,9 @@ function exportDebugReport(){
    engineContext:analysis.engineContext||null,
    acceptance:analysis.acceptance||null,
    catalogState:window.wafferCatalogState||null,
+   pricingCapability:window.wafferVerifiedMarketPricing===true,
+   pricingResults:window.wafferPricingResults||[],
+   pricingSummary:window.wafferPricingSummary||null,
    upload:window.wafferUploadMeta||null,
    vehicle:{
      vehicleId:vehicle.vehicleId||window.wafferVehicleId||null,
@@ -921,6 +1089,12 @@ async function checkSystemHealth(){
      clearTimeout(timer);
    }
    if(run!==healthCheckRun)return;
+   window.wafferVerifiedMarketPricing=d?.capabilities?.verifiedMarketPricing===true;
+   if(window.wafferVerifiedMarketPricing && analysis){
+     void refreshVerifiedPricing(analysisRunId);
+   }else if(typeof window.wafferRenderPricingSummary==='function'){
+     window.wafferRenderPricingSummary();
+   }
    const en=window.wafferLocale?.startsWith('en');
    if(d.status==='ready'){
      const ms=Number(d?.latency?.catalogMs);
@@ -947,6 +1121,8 @@ async function checkSystemHealth(){
    }
  }catch(e){
    if(run!==healthCheckRun)return;
+   window.wafferVerifiedMarketPricing=false;
+   if(typeof window.wafferRenderPricingSummary==='function')window.wafferRenderPricingSummary();
    const en=window.wafferLocale?.startsWith('en');
    el.textContent=en
      ? '⚠ Could not verify service status'
@@ -1183,9 +1359,17 @@ import {
   JPEG_QUALITY_LADDER
 } from '/lib/image-optimization.js';
 import { hasUsablePartNumber } from '/lib/identity.js';
+import {
+  selectPriceableItems,
+  buildPriceComparePayload,
+  summarizeVerifiedPricing
+} from '/lib/pricing-client.js';
 window.WAFFER_RUNTIME=RUNTIME_CONFIG;
 window.wafferCompareDisplayedTotals=compareDisplayedTotals;
 window.wafferHasUsablePartNumber=hasUsablePartNumber;
+window.wafferSelectPriceableItems=selectPriceableItems;
+window.wafferBuildPriceComparePayload=buildPriceComparePayload;
+window.wafferSummarizeVerifiedPricing=summarizeVerifiedPricing;
 window.wafferFitImageWithinMaxDimension=fitWithinMaxDimension;
 window.wafferShouldOptimizeImage=shouldOptimizeImage;
 window.WAFFER_IMAGE_QUALITY_LADDER=[...JPEG_QUALITY_LADDER];
@@ -1269,6 +1453,7 @@ function applyLocale(locale){
  document.getElementById('savingNote').textContent=t(locale,'savingNote');
  if(!window.wafferPartMatches)document.getElementById('priceReadiness').textContent=t(locale,'priceWaiting');
  document.getElementById('workshopFollowupBtn').textContent=t(locale,'workshopFollowup');
+ if(typeof window.wafferRenderPricingSummary==='function')window.wafferRenderPricingSummary();
  const debugExport=document.getElementById('debugExportBtn');
  if(debugExport)debugExport.textContent=locale.startsWith('en')?'Export test report':'تصدير تقرير الاختبار';
  window.wafferLocale=locale;
