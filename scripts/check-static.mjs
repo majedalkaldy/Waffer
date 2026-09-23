@@ -22,6 +22,7 @@ const required = [
   'lib/analysis-normalizer.js',
   'lib/upload-validation.js',
   'lib/i18n.js',
+  'lib/identity.js',
   'sw.js',
   'manifest.webmanifest',
   'robots.txt',
@@ -29,7 +30,8 @@ const required = [
   'package.json',
   '.github/workflows/ci.yml',
   'tests/api-timeouts.test.mjs',
-  'tests/analyze-cleanup.test.mjs'
+  'tests/analyze-cleanup.test.mjs',
+  'tests/identity-contract.test.mjs'
 ];
 
 const failures = [];
@@ -97,6 +99,24 @@ if (!failures.length) {
   const criteriaApi = read('api/article-criteria.js');
   const vinApi = read('api/vin.js');
   const health = read('api/health.js');
+  const identity = read('lib/identity.js');
+  const priceCompare = read('api/price-compare.js');
+
+  if (!identity.includes('hasUsablePartNumber') || !identity.includes('hasUsableVehicleIdentity')) {
+    failures.push('Shared identity verification helpers are missing');
+  }
+  if (!analyze.includes("from '../lib/analysis-normalizer.js'")) {
+    failures.push('Analysis API normalizer import is missing');
+  }
+  const normalizer = read('lib/analysis-normalizer.js');
+  if (!normalizer.includes("from './identity.js'") ||
+      !priceCompare.includes("from '../lib/identity.js'")) {
+    failures.push('Identity rules are not shared by analysis and price comparison');
+  }
+  if (/Boolean\(String\(partNumber/.test(priceCompare) ||
+      /Boolean\(vehicle\.vehicleId \|\| vehicle\.vin\)/.test(priceCompare)) {
+    failures.push('Price comparison still accepts unverified identity placeholders');
+  }
 
   if (vinUi.includes('vehicles[0]')) {
     failures.push('VIN resolver must not silently choose the first vehicle variant');

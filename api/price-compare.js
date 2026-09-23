@@ -1,4 +1,5 @@
 import { getMarketConfig } from '../lib/market-config.js';
+import { hasUsablePartNumber, hasUsableVehicleIdentity } from '../lib/identity.js';
 
 export default async function handler(req, res) {
   res.setHeader('Allow', 'POST');
@@ -28,8 +29,8 @@ export default async function handler(req, res) {
     const normalizedMarket = marketConfig.market;
     const normalizedLocale = marketConfig.locale;
     const normalizedCurrency = marketConfig.currency;
-    const hasPartIdentity = Boolean(String(partNumber || '').trim());
-    const hasVehicleIdentity = Boolean(vehicle.vehicleId || vehicle.vin);
+    const hasPartIdentity = hasUsablePartNumber(partNumber);
+    const hasVehicleIdentity = hasUsableVehicleIdentity(vehicle);
 
     return res.status(200).json({
       context: {
