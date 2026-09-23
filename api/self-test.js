@@ -18,6 +18,10 @@ export default async function handler(req, res) {
       RUNTIME_CONFIG.supportedMimeTypes.some(type => type.startsWith('image/')),
     analysisTimeout: Number(RUNTIME_CONFIG.analysisTimeoutMs) > Number(RUNTIME_CONFIG.pdfUploadTimeoutMs),
     clientAnalysisTimeout: Number(RUNTIME_CONFIG.clientAnalysisTimeoutMs) > Number(RUNTIME_CONFIG.analysisTimeoutMs),
+    analysisRateLimit: Number(RUNTIME_CONFIG.analysisRateLimitBurstWindowMs) > 0 &&
+      Number(RUNTIME_CONFIG.analysisRateLimitBurstMax) > 0 &&
+      Number(RUNTIME_CONFIG.analysisRateLimitHourlyWindowMs) > Number(RUNTIME_CONFIG.analysisRateLimitBurstWindowMs) &&
+      Number(RUNTIME_CONFIG.analysisRateLimitHourlyMax) >= Number(RUNTIME_CONFIG.analysisRateLimitBurstMax),
     pdfCleanupTimeout: Number(RUNTIME_CONFIG.pdfCleanupTimeoutMs) > 0 &&
       Number(RUNTIME_CONFIG.pdfCleanupTimeoutMs) <= 10000,
     catalogTimeout: Number(RUNTIME_CONFIG.catalogMatchTimeoutMs) > 0,
