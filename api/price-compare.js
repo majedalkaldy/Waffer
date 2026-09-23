@@ -6,6 +6,8 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const requestedLocale = String(req.body?.locale || 'ar-SA');
+  const requestedEnglish = requestedLocale.toLowerCase().startsWith('en');
   try {
     const {
       partName,
@@ -21,7 +23,10 @@ export default async function handler(req, res) {
     const safePartName = String(partName || '').trim().slice(0, 240);
     const safePartNumber = String(partNumber || '').trim().slice(0, 120);
     if (!safePartName && !safePartNumber) {
-      return res.status(400).json({ error: 'يلزم اسم القطعة أو رقم القطعة.', code: 'PART_IDENTITY_REQUIRED' });
+      return res.status(400).json({
+        error: requestedEnglish ? 'A part name or part number is required.' : 'يلزم اسم القطعة أو رقم القطعة.',
+        code: 'PART_IDENTITY_REQUIRED'
+      });
     }
     const rawPrice = Number(workshopPrice);
     const priceValid = Number.isFinite(rawPrice) && rawPrice >= 0;
@@ -30,10 +35,17 @@ export default async function handler(req, res) {
     const quantityValid = Number.isFinite(rawQuantity) && rawQuantity > 0;
     const qty = quantityValid ? rawQuantity : 1;
     const marketConfig = getMarketConfig({ market, locale, currency });
-    if (!marketConfig.supported) return res.status(400).json({ error: 'Unsupported market', code: 'UNSUPPORTED_MARKET', requestedMarket: marketConfig.requestedMarket });
+    if (!marketConfig.supported) {
+      return res.status(400).json({
+        error: requestedEnglish ? 'The requested market is not supported yet.' : 'السوق المطلوب غير مدعوم حاليًا.',
+        code: 'UNSUPPORTED_MARKET',
+        requestedMarket: marketConfig.requestedMarket
+      });
+    }
     const normalizedMarket = marketConfig.market;
     const normalizedLocale = marketConfig.locale;
     const normalizedCurrency = marketConfig.currency;
+    const isEnglish = normalizedLocale.toLowerCase().startsWith('en');
     const hasPartIdentity = hasUsablePartNumber(safePartNumber);
     const hasVehicleIdentity = hasUsableVehicleIdentity(vehicle);
 
@@ -44,7 +56,7 @@ export default async function handler(req, res) {
         currency: normalizedCurrency
       },
       part: {
-        name: safePartName || 'غير محدد',
+        name: safePartName || (isEnglish ? 'not specified' : 'غير محدد'),
         number: safePartNumber || null,
         quantity: qty
       },
@@ -84,10 +96,14 @@ export default async function handler(req, res) {
         price: 0
       },
       status: 'WAITING_FOR_VERIFIED_PRICE_SOURCE',
-      message: 'لم يتم احتساب سعر السوق أو التوفير لعدم وجود مصدر أسعار خارجي موثوق ومربوط بهذا السوق.'
+      message: isEnglish
+        ? 'Market price and savings were not calculated because no trusted external price source is connected for this market.'
+        : 'لم يتم احتساب سعر السوق أو التوفير لعدم وجود مصدر أسعار خارجي موثوق ومربوط بهذا السوق.'
     });
   } catch (error) {
     console.error('Waffer price compare error:', error);
-    return res.status(500).json({ error: 'تعذر تنفيذ مقارنة السعر حاليًا.' });
+    return res.status(500).json({
+      error: requestedEnglish ? 'Price comparison is currently unavailable.' : 'تعذر تنفيذ مقارنة السعر حاليًا.'
+    });
   }
 }
