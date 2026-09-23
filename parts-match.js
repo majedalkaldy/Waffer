@@ -683,14 +683,17 @@
           ? 'TIMED_OUT'
           : error?.code === 'CATALOG_CLIENT_RATE_LIMITED'
             ? 'RATE_LIMITED'
-            : 'FAILED',
+            : isCatalogHardBlock(error)
+              ? 'BLOCKED'
+              : 'FAILED',
         matched: 0,
         totalItems: items.length,
         error: String(error?.message || error),
+        code: error?.code || null,
+        retryAfterSeconds: error?.retryAfterSeconds || null,
         runId
       };
-      emitMatches([]);
-      return [];
+      throw error;
     }
   }
 
