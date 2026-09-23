@@ -29,6 +29,8 @@ export default async function handler(req, res) {
     healthCatalogTimeout: Number(RUNTIME_CONFIG.healthCatalogTimeoutMs) > 0,
     manufacturersTimeout: Number(RUNTIME_CONFIG.manufacturersTimeoutMs) > 0 &&
       Number(RUNTIME_CONFIG.clientManufacturersTimeoutMs) > Number(RUNTIME_CONFIG.manufacturersTimeoutMs),
+    vinTimeout: Number(RUNTIME_CONFIG.vinTimeoutMs) > 0 &&
+      Number(RUNTIME_CONFIG.clientVinTimeoutMs) > Number(RUNTIME_CONFIG.vinTimeoutMs),
     saMarket: sa.supported === true && sa.market === 'SA' && sa.currency === 'SAR',
     unsupportedMarketRejected: unsupported.supported === false
   };

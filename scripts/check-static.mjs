@@ -88,6 +88,10 @@ if (!failures.length) {
   const matcher = read('parts-match.js');
   const vinUi = read('vin-ui.js');
   const vehiclesApi = read('api/vehicles.js');
+  const productsApi = read('api/products.js');
+  const articlesApi = read('api/articles.js');
+  const criteriaApi = read('api/article-criteria.js');
+  const vinApi = read('api/vin.js');
   const health = read('api/health.js');
 
   if (vinUi.includes('vehicles[0]')) {
@@ -160,6 +164,34 @@ if (!failures.length) {
   if (!runtime.includes('clientAnalysisTimeoutMs')) failures.push('Client analysis timeout is missing');
   if (!runtime.includes('pdfCleanupTimeoutMs')) failures.push('PDF cleanup timeout is missing');
   if (!runtime.includes('clientManufacturersTimeoutMs')) failures.push('Client manufacturers timeout is missing');
+  if (!runtime.includes('clientVinTimeoutMs')) failures.push('Client VIN timeout is missing');
+
+  const catalogBodyTimeoutChecks = [
+    [productsApi, 'data = await response.json()', 'clearTimeout(timer)', 'api/products.js'],
+    [articlesApi, 'data = await response.json()', 'clearTimeout(timer)', 'api/articles.js'],
+    [criteriaApi, 'text = await response.text()', 'clearTimeout(timer)', 'api/article-criteria.js'],
+    [vinApi, 'text = await response.text()', 'clearTimeout(timer)', 'api/vin.js']
+  ];
+  for (const [source, bodyRead, clearTimer, label] of catalogBodyTimeoutChecks) {
+    const bodyIndex = source.indexOf(bodyRead);
+    const clearIndex = source.indexOf(clearTimer);
+    if (!(bodyIndex >= 0 && clearIndex > bodyIndex)) {
+      failures.push(label + ' timeout does not cover response body consumption');
+    }
+  }
+  if (!productsApi.includes("code: 'CATALOG_TIMEOUT'") ||
+      !articlesApi.includes("code: 'CATALOG_TIMEOUT'") ||
+      !criteriaApi.includes("code: 'CATALOG_TIMEOUT'")) {
+    failures.push('Catalog endpoint timeouts are not classified consistently');
+  }
+  if (!vinApi.includes("code: 'VIN_TIMEOUT'")) {
+    failures.push('VIN API timeout is not classified explicitly');
+  }
+  if (!vinUi.includes('clientVinTimeoutMs') ||
+      !vinUi.includes("timeoutError.code = 'VIN_TIMEOUT'") ||
+      !vinUi.includes("if (error?.name === 'AbortError') throw error;")) {
+    failures.push('VIN client timeout/body-abort handling is incomplete');
+  }
 
   const manufacturersLoaderStart = index.indexOf('async function loadManufacturers(){');
   const manufacturersLoaderEnd = index.indexOf("window.addEventListener('wafferPartsMatched'", manufacturersLoaderStart);
@@ -292,6 +324,9 @@ if (!failures.length) {
     }
     if (!(RUNTIME_CONFIG.clientManufacturersTimeoutMs > RUNTIME_CONFIG.manufacturersTimeoutMs)) {
       failures.push('Client manufacturers timeout must exceed server manufacturers timeout');
+    }
+    if (!(RUNTIME_CONFIG.clientVinTimeoutMs > RUNTIME_CONFIG.vinTimeoutMs)) {
+      failures.push('Client VIN timeout must exceed server VIN timeout');
     }
 
     const robots = read('robots.txt');

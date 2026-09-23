@@ -100,6 +100,11 @@ export default async function handler(req, res) {
       pdfCleanupTimeoutMs: RUNTIME_CONFIG.pdfCleanupTimeoutMs,
       manufacturersTimeoutMs: RUNTIME_CONFIG.manufacturersTimeoutMs,
       clientManufacturersTimeoutMs: RUNTIME_CONFIG.clientManufacturersTimeoutMs,
+      vinTimeoutMs: RUNTIME_CONFIG.vinTimeoutMs,
+      clientVinTimeoutMs: RUNTIME_CONFIG.clientVinTimeoutMs,
+      catalogProductsTimeoutMs: RUNTIME_CONFIG.catalogProductsTimeoutMs,
+      catalogArticlesTimeoutMs: RUNTIME_CONFIG.catalogArticlesTimeoutMs,
+      catalogCriteriaTimeoutMs: RUNTIME_CONFIG.catalogCriteriaTimeoutMs,
       healthCatalogTimeoutMs: RUNTIME_CONFIG.healthCatalogTimeoutMs
     },
     timestamp: new Date().toISOString()

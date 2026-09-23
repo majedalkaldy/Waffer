@@ -16,6 +16,7 @@ export default async function handler(req, res) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), RUNTIME_CONFIG.vinTimeoutMs);
     let response;
+    let text;
     try {
       response = await fetch(
         'https://auto-parts-catalog.apiprofile.com/api/v2/vin/tecdoc-vin-check/' + encodeURIComponent(vin),
@@ -27,11 +28,10 @@ export default async function handler(req, res) {
           signal: controller.signal
         }
       );
+      text = await response.text();
     } finally {
       clearTimeout(timer);
     }
-
-    const text = await response.text();
     let data;
     try { data = JSON.parse(text); }
     catch { return res.status(502).json({ error: 'Invalid VIN provider response', code: 'VIN_INVALID_RESPONSE' }); }
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
     return res.status(200).json(data);
   } catch (error) {
     console.error('VIN API error:', error);
-    if (error?.name === 'AbortError') return res.status(504).json({ error: 'VIN lookup timed out' });
+    if (error?.name === 'AbortError') return res.status(504).json({ error: 'VIN lookup timed out', code: 'VIN_TIMEOUT' });
     return res.status(500).json({ error: 'Failed to check VIN' });
   }
 }

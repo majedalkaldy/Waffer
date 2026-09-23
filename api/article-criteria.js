@@ -29,15 +29,16 @@ export default async function handler(req, res) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), RUNTIME_CONFIG.catalogCriteriaTimeoutMs);
     let response;
+    let text;
     try {
       response = await fetch(url, {
         headers: { Accept: 'application/json', 'x-apiprofile-key': apiKey },
         signal: controller.signal
       });
+      text = await response.text();
     } finally {
       clearTimeout(timer);
     }
-    const text = await response.text();
     let data;
     try { data = JSON.parse(text); }
     catch { return res.status(502).json({ error: 'Invalid response from parts catalog', code: 'CATALOG_INVALID_RESPONSE', status: response.status }); }
@@ -52,7 +53,7 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('Article criteria error:', error);
-    if (error?.name === 'AbortError') return res.status(504).json({ error: 'Parts catalog timed out' });
+    if (error?.name === 'AbortError') return res.status(504).json({ error: 'Parts catalog timed out', code: 'CATALOG_TIMEOUT' });
     return res.status(500).json({ error: 'Article criteria lookup failed' });
   }
 }
