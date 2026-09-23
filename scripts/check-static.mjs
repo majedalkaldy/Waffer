@@ -360,8 +360,10 @@ if (!failures.length) {
     'CONTRACT READY / PROVIDER MISSING',
     'IMPLEMENTED IN CODE',
     'WAF MONITORING ACTIVE',
-    'READ ACCESS RESTORED / WAF WRITE TOOL UNAVAILABLE',
-    'GitHub Rulesets = []'
+    'وصول Vercel الحي',
+    'ACTIVE',
+    'ACTION REQUIRED',
+    'protected=false'
   ]) {
     if (!readinessDoc.includes(requiredBoundary)) {
       failures.push('Launch readiness document is missing boundary: ' + requiredBoundary);
