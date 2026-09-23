@@ -40,6 +40,7 @@ const required = [
   'scripts/check-launch-gate.mjs',
   'docs/FIELD_TEST_RESULTS.json',
   'docs/FIELD_TEST_AUTOMATION.json',
+  'docs/LAUNCH_READINESS.md',
   'lib/total-check.js',
   'tests/field-scenarios-synthetic.test.mjs'
 ];
@@ -243,6 +244,19 @@ if (!failures.length) {
       if (!allowedCoverage.has(String(scenario?.coverage || ''))) {
         failures.push('Invalid automated field-test coverage for scenario ' + scenario?.id);
       }
+    }
+  }
+
+  const readinessDoc = read('docs/LAUNCH_READINESS.md');
+  for (const requiredBoundary of [
+    '0/10 PASS',
+    'price-compare',
+    'NEEDS DECISION',
+    'BLOCKED BY ACCESS',
+    'GitHub Rulesets = []'
+  ]) {
+    if (!readinessDoc.includes(requiredBoundary)) {
+      failures.push('Launch readiness document is missing boundary: ' + requiredBoundary);
     }
   }
 
