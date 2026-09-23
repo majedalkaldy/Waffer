@@ -31,7 +31,8 @@ const required = [
   '.github/workflows/ci.yml',
   'tests/api-timeouts.test.mjs',
   'tests/analyze-cleanup.test.mjs',
-  'tests/identity-contract.test.mjs'
+  'tests/identity-contract.test.mjs',
+  'tests/catalog-shortlist.test.mjs'
 ];
 
 const failures = [];
@@ -326,6 +327,9 @@ if (!failures.length) {
   if (!matcher.includes('fetch(url, { signal: controller.signal })') ||
       !matcher.includes("signal.addEventListener('abort'")) {
     failures.push('Catalog upstream requests are not abortable');
+  }
+  if (!matcher.includes("(supplier || 'unknown-supplier') + '|' + number")) {
+    failures.push('Catalog article dedupe key must include supplier plus part number');
   }
   const matcherPrecondition = matcher.match(/if \(!analysis \|\| !vehicleId \|\| !items\.length\) \{([\s\S]*?)\n    \}\n\n    try/);
   if (matcherPrecondition?.[1]?.includes('error?.message')) {
