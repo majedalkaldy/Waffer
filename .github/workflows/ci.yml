@@ -5,9 +5,17 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: waffer-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  static-check:
+  regression-suite:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -15,5 +23,5 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Run static checks
-        run: npm run check
+      - name: Run static and behavioral checks
+        run: npm run ci

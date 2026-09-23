@@ -25,7 +25,11 @@ const required = [
   'sw.js',
   'manifest.webmanifest',
   'robots.txt',
-  'docs/FIELD_TEST.md'
+  'docs/FIELD_TEST.md',
+  'package.json',
+  '.github/workflows/ci.yml',
+  'tests/api-timeouts.test.mjs',
+  'tests/analyze-cleanup.test.mjs'
 ];
 
 const failures = [];
@@ -156,6 +160,21 @@ if (!failures.length) {
     if (!text.includes(`res.setHeader('Allow', '${method}')`)) failures.push(`${path} missing Allow: ${method}`);
     if (!text.includes("Cache-Control', 'no-store")) failures.push(`${path} missing no-store`);
     if (!text.includes("X-Content-Type-Options', 'nosniff")) failures.push(`${path} missing nosniff`);
+  }
+
+  const packageJson = JSON.parse(read('package.json'));
+  const ciWorkflow = read('.github/workflows/ci.yml');
+  if (packageJson?.scripts?.test !== 'node --test tests/*.test.mjs') {
+    failures.push('package.json test script does not run regression tests');
+  }
+  if (packageJson?.scripts?.ci !== 'npm run check && npm test') {
+    failures.push('package.json ci script must run static checks and tests');
+  }
+  if (!ciWorkflow.includes('run: npm run ci')) {
+    failures.push('GitHub Actions CI does not run npm run ci');
+  }
+  if (!ciWorkflow.includes('contents: read')) {
+    failures.push('GitHub Actions CI permissions are not explicitly read-only');
   }
 
   const runtime = read('lib/runtime-config.js');
