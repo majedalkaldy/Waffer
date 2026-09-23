@@ -304,11 +304,19 @@
         }
 
         if (!response.ok) {
-          throw new Error(
-            result?.message ||
-            result?.error ||
-            (isEnglish() ? 'Could not verify the VIN' : 'تعذر التحقق من رقم الهيكل')
-          );
+          const message = result?.code === 'VIN_CLIENT_RATE_LIMITED'
+            ? (isEnglish()
+                ? 'Too many VIN checks. Wait briefly and try again.'
+                : 'تم إجراء محاولات VIN كثيرة. انتظر قليلًا ثم حاول مرة أخرى.')
+            : (
+                result?.message ||
+                result?.error ||
+                (isEnglish() ? 'Could not verify the VIN' : 'تعذر التحقق من رقم الهيكل')
+              );
+          const requestError = new Error(message);
+          requestError.code = result?.code || 'VIN_UPSTREAM_ERROR';
+          requestError.retryAfterSeconds = Number(result?.retryAfterSeconds) || null;
+          throw requestError;
         }
 
         const currentVin = String(document.getElementById('vin')?.value || '').trim().toUpperCase();
