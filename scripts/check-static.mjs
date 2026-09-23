@@ -25,6 +25,7 @@ const required = [
   'lib/identity.js',
   'sw.js',
   'manifest.webmanifest',
+  'vercel.json',
   'robots.txt',
   'docs/FIELD_TEST.md',
   'package.json',
@@ -56,6 +57,7 @@ const required = [
   'tests/catalog-abuse-guard.test.mjs',
   'tests/catalog-guard-integration.test.mjs',
   'tests/catalog-failure-propagation.test.mjs',
+  'tests/security-headers.test.mjs',
   'tests/runtime-resilience.test.mjs',
   'lib/catalog-health-probe.js',
   'tests/catalog-health-probe.test.mjs',
@@ -976,6 +978,23 @@ if (!failures.length) {
     JSON.parse(read('manifest.webmanifest'));
   } catch {
     failures.push('manifest.webmanifest is invalid JSON');
+  }
+
+  try {
+    const vercelConfig = JSON.parse(read('vercel.json'));
+    const headerRule = (vercelConfig.headers || []).find(item => item.source === '/(.*)');
+    const headerMap = new Map((headerRule?.headers || []).map(item => [item.key, item.value]));
+    const csp = headerMap.get('Content-Security-Policy') || '';
+    if (!headerRule ||
+        !csp.includes("frame-ancestors 'none'") ||
+        !csp.includes("object-src 'none'") ||
+        !csp.includes("connect-src 'self'") ||
+        headerMap.get('X-Frame-Options') !== 'DENY' ||
+        headerMap.get('X-Content-Type-Options') !== 'nosniff') {
+      failures.push('Vercel browser security headers are incomplete');
+    }
+  } catch {
+    failures.push('vercel.json is invalid JSON or security headers cannot be read');
   }
 }
 
