@@ -59,6 +59,7 @@ const required = [
   'lib/catalog-health-probe.js',
   'tests/catalog-health-probe.test.mjs',
   'tests/manufacturers-cdn-cache.test.mjs',
+  'tests/catalog-data-cdn-cache.test.mjs',
   'lib/price-provider.js',
   'tests/price-provider-contract.test.mjs',
   'docs/PRICE_PROVIDER_CONTRACT.md',
@@ -421,6 +422,12 @@ if (!failures.length) {
   }
   if (!runtime.includes('clientVinTimeoutMs')) failures.push('Client VIN timeout is missing');
   if (!runtime.includes('healthCatalogCacheMs')) failures.push('Catalog health cache duration is missing');
+  if (!runtime.includes('catalogDataCdnCacheSeconds') ||
+      !runtime.includes('catalogDataCdnStaleSeconds') ||
+      !runtime.includes('catalogCriteriaCdnCacheSeconds') ||
+      !runtime.includes('catalogCriteriaCdnStaleSeconds')) {
+    failures.push('Catalog CDN cache policy is missing');
+  }
 
   const catalogBodyTimeoutChecks = [
     [productsApi, 'data = await response.json()', 'clearTimeout(timer)', 'api/products.js'],
@@ -471,6 +478,20 @@ if (!failures.length) {
   }
   if (!vehiclesApi.includes("code: 'CATALOG_TIMEOUT'")) {
     failures.push('Manufacturers API timeout is not classified explicitly');
+  }
+  for (const [source,label] of [
+    [productsApi,'api/products.js'],
+    [articlesApi,'api/articles.js'],
+    [criteriaApi,'api/article-criteria.js']
+  ]) {
+    const cacheHeaderIndex = source.indexOf("'Vercel-CDN-Cache-Control'");
+    const upstreamGuardIndex = source.indexOf('if (!response.ok)');
+    if (!(cacheHeaderIndex > upstreamGuardIndex)) {
+      failures.push(label + ' CDN cache header must only be applied after successful upstream validation');
+    }
+  }
+  if (vinApi.includes("'Vercel-CDN-Cache-Control'")) {
+    failures.push('VIN responses must never be stored in the Vercel CDN');
   }
   const manufacturerCacheHeader = vehiclesApi.indexOf("'Vercel-CDN-Cache-Control'");
   const manufacturerUpstreamGuard = vehiclesApi.indexOf('if (!response.ok)');
@@ -684,6 +705,12 @@ if (!failures.length) {
     }
     if (!(RUNTIME_CONFIG.healthCatalogCacheMs >= RUNTIME_CONFIG.healthCatalogTimeoutMs)) {
       failures.push('Catalog health cache duration must cover at least one probe timeout');
+    }
+    if (!(RUNTIME_CONFIG.catalogDataCdnCacheSeconds > 0 &&
+          RUNTIME_CONFIG.catalogDataCdnStaleSeconds >= RUNTIME_CONFIG.catalogDataCdnCacheSeconds &&
+          RUNTIME_CONFIG.catalogCriteriaCdnCacheSeconds >= RUNTIME_CONFIG.catalogDataCdnCacheSeconds &&
+          RUNTIME_CONFIG.catalogCriteriaCdnStaleSeconds >= RUNTIME_CONFIG.catalogCriteriaCdnCacheSeconds)) {
+      failures.push('Catalog CDN cache policy is invalid');
     }
 
     const robots = read('robots.txt');
