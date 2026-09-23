@@ -468,8 +468,8 @@ function render(){
    const conflicts=Array.isArray(analysis.conflicts)?analysis.conflicts.length:0;
    const total=missing+conflicts;
    warningsSummary.textContent=total
-     ? '⚠️ نقاط تحتاج انتباهًا قبل الموافقة: '+total+' ('+missing+' بيانات ناقصة، '+conflicts+' نقاط تحقق).'
-     : '✓ لم يستخرج النظام نقاط نقص أو تعارض رئيسية من المستند.';
+     ? ui('⚠️ نقاط تحتاج انتباهًا قبل الموافقة: '+total+' ('+missing+' بيانات ناقصة، '+conflicts+' نقاط تحقق).','⚠️ Items need attention before approval: '+total+' ('+missing+' missing data, '+conflicts+' verification points).')
+     : ui('✓ لم يستخرج النظام نقاط نقص أو تعارض رئيسية من المستند.','✓ No major missing-data or conflict findings were extracted.');
  }
  const manualTestPrompt=document.getElementById('rManualTestPrompt');
  if(manualTestPrompt){
@@ -576,7 +576,8 @@ function render(){
    const named=items.filter(i=>String(i.name||'').trim()).length;
    const priced=items.filter(i=>String(i.price||'').trim()).length;
    const ratio=items.length?Math.round(((named+priced)/(items.length*2))*100):0;
-   docQuality.textContent='📄 جودة الاستخراج من المستند: '+(ratio>=80?'جيدة':ratio>=50?'متوسطة':'محدودة')+' ('+ratio+'%) — تعتمد على وضوح الصورة/الملف والبيانات المطبوعة.';
+   const quality=ratio>=80?ui('جيدة','good'):ratio>=50?ui('متوسطة','moderate'):ui('محدودة','limited');
+   docQuality.textContent=ui('📄 جودة الاستخراج من المستند: ','📄 Document extraction quality: ')+quality+' ('+ratio+'%)'+ui(' — تعتمد على وضوح الصورة/الملف والبيانات المطبوعة.',' — depends on document clarity and printed data.');
  }
  const evidence=document.getElementById('rVehicleEvidence');
  const evidenceLevel=document.getElementById('rEvidenceLevel');
@@ -584,18 +585,18 @@ function render(){
    const hasVin=Boolean(window.wafferVehicle?.vehicleId);
    const items=Array.isArray(analysis.items)?analysis.items:[];
    const withPartNumbers=items.filter(i=>i.partNumber && !/غير ظاهر|غير متوفر/i.test(String(i.partNumber))).length;
-   let label='محدودة';
-   if(hasVin && withPartNumbers>0)label='متوسطة';
-   if(hasVin && items.length>0 && withPartNumbers===items.length)label='مرتفعة مبدئيًا';
-   evidenceLevel.textContent='🧾 مستوى الأدلة المتاحة: '+label+' — '+(hasVin?'هوية السيارة موثقة. ':'هوية السيارة غير موثقة عبر VIN. ')+(withPartNumbers?('أرقام قطع ظاهرة: '+withPartNumbers+' من '+items.length+'.'):'لا تظهر أرقام قطع قابلة للتحقق في العرض.');
+   let label=ui('محدودة','limited');
+   if(hasVin && withPartNumbers>0)label=ui('متوسطة','moderate');
+   if(hasVin && items.length>0 && withPartNumbers===items.length)label=ui('مرتفعة مبدئيًا','provisionally high');
+   evidenceLevel.textContent=ui('🧾 مستوى الأدلة المتاحة: ','🧾 Available evidence level: ')+label+' — '+(hasVin?ui('هوية السيارة موثقة. ','Vehicle identity verified. '):ui('هوية السيارة غير موثقة عبر VIN. ','Vehicle identity is not verified by VIN. '))+(withPartNumbers?ui('أرقام قطع ظاهرة: '+withPartNumbers+' من '+items.length+'.','Visible part numbers: '+withPartNumbers+' of '+items.length+'.'):ui('لا تظهر أرقام قطع قابلة للتحقق في العرض.','No verifiable part numbers are visible in the estimate.'));
  }
  if(evidence){
    const v=window.wafferVehicle;
    evidence.textContent=v?.vehicleId
-     ? '🚗 تم التحقق من هوية السيارة عبر VIN: '+[v.manufacturerName,v.modelName,v.vehicleDescription].filter(Boolean).join(' — ')
-     : '🚗 لم يتم التحقق من هوية السيارة عبر VIN؛ نتائج التوافق ستكون محدودة.';
+     ? ui('🚗 تم التحقق من هوية السيارة عبر VIN: ','🚗 Vehicle identity verified by VIN: ')+[v.manufacturerName,v.modelName,v.vehicleDescription].filter(Boolean).join(' — ')
+     : ui('🚗 لم يتم التحقق من هوية السيارة عبر VIN؛ نتائج التوافق ستكون محدودة.','🚗 Vehicle identity was not verified by VIN; compatibility results will be limited.');
  }
- document.getElementById('rTotal').textContent=analysis.total||'غير واضح';
+ document.getElementById('rTotal').textContent=analysis.total||ui('غير واضح','unclear');
  const currencyContext=document.getElementById('currencyContext');
  if(currencyContext){
    currencyContext.textContent=(window.wafferLocale?.startsWith('en')?'Currency: ':'العملة: ')+(analysis?.engineContext?.currency||'SAR');
@@ -604,18 +605,18 @@ function render(){
  if(calc){
    const calculated=analysis.calculatedTotal;
    calc.textContent=calculated && calculated!=='غير محسوب'
-     ? 'مجموع البنود المحسوب من القيم الظاهرة: '+calculated
+     ? ui('مجموع البنود المحسوب من القيم الظاهرة: ','Calculated sum of visible line items: ')+calculated
      : '';
  }
  const taxLabor=document.getElementById('rTaxLabor');
  if(taxLabor){
-   const tax=analysis.tax||'غير مذكورة';
-   const labor=analysis.laborTotal||'غير مذكور';
-   taxLabor.textContent='الضريبة: '+tax+' | أجور العمل: '+labor;
+   const tax=analysis.tax||ui('غير مذكورة','not stated');
+   const labor=analysis.laborTotal||ui('غير مذكور','not stated');
+   taxLabor.textContent=ui('الضريبة: ','Tax: ')+tax+' | '+ui('أجور العمل: ','Labor: ')+labor;
  }
  const warranty=document.getElementById('rWarranty');
  if(warranty){
-   warranty.textContent='الضمان: '+(analysis.warranty||'غير مذكور');
+   warranty.textContent=ui('الضمان: ','Warranty: ')+(analysis.warranty||ui('غير مذكور','not stated'));
  }
  const totalCheck=document.getElementById('rTotalCheck');
  if(totalCheck){
@@ -626,16 +627,16 @@ function render(){
    if(Number.isFinite(pNum)&&Number.isFinite(cNum)){
      const diff=Math.abs(pNum-cNum);
      totalCheck.textContent=diff<0.01
-       ? '🧮 الإجمالي المطبوع يطابق مجموع البنود الظاهرة.'
-       : '🧮 يوجد فرق حسابي قدره '+diff.toFixed(2)+' بين الإجمالي المطبوع ومجموع البنود الظاهرة؛ يحتاج مراجعة.';
+       ? ui('🧮 الإجمالي المطبوع يطابق مجموع البنود الظاهرة.','🧮 The printed total matches the sum of visible line items.')
+       : ui('🧮 يوجد فرق حسابي قدره '+diff.toFixed(2)+' بين الإجمالي المطبوع ومجموع البنود الظاهرة؛ يحتاج مراجعة.','🧮 There is a '+diff.toFixed(2)+' difference between the printed total and the visible line-item sum; review is needed.');
    }else{
-     totalCheck.textContent='🧮 تعذر التحقق حسابيًا من الإجمالي بسبب نقص أو غموض القيم الظاهرة.';
+     totalCheck.textContent=ui('🧮 تعذر التحقق حسابيًا من الإجمالي بسبب نقص أو غموض القيم الظاهرة.','🧮 The total could not be verified mathematically because visible values are missing or unclear.');
    }
  }
- document.getElementById('rStatus').textContent='⚠️ '+(analysis.status||'يحتاج مراجعة'); document.getElementById('rTransparency').textContent=(analysis.transparency??'—')+'/100'; document.getElementById('rIdentity').textContent=(analysis.identityConfidence??'—')+'/100'; document.getElementById('rCompatibility').textContent=(analysis.compatibilityConfidence??'—')+'/100'; document.getElementById('rPrice').textContent=(analysis.priceConfidence??'—')+'/100'; document.getElementById('rOverall').textContent=(analysis.overallConfidence??'—')+'/100';
+ document.getElementById('rStatus').textContent='⚠️ '+(analysis.status||ui('يحتاج مراجعة','needs review')); document.getElementById('rTransparency').textContent=(analysis.transparency??'—')+'/100'; document.getElementById('rIdentity').textContent=(analysis.identityConfidence??'—')+'/100'; document.getElementById('rCompatibility').textContent=(analysis.compatibilityConfidence??'—')+'/100'; document.getElementById('rPrice').textContent=(analysis.priceConfidence??'—')+'/100'; document.getElementById('rOverall').textContent=(analysis.overallConfidence??'—')+'/100';
  const breakdown=document.getElementById('confidenceBreakdown');
  if(breakdown){
-   breakdown.textContent='الشفافية '+(analysis.transparency??0)+'/100 • هوية القطع '+(analysis.identityConfidence??0)+'/100 • التوافق '+(analysis.compatibilityConfidence??0)+'/100 • قابلية مقارنة السعر '+(analysis.priceConfidence??0)+'/100';
+   breakdown.textContent=ui('الشفافية ','Transparency ')+(analysis.transparency??0)+'/100 • '+ui('هوية القطع ','Part identity ')+(analysis.identityConfidence??0)+'/100 • '+ui('التوافق ','Compatibility ')+(analysis.compatibilityConfidence??0)+'/100 • '+ui('قابلية مقارنة السعر ','Price comparability ')+(analysis.priceConfidence??0)+'/100';
  }
  const alerts=[...(analysis.missing||[]).map(x=>'📋 '+x),...(analysis.conflicts||[]).map(x=>'⚙️ '+x)];
  const noAlerts=window.wafferLocale?.startsWith('en')?'No major issues were extracted.':'لم تظهر ملاحظات رئيسية.';
