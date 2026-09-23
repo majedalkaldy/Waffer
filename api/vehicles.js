@@ -1,5 +1,6 @@
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { getMarketConfig } from '../lib/market-config.js';
+import { applyCatalogRequestGuard } from '../lib/catalog-abuse-guard.js';
 
 export default async function handler(req, res) {
   res.setHeader('Allow', 'GET');
@@ -14,6 +15,7 @@ export default async function handler(req, res) {
     const config = getMarketConfig(req.query);
     if (!config.supported) return res.status(400).json({ error: 'Unsupported market', code: 'UNSUPPORTED_MARKET', requestedMarket: config.requestedMarket });
     const ctx = { market: config.market, langId: config.catalog.langId, countryFilterId: config.catalog.countryFilterId };
+    if (!applyCatalogRequestGuard(req, res, RUNTIME_CONFIG, 'manufacturers')) return;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), RUNTIME_CONFIG.manufacturersTimeoutMs);
     let response;
