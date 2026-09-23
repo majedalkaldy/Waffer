@@ -176,6 +176,15 @@ if (!failures.length) {
       !priceProvider.includes("'CALCULATED_FROM_VERIFIED_OFFER'")) {
     failures.push('Trusted price-provider validation contract is incomplete');
   }
+  if (!priceProvider.includes("'PROVIDER_TIMEOUT'") ||
+      !priceProvider.includes('signal: controller.signal') ||
+      !priceProvider.includes('timedOut = true')) {
+    failures.push('Trusted price-provider timeout/abort contract is incomplete');
+  }
+  if (!priceCompare.includes('timeoutMs: RUNTIME_CONFIG.priceProviderTimeoutMs') ||
+      !priceCompare.includes("PROVIDER_TIMEOUT: 'PRICE_SOURCE_TIMEOUT'")) {
+    failures.push('Price comparison does not enforce the configured provider timeout');
+  }
 
   if (!analyze.includes("from '../lib/analysis-abuse-guard.js'") ||
       !analyze.includes('checkAnalysisRequestProvenance(req)') ||
@@ -432,6 +441,7 @@ if (!failures.length) {
   }
   if (!runtime.includes('clientVinTimeoutMs')) failures.push('Client VIN timeout is missing');
   if (!runtime.includes('healthCatalogCacheMs')) failures.push('Catalog health cache duration is missing');
+  if (!runtime.includes('priceProviderTimeoutMs')) failures.push('Price provider timeout is missing');
   if (!runtime.includes('catalogDataCdnCacheSeconds') ||
       !runtime.includes('catalogDataCdnStaleSeconds') ||
       !runtime.includes('catalogCriteriaCdnCacheSeconds') ||
@@ -715,6 +725,10 @@ if (!failures.length) {
     }
     if (!(RUNTIME_CONFIG.healthCatalogCacheMs >= RUNTIME_CONFIG.healthCatalogTimeoutMs)) {
       failures.push('Catalog health cache duration must cover at least one probe timeout');
+    }
+    if (!(RUNTIME_CONFIG.priceProviderTimeoutMs > 0 &&
+          RUNTIME_CONFIG.priceProviderTimeoutMs <= 15000)) {
+      failures.push('Price provider timeout must be positive and bounded');
     }
     if (!(RUNTIME_CONFIG.catalogDataCdnCacheSeconds > 0 &&
           RUNTIME_CONFIG.catalogDataCdnStaleSeconds >= RUNTIME_CONFIG.catalogDataCdnCacheSeconds &&
