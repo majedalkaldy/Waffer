@@ -27,7 +27,11 @@ test('CSP blocks framing and plugins and limits network connections to same orig
   assert.ok(csp.includes("connect-src 'self'"));
   assert.ok(csp.includes("base-uri 'self'"));
   assert.ok(csp.includes("form-action 'self'"));
-  assert.equal(/connect-src[^;]**/.test(csp),false);
+  const connectDirective=csp
+    .split(';')
+    .map(part=>part.trim())
+    .find(part=>part.startsWith('connect-src'))||'';
+  assert.equal(connectDirective.includes('*'),false);
 });
 
 test('CSP preserves current image compression and catalog image requirements',()=>{
