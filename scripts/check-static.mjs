@@ -35,6 +35,7 @@ const required = [
   'tests/catalog-shortlist.test.mjs',
   'tests/pipeline-contract.test.mjs',
   'tests/launch-gate.test.mjs',
+  'tests/runtime-localization.test.mjs',
   'lib/launch-readiness.js',
   'scripts/check-launch-gate.mjs',
   'docs/FIELD_TEST_RESULTS.json'
@@ -238,6 +239,19 @@ if (!failures.length) {
   for (const scenario of launchResults?.scenarios || []) {
     if (!launchStatuses.has(String(scenario?.status || '').toUpperCase())) {
       failures.push('Invalid field-test status for scenario ' + scenario?.id);
+    }
+  }
+
+  if (!index.includes("function ui(ar,en){return window.wafferLocale?.startsWith('en')?en:ar;}")) {
+    failures.push('Core bilingual runtime helper is missing');
+  }
+  for (const legacyRuntimeText of [
+    "setStage('قراءة بيانات السيارة والملف')",
+    "typeSummary.textContent='التصنيف:",
+    "decision.textContent='ملخص قبل الموافقة:"
+  ]) {
+    if (index.includes(legacyRuntimeText)) {
+      failures.push('Unlocalized core runtime text remains: ' + legacyRuntimeText);
     }
   }
 
