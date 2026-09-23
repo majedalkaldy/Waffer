@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import { UI_STRINGS, t } from '../lib/i18n.js';
 
 const index = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const app = fs.readFileSync(new URL('../app.js', import.meta.url), 'utf8');
 
 test('core English localization keys are complete and non-Arabic', () => {
   const keys = [
@@ -25,15 +26,15 @@ test('core English localization keys are complete and non-Arabic', () => {
 });
 
 test('core runtime paths use bilingual UI helper', () => {
-  assert.ok(index.includes("function ui(ar,en){return window.wafferLocale?.startsWith('en')?en:ar;}"));
-  assert.ok(index.includes("setStage(ui('قراءة بيانات السيارة والملف','Reading vehicle and file data'))"));
-  assert.ok(index.includes("ui('مطابقة كتالوج القطع','Parts catalog matching')"));
-  assert.ok(index.includes("ui('ملخص قبل الموافقة: ','Before approval: ')"));
-  assert.ok(index.includes("ui('وفّر — ملخص فحص عرض الصيانة','Waffer — repair estimate summary')"));
+  assert.ok(app.includes("function ui(ar,en){return window.wafferLocale?.startsWith('en')?en:ar;}"));
+  assert.ok(app.includes("setStage(ui('قراءة بيانات السيارة والملف','Reading vehicle and file data'))"));
+  assert.ok(app.includes("ui('مطابقة كتالوج القطع','Parts catalog matching')"));
+  assert.ok(app.includes("ui('ملخص قبل الموافقة: ','Before approval: ')"));
+  assert.ok(app.includes("ui('وفّر — ملخص فحص عرض الصيانة','Waffer — repair estimate summary')"));
 
-  assert.equal(index.includes("setStage('قراءة بيانات السيارة والملف')"), false);
-  assert.equal(index.includes("typeSummary.textContent='التصنيف:"), false);
-  assert.equal(index.includes("decision.textContent='ملخص قبل الموافقة:"), false);
+  assert.equal(app.includes("setStage('قراءة بيانات السيارة والملف')"), false);
+  assert.equal(app.includes("typeSummary.textContent='التصنيف:"), false);
+  assert.equal(app.includes("decision.textContent='ملخص قبل الموافقة:"), false);
 });
 
 test('advanced result table and loading steps are addressable by localization', () => {
