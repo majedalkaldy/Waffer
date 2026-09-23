@@ -33,7 +33,11 @@ const required = [
   'tests/analyze-cleanup.test.mjs',
   'tests/identity-contract.test.mjs',
   'tests/catalog-shortlist.test.mjs',
-  'tests/pipeline-contract.test.mjs'
+  'tests/pipeline-contract.test.mjs',
+  'tests/launch-gate.test.mjs',
+  'lib/launch-readiness.js',
+  'scripts/check-launch-gate.mjs',
+  'docs/FIELD_TEST_RESULTS.json'
 ];
 
 const failures = [];
@@ -198,8 +202,11 @@ if (!failures.length) {
   if (packageJson?.scripts?.test !== 'node --test tests/*.test.mjs') {
     failures.push('package.json test script does not run regression tests');
   }
-  if (packageJson?.scripts?.ci !== 'npm run check && npm test') {
-    failures.push('package.json ci script must run static checks and tests');
+  if (packageJson?.scripts?.gate !== 'node scripts/check-launch-gate.mjs') {
+    failures.push('package.json gate script is missing or unexpected');
+  }
+  if (packageJson?.scripts?.ci !== 'npm run check && npm test && npm run gate') {
+    failures.push('package.json ci script must run static checks, tests, and launch gate');
   }
   if (!ciWorkflow.includes('run: npm run ci')) {
     failures.push('GitHub Actions CI does not run npm run ci');
@@ -216,6 +223,21 @@ if (!failures.length) {
   ]) {
     if (!pipelineTest.includes(requiredSignal)) {
       failures.push('Pipeline contract test is missing critical assertion: ' + requiredSignal);
+    }
+  }
+
+  const launchResults = JSON.parse(read('docs/FIELD_TEST_RESULTS.json'));
+  if (!Array.isArray(launchResults?.scenarios) || launchResults.scenarios.length !== 10) {
+    failures.push('Field-test results tracker must contain exactly ten scenarios');
+  }
+  const launchIds = (launchResults?.scenarios || []).map(item => Number(item?.id));
+  if (new Set(launchIds).size !== 10 || ![1,2,3,4,5,6,7,8,9,10].every(id => launchIds.includes(id))) {
+    failures.push('Field-test results tracker must contain unique scenario ids 1..10');
+  }
+  const launchStatuses = new Set(['PENDING','PASS','FAIL']);
+  for (const scenario of launchResults?.scenarios || []) {
+    if (!launchStatuses.has(String(scenario?.status || '').toUpperCase())) {
+      failures.push('Invalid field-test status for scenario ' + scenario?.id);
     }
   }
 
