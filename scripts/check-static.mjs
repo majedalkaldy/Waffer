@@ -291,7 +291,7 @@ if (!failures.length) {
     'price-compare',
     'IMPLEMENTED IN CODE',
     'WAF PENDING',
-    'BLOCKED BY ACCESS',
+    'READ ACCESS RESTORED / WAF WRITE TOOL UNAVAILABLE',
     'GitHub Rulesets = []'
   ]) {
     if (!readinessDoc.includes(requiredBoundary)) {
