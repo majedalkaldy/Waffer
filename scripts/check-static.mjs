@@ -43,6 +43,7 @@ const required = [
   'docs/FIELD_TEST_AUTOMATION.json',
   'docs/LIVE_SMOKE_RESULTS.json',
   'docs/LAUNCH_READINESS.md',
+  'docs/MAIN_BRANCH_PROTECTION.md',
   'lib/total-check.js',
   'tests/field-scenarios-synthetic.test.mjs',
   'lib/image-optimization.js',
@@ -397,6 +398,19 @@ if (!failures.length) {
   ]) {
     if (!readinessDoc.includes(requiredBoundary)) {
       failures.push('Launch readiness document is missing boundary: ' + requiredBoundary);
+    }
+  }
+
+  const branchProtectionDoc = read('docs/MAIN_BRANCH_PROTECTION.md');
+  for (const requiredRule of [
+    'Require a pull request before merging',
+    'Require status checks to pass',
+    'regression-suite',
+    'Block force pushes',
+    'Block deletions'
+  ]) {
+    if (!branchProtectionDoc.includes(requiredRule)) {
+      failures.push('Main branch protection guide is missing rule: ' + requiredRule);
     }
   }
 
