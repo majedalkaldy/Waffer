@@ -58,6 +58,10 @@ const required = [
   'tests/manufacturers-cdn-cache.test.mjs',
   'lib/price-provider.js',
   'tests/price-provider-contract.test.mjs',
+  'lib/catalog-abuse-guard.js',
+  'tests/catalog-abuse-guard.test.mjs',
+  'tests/catalog-rate-limit.test.mjs',
+  'tests/vin-rate-limit.test.mjs',
   'docs/PRICE_PROVIDER_CONTRACT.md',
   'docs/VERCEL_FIREWALL_PLAN.md'
 ];
@@ -129,6 +133,7 @@ if (!failures.length) {
   const vinApi = read('api/vin.js');
   const health = read('api/health.js');
   const identity = read('lib/identity.js');
+  const catalogAbuseGuard = read('lib/catalog-abuse-guard.js');
   const priceProvider = read('lib/price-provider.js');
   const priceCompare = read('api/price-compare.js');
 
@@ -239,6 +244,41 @@ if (!failures.length) {
   const allText = required.map(path => read(path)).join('\n');
   if (/sk-[A-Za-z0-9_-]{10,}/.test(allText)) failures.push('Possible hard-coded OpenAI secret');
   if (/x-apiprofile-key\s*:\s*['"][^'"]+['"]/.test(allText)) failures.push('Possible hard-coded catalog secret');
+
+  if (!catalogAbuseGuard.includes('checkCatalogRequestLimit') ||
+      !catalogAbuseGuard.includes('applyCatalogRequestGuard') ||
+      !catalogAbuseGuard.includes("createHash('sha256')")) {
+    failures.push('Catalog abuse guard contract is incomplete');
+  }
+
+  const guardedCatalogApis = [
+    [productsApi, "'match'", 'api/products.js'],
+    [articlesApi, "'match'", 'api/articles.js'],
+    [criteriaApi, "'match'", 'api/article-criteria.js'],
+    [vinApi, "'vin'", 'api/vin.js'],
+    [vehiclesApi, "'manufacturers'", 'api/vehicles.js']
+  ];
+  for (const [source, bucket, label] of guardedCatalogApis) {
+    if (!source.includes("from '../lib/catalog-abuse-guard.js'") ||
+        !source.includes('applyCatalogRequestGuard(req, res, RUNTIME_CONFIG, ' + bucket + ')')) {
+      failures.push(label + ' is not protected by the catalog abuse guard');
+    }
+    const guardIndex = source.indexOf('applyCatalogRequestGuard(req, res, RUNTIME_CONFIG, ' + bucket + ')');
+    const fetchIndex = source.indexOf('fetch(');
+    if (!(guardIndex >= 0 && fetchIndex > guardIndex)) {
+      failures.push(label + ' catalog guard must run before upstream fetch');
+    }
+  }
+  if (!matcher.includes("data?.code || 'CATALOG_UPSTREAM_ERROR'") ||
+      !matcher.includes("error?.code === 'CATALOG_CLIENT_RATE_LIMITED'")) {
+    failures.push('Parts matcher does not propagate catalog rate-limit state');
+  }
+  if (!vinUi.includes("result?.code === 'VIN_CLIENT_RATE_LIMITED'")) {
+    failures.push('VIN UI does not surface VIN rate-limit feedback');
+  }
+  if (!index.includes("matchError?.code==='CATALOG_CLIENT_RATE_LIMITED'")) {
+    failures.push('Main UI does not surface catalog rate-limit feedback');
+  }
 
   const apiContracts = {
     'api/analyze.js': 'POST',
@@ -393,6 +433,14 @@ if (!failures.length) {
   }
   if (!runtime.includes('clientVinTimeoutMs')) failures.push('Client VIN timeout is missing');
   if (!runtime.includes('healthCatalogCacheMs')) failures.push('Catalog health cache duration is missing');
+  if (!runtime.includes('catalogRateLimitBurstMax') ||
+      !runtime.includes('catalogRateLimitHourlyMax') ||
+      !runtime.includes('vinRateLimitBurstMax') ||
+      !runtime.includes('vinRateLimitHourlyMax') ||
+      !runtime.includes('manufacturersRateLimitBurstMax') ||
+      !runtime.includes('manufacturersRateLimitHourlyMax')) {
+    failures.push('Catalog/VIN rate-limit configuration is missing');
+  }
 
   const catalogBodyTimeoutChecks = [
     [productsApi, 'data = await response.json()', 'clearTimeout(timer)', 'api/products.js'],
@@ -650,6 +698,21 @@ if (!failures.length) {
     }
     if (!(RUNTIME_CONFIG.healthCatalogCacheMs >= RUNTIME_CONFIG.healthCatalogTimeoutMs)) {
       failures.push('Catalog health cache duration must cover at least one probe timeout');
+    }
+    if (!(RUNTIME_CONFIG.catalogRateLimitBurstMax > 0 &&
+          RUNTIME_CONFIG.catalogRateLimitHourlyMax >= RUNTIME_CONFIG.catalogRateLimitBurstMax &&
+          RUNTIME_CONFIG.catalogRateLimitHourlyWindowMs > RUNTIME_CONFIG.catalogRateLimitBurstWindowMs)) {
+      failures.push('Catalog rate-limit configuration is invalid');
+    }
+    if (!(RUNTIME_CONFIG.vinRateLimitBurstMax > 0 &&
+          RUNTIME_CONFIG.vinRateLimitHourlyMax >= RUNTIME_CONFIG.vinRateLimitBurstMax &&
+          RUNTIME_CONFIG.vinRateLimitHourlyWindowMs > RUNTIME_CONFIG.vinRateLimitBurstWindowMs)) {
+      failures.push('VIN rate-limit configuration is invalid');
+    }
+    if (!(RUNTIME_CONFIG.manufacturersRateLimitBurstMax > 0 &&
+          RUNTIME_CONFIG.manufacturersRateLimitHourlyMax >= RUNTIME_CONFIG.manufacturersRateLimitBurstMax &&
+          RUNTIME_CONFIG.manufacturersRateLimitHourlyWindowMs > RUNTIME_CONFIG.manufacturersRateLimitBurstWindowMs)) {
+      failures.push('Manufacturer rate-limit configuration is invalid');
     }
 
     const robots = read('robots.txt');
