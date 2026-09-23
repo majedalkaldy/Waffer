@@ -80,6 +80,7 @@ test('service worker activation deletes only obsolete Waffer shell caches', asyn
     keys: [
       'waffer-shell-v26',
       'waffer-shell-v27',
+      'waffer-shell-v28',
       'other-app-cache',
       'analytics-cache'
     ]
@@ -91,7 +92,7 @@ test('service worker activation deletes only obsolete Waffer shell caches', asyn
   });
 
   await activation;
-  assert.deepEqual(worker.deleted, ['waffer-shell-v26']);
+  assert.deepEqual(worker.deleted, ['waffer-shell-v26','waffer-shell-v27']);
   assert.equal(worker.claimCalls, 1);
 });
 
