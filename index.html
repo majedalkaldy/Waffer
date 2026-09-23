@@ -63,32 +63,32 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
  <div class="stage" id="loadingStage" role="status" aria-live="polite">المرحلة الحالية: <strong>قراءة عرض الصيانة</strong></div>
  <div class="note" id="elapsedTime" style="text-align:center;margin-top:6px">الوقت المنقضي: 0 ث</div>
  <div class="card"><ul class="steps">
-  <li><span class="check">✓</span> قراءة عرض السعر</li><li><span class="check">✓</span> استخراج القطع والأسعار</li>
-  <li><span class="check">✓</span> فحص اكتمال المعلومات</li><li><span class="check">✓</span> البحث عن البنود المحتمل تداخلها</li>
-  <li><span class="check">✓</span> تحديد ما يمكن مقارنته</li></ul></div>
+  <li><span class="check">✓</span> <span id="loadingStep1">قراءة عرض السعر</span></li><li><span class="check">✓</span> <span id="loadingStep2">استخراج القطع والأسعار</span></li>
+  <li><span class="check">✓</span> <span id="loadingStep3">فحص اكتمال المعلومات</span></li><li><span class="check">✓</span> <span id="loadingStep4">البحث عن البنود المحتمل تداخلها</span></li>
+  <li><span class="check">✓</span> <span id="loadingStep5">تحديد ما يمكن مقارنته</span></li></ul></div>
 </section>
 
 <section id="result" class="hidden" aria-live="polite">
- <div class="top"><span class="pill">فحص AI</span><h2 id="resultTitle">نتيجة التحليل</h2></div>
+ <div class="top"><span class="pill" id="resultPill">فحص AI</span><h2 id="resultTitle">نتيجة التحليل</h2></div>
  <div class="card"><div class="total"><span id="totalShownLabel">إجمالي العرض الظاهر</span><b id="rTotal">—</b><small id="currencyContext">العملة: SAR</small></div><div id="rCalculatedTotal" class="note" style="text-align:center;margin-top:8px"></div><div id="rTaxLabor" class="note" style="text-align:center;margin-top:5px"></div><div id="rWarranty" class="note" style="text-align:center;margin-top:5px"></div><div class="status" id="rStatus">—</div></div>
- <div class="scores"><div class="card score"><span id="transparencyLabel">شفافية العرض</span><b id="rTransparency">—</b><small>اكتمال ووضوح البيانات</small></div>
- <div class="card score"><span id="identityLabel">ثقة هوية القطع</span><b id="rIdentity">—</b><small>رقم القطعة والمصنع والوصف</small></div>
- <div class="card score"><span id="compatibilityLabel">ثقة التوافق</span><b id="rCompatibility">—</b><small>إمكان التحقق للسيارة المحددة</small></div>
- <div class="card score"><span id="priceConfidenceLabel">ثقة المقارنة السعرية</span><b id="rPrice">—</b><small>قابلية المقارنة دون تخمين</small></div></div>
- <div class="card"><h3 id="overallLabel">درجة الثقة الكلية</h3><div class="total"><b id="rOverall">—</b><small>تعكس قوة الأدلة المتاحة، وليست تقييمًا للورشة</small></div><div id="confidenceBreakdown" class="note" style="margin-top:10px"></div></div>
+ <div class="scores"><div class="card score"><span id="transparencyLabel">شفافية العرض</span><b id="rTransparency">—</b><small id="transparencyHelp">اكتمال ووضوح البيانات</small></div>
+ <div class="card score"><span id="identityLabel">ثقة هوية القطع</span><b id="rIdentity">—</b><small id="identityHelp">رقم القطعة والمصنع والوصف</small></div>
+ <div class="card score"><span id="compatibilityLabel">ثقة التوافق</span><b id="rCompatibility">—</b><small id="compatibilityHelp">إمكان التحقق للسيارة المحددة</small></div>
+ <div class="card score"><span id="priceConfidenceLabel">ثقة المقارنة السعرية</span><b id="rPrice">—</b><small id="priceHelp">قابلية المقارنة دون تخمين</small></div></div>
+ <div class="card"><h3 id="overallLabel">درجة الثقة الكلية</h3><div class="total"><b id="rOverall">—</b><small id="overallHelp">تعكس قوة الأدلة المتاحة، وليست تقييمًا للورشة</small></div><div id="confidenceBreakdown" class="note" style="margin-top:10px"></div></div>
  <div class="card"><h3 id="findingsLabel">أبرز ما وجدناه</h3><div id="rConfidenceNote" class="note" style="margin-bottom:10px">درجات الثقة تقيس قوة الأدلة المتاحة وليست تقييمًا لجودة الورشة.</div><div id="rWarningsSummary" class="lock"></div><div id="rTestMeta" class="note diagnostic" style="margin:8px 0"></div><div id="rRequestId" class="note diagnostic" style="margin:4px 0"></div><div id="rEngineMeta" class="note diagnostic" style="margin:4px 0"></div><div id="rVerificationSummary" class="lock"></div><div id="rMvpGate" class="lock diagnostic"></div><div id="rReleaseReadiness" class="lock diagnostic"></div><div id="rDataIntegrity" class="lock diagnostic"></div><div id="rVersionIntegrity" class="lock diagnostic"></div><div id="rOverallGate" class="lock diagnostic"></div><div id="rManualTestPrompt" class="lock diagnostic"></div><div id="rDocQuality" class="lock"></div><div id="rCatalogCoverage" class="lock">🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.</div><div id="rCatalogGate" class="lock diagnostic">🔎 فحص الكتالوج: بانتظار المطابقة.</div><div id="rAxleGate" class="lock diagnostic"></div><div id="rFieldTestSummary" class="lock diagnostic"></div><button id="debugExportBtn" class="secondary diagnostic" type="button" onclick="exportDebugReport()">تصدير تقرير الاختبار</button><div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
-  <div class="lock">🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون مطابقة القطعة ومصدر سعر موثوق.</div>
+  <div class="lock" id="trustNotice">🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون مطابقة القطعة ومصدر سعر موثوق.</div>
   <div id="catalogSummary" class="lock" role="status" aria-live="polite">🔎 حالة مطابقة الكتالوج: بانتظار التحليل.</div>
   <button id="detailsBtn" onclick="advanced()">عرض تفاصيل البنود</button><button id="workshopBtn" class="secondary" onclick="messageWorkshop()">أنشئ رسالة للورشة</button>
  </div>
 </section>
 
 <section id="advanced" class="hidden">
- <div class="top"><span class="pill">نموذج تجريبي</span><h2 id="advancedTitle">التحليل المتقدم</h2></div>
+ <div class="top"><span class="pill" id="advancedPill">نموذج تجريبي</span><h2 id="advancedTitle">التحليل المتقدم</h2></div>
  <div class="card"><h3 id="detailsTitle">تفاصيل بنود العرض المقروءة</h3><div id="itemTypeSummary" class="note" style="margin-bottom:8px"></div>
- <div class="table-wrap"><table><caption class="note" style="text-align:start;margin-bottom:8px">بنود عرض الصيانة المستخرجة</caption><thead><tr><th scope="col">البند</th><th scope="col">النوع</th><th scope="col">رقم القطعة</th><th scope="col">السعر</th><th scope="col">الهوية</th><th scope="col">التوافق</th><th scope="col">تقييم السعر</th><th scope="col">التداخل</th></tr></thead>
+ <div class="table-wrap"><table><caption id="itemsCaption" class="note" style="text-align:start;margin-bottom:8px">بنود عرض الصيانة المستخرجة</caption><thead><tr><th id="colItem" scope="col">البند</th><th id="colType" scope="col">النوع</th><th id="colPartNumber" scope="col">رقم القطعة</th><th id="colPrice" scope="col">السعر</th><th id="colIdentity" scope="col">الهوية</th><th id="colCompatibility" scope="col">التوافق</th><th id="colPriceAssessment" scope="col">تقييم السعر</th><th id="colConflict" scope="col">التداخل</th></tr></thead>
  <tbody id="itemsBody"></tbody></table></div>
- <p class="note">البيانات مستخرجة من العرض المرفوع. الحكم مبدئي ولا يمثل مقارنة سعرية نهائية قبل التحقق من هوية القطعة ومصدر السعر.</p></div>
+ <p class="note" id="detailsDisclaimer">البيانات مستخرجة من العرض المرفوع. الحكم مبدئي ولا يمثل مقارنة سعرية نهائية قبل التحقق من هوية القطعة ومصدر السعر.</p></div>
  <div id="catalogMatches" class="card">
   <h3 id="catalogMatchLabel">🔎 مطابقة كتالوج القطع</h3>
   <div class="note" id="catalogWaitingText">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>
@@ -100,7 +100,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 </section>
 
 <section id="msg" class="hidden">
- <div class="top"><span class="pill">جاهزة للنسخ</span><h2 id="workshopMessageTitle">رسالة للورشة</h2></div>
+ <div class="top"><span class="pill" id="messagePill">جاهزة للنسخ</span><h2 id="workshopMessageTitle">رسالة للورشة</h2></div>
  <div class="card"><p id="message" style="line-height:2">السلام عليكم، قبل اعتماد العرض أحتاج فضلاً كشفًا مفصلًا يوضح اسم ورقم كل قطعة، الشركة المصنعة، وهل هي أصلية Ford/Motorcraft أو بديلة، والكمية وسعر القطعة وأجرة التركيب والضريبة والضمان. كذلك أرجو توضيح ما إذا كان السعر يشمل ضبط الزوايا بعد أعمال التعليق والدركسون. وشكرًا.</p>
  <button id="copyMessageBtn" onclick="copyMsg()">نسخ الرسالة</button><button id="resultBackBtn" class="secondary" onclick="show('result')">العودة للنتيجة</button></div>
 </section>
@@ -1207,6 +1207,31 @@ function applyLocale(locale){
  document.getElementById('confirmedSavingLabel').textContent=t(locale,'confirmedSaving');
  document.getElementById('privacyText').textContent=t(locale,'privacy');
  document.getElementById('loadingTitle').textContent=t(locale,'loadingTitle');
+ document.getElementById('loadingStep1').textContent=t(locale,'loadingStep1');
+ document.getElementById('loadingStep2').textContent=t(locale,'loadingStep2');
+ document.getElementById('loadingStep3').textContent=t(locale,'loadingStep3');
+ document.getElementById('loadingStep4').textContent=t(locale,'loadingStep4');
+ document.getElementById('loadingStep5').textContent=t(locale,'loadingStep5');
+ document.getElementById('resultPill').textContent=t(locale,'resultPill');
+ document.getElementById('transparencyHelp').textContent=t(locale,'transparencyHelp');
+ document.getElementById('identityHelp').textContent=t(locale,'identityHelp');
+ document.getElementById('compatibilityHelp').textContent=t(locale,'compatibilityHelp');
+ document.getElementById('priceHelp').textContent=t(locale,'priceHelp');
+ document.getElementById('overallHelp').textContent=t(locale,'overallHelp');
+ document.getElementById('rConfidenceNote').textContent=t(locale,'confidenceNote');
+ document.getElementById('trustNotice').textContent=t(locale,'trustNotice');
+ document.getElementById('advancedPill').textContent=t(locale,'advancedPill');
+ document.getElementById('itemsCaption').textContent=t(locale,'tableCaption');
+ document.getElementById('colItem').textContent=t(locale,'colItem');
+ document.getElementById('colType').textContent=t(locale,'colType');
+ document.getElementById('colPartNumber').textContent=t(locale,'colPartNumber');
+ document.getElementById('colPrice').textContent=t(locale,'colPrice');
+ document.getElementById('colIdentity').textContent=t(locale,'colIdentity');
+ document.getElementById('colCompatibility').textContent=t(locale,'colCompatibility');
+ document.getElementById('colPriceAssessment').textContent=t(locale,'colPriceAssessment');
+ document.getElementById('colConflict').textContent=t(locale,'colConflict');
+ document.getElementById('detailsDisclaimer').textContent=t(locale,'detailsDisclaimer');
+ document.getElementById('messagePill').textContent=t(locale,'messagePill');
  document.getElementById('detailsTitle').textContent=t(locale,'detailsTitle');
  const waiting=document.getElementById('catalogWaitingText'); if(waiting)waiting.textContent=t(locale,'catalogWaiting');
  document.getElementById('savingNote').textContent=t(locale,'savingNote');
