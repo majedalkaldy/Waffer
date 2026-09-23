@@ -6,6 +6,8 @@ import vm from 'node:vm';
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 
 const swSource = fs.readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
+const currentCacheName = swSource.match(/const CACHE_NAME = '([^']+)'/)?.[1];
+assert.ok(currentCacheName, 'Service worker CACHE_NAME must be discoverable');
 
 function loadServiceWorker({ keys = [], addAllError = null } = {}) {
   const listeners = new Map();
@@ -78,8 +80,9 @@ test('client timeout covers PDF upload + analysis + explicit safety margin', () 
 test('service worker activation deletes only obsolete Waffer shell caches', async () => {
   const worker = loadServiceWorker({
     keys: [
-      'waffer-shell-v26',
-      'waffer-shell-v27',
+      'waffer-shell-obsolete-a',
+      'waffer-shell-obsolete-b',
+      currentCacheName,
       'other-app-cache',
       'analytics-cache'
     ]
@@ -91,7 +94,7 @@ test('service worker activation deletes only obsolete Waffer shell caches', asyn
   });
 
   await activation;
-  assert.deepEqual(worker.deleted, ['waffer-shell-v26']);
+  assert.deepEqual(worker.deleted, ['waffer-shell-obsolete-a','waffer-shell-obsolete-b']);
   assert.equal(worker.claimCalls, 1);
 });
 
