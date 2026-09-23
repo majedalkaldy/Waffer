@@ -1,5 +1,6 @@
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { getMarketConfig } from '../lib/market-config.js';
+import { applyCatalogRequestGuard } from '../lib/catalog-abuse-guard.js';
 
 export default async function handler(req, res) {
   res.setHeader('Allow', 'GET');
@@ -19,6 +20,7 @@ export default async function handler(req, res) {
     const market = config.market;
     const langId = config.catalog.langId;
     const countryFilterId = config.catalog.countryFilterId;
+    if (!applyCatalogRequestGuard(req, res, RUNTIME_CONFIG, 'match')) return;
 
     const url = 'https://auto-parts-catalog.apiprofile.com' +
       '/api/v2/articles/selection-of-all-specifications-criterias-for-the-article' +
