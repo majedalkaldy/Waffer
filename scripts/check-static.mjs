@@ -249,7 +249,7 @@ if (!failures.length) {
 
   const readinessDoc = read('docs/LAUNCH_READINESS.md');
   for (const requiredBoundary of [
-    '0/10 PASS',
+    'الاختبار الميداني الحقيقي',
     'price-compare',
     'NEEDS DECISION',
     'BLOCKED BY ACCESS',
