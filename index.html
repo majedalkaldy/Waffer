@@ -420,11 +420,18 @@ async function start(){
        if(!isCurrentAnalysisRun(runId))return;
        console.error('Parts matching error:',matchError);
        if(catalogSummary){
+         const securityBlocked=[
+           'CATALOG_CROSS_SITE_BLOCKED',
+           'CATALOG_ORIGIN_MISMATCH',
+           'CATALOG_ORIGIN_INVALID'
+         ].includes(matchError?.code);
          catalogSummary.textContent=matchError?.code==='CATALOG_CLIENT_RATE_LIMITED'
            ? ui('⚠️ وصل فحص الكتالوج إلى حد الاستخدام المؤقت. نتيجة تحليل العرض متاحة، وحاول المطابقة لاحقًا.','⚠️ Catalog matching reached the temporary usage limit. The estimate analysis is still available; retry matching later.')
-           : catalogTimedOut||matchError?.name==='AbortError'
-             ? ui('⚠️ استغرقت مطابقة الكتالوج وقتًا أطول من المتوقع. نتيجة تحليل العرض متاحة.','⚠️ Catalog matching took longer than expected. The estimate analysis is still available.')
-             : ui('⚠️ تعذر إكمال مطابقة الكتالوج. نتيجة تحليل العرض متاحة.','⚠️ Catalog matching could not be completed. The estimate analysis is still available.');
+           : securityBlocked
+             ? ui('⚠️ تم حظر طلب مطابقة الكتالوج بسبب سياسة أمان الطلب. نتيجة تحليل العرض ما زالت متاحة.','⚠️ Catalog matching was blocked by the request security policy. The estimate analysis is still available.')
+             : catalogTimedOut||matchError?.name==='AbortError'||matchError?.code==='CATALOG_TIMEOUT'
+               ? ui('⚠️ استغرقت مطابقة الكتالوج وقتًا أطول من المتوقع. نتيجة تحليل العرض متاحة.','⚠️ Catalog matching took longer than expected. The estimate analysis is still available.')
+               : ui('⚠️ تعذر إكمال مطابقة الكتالوج. نتيجة تحليل العرض متاحة.','⚠️ Catalog matching could not be completed. The estimate analysis is still available.');
        }
      }finally{
        clearTimeout(catalogTimeout);
