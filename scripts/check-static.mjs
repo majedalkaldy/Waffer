@@ -53,6 +53,8 @@ const required = [
   'tests/analysis-abuse-guard.test.mjs',
   'tests/analyze-guard-integration.test.mjs',
   'tests/runtime-resilience.test.mjs',
+  'lib/catalog-health-probe.js',
+  'tests/catalog-health-probe.test.mjs',
   'docs/VERCEL_FIREWALL_PLAN.md'
 ];
 
@@ -364,6 +366,7 @@ if (!failures.length) {
   if (!runtime.includes('pdfCleanupTimeoutMs')) failures.push('PDF cleanup timeout is missing');
   if (!runtime.includes('clientManufacturersTimeoutMs')) failures.push('Client manufacturers timeout is missing');
   if (!runtime.includes('clientVinTimeoutMs')) failures.push('Client VIN timeout is missing');
+  if (!runtime.includes('healthCatalogCacheMs')) failures.push('Catalog health cache duration is missing');
 
   const catalogBodyTimeoutChecks = [
     [productsApi, 'data = await response.json()', 'clearTimeout(timer)', 'api/products.js'],
@@ -419,6 +422,11 @@ if (!failures.length) {
   if (!health.includes("analysis: configured.analysis ? 'configured_not_probed' : 'not_configured'") ||
       !health.includes("analysis: configured.analysis ? 'configuration_only' : 'unavailable'")) {
     failures.push('Health contract does not distinguish configured analysis from live verification');
+  }
+  if (!health.includes("from '../lib/catalog-health-probe.js'") ||
+      !health.includes('probeCatalogHealth({') ||
+      !health.includes('catalogCache:')) {
+    failures.push('Health endpoint is not using the cached catalog probe contract');
   }
   if (!health.includes('quoteAnalysisVerified: false')) {
     failures.push('Health capabilities overstate analysis verification');
@@ -596,6 +604,9 @@ if (!failures.length) {
     }
     if (!(RUNTIME_CONFIG.clientVinTimeoutMs > RUNTIME_CONFIG.vinTimeoutMs)) {
       failures.push('Client VIN timeout must exceed server VIN timeout');
+    }
+    if (!(RUNTIME_CONFIG.healthCatalogCacheMs >= RUNTIME_CONFIG.healthCatalogTimeoutMs)) {
+      failures.push('Catalog health cache duration must cover at least one probe timeout');
     }
 
     const robots = read('robots.txt');
