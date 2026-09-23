@@ -45,24 +45,6 @@ export default async function handler(req, res) {
     });
   }
 
-  const requestLimit = checkAnalysisRequestLimit(req, RUNTIME_CONFIG);
-  if (requestLimit.burstMax != null) {
-    res.setHeader('X-RateLimit-Burst-Limit', String(requestLimit.burstMax));
-    res.setHeader('X-RateLimit-Burst-Remaining', String(requestLimit.burstRemaining));
-    res.setHeader('X-RateLimit-Hourly-Limit', String(requestLimit.hourlyMax));
-    res.setHeader('X-RateLimit-Hourly-Remaining', String(requestLimit.hourlyRemaining));
-  }
-  if (!requestLimit.allowed) {
-    res.setHeader('Retry-After', String(requestLimit.retryAfterSeconds));
-    return res.status(429).json({
-      error: requestedEnglish
-        ? 'Too many analysis requests. Try again after the cooldown.'
-        : 'تم إرسال طلبات تحليل كثيرة. حاول مجددًا بعد انتهاء فترة الانتظار.',
-      code: 'ANALYSIS_CLIENT_RATE_LIMITED',
-      retryAfterSeconds: requestLimit.retryAfterSeconds
-    });
-  }
-
   if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: 'OPENAI_API_KEY غير مضاف في Vercel.' });
 
   let openaiFileId = null;
@@ -108,6 +90,25 @@ export default async function handler(req, res) {
         error: 'السوق المطلوب غير مدعوم حاليًا.',
         code: 'UNSUPPORTED_MARKET',
         requestedMarket: marketConfig.requestedMarket
+      });
+    }
+
+    // Count only requests that passed basic validation and are about to consume paid upstream compute.
+    const requestLimit = checkAnalysisRequestLimit(req, RUNTIME_CONFIG);
+    if (requestLimit.burstMax != null) {
+      res.setHeader('X-RateLimit-Burst-Limit', String(requestLimit.burstMax));
+      res.setHeader('X-RateLimit-Burst-Remaining', String(requestLimit.burstRemaining));
+      res.setHeader('X-RateLimit-Hourly-Limit', String(requestLimit.hourlyMax));
+      res.setHeader('X-RateLimit-Hourly-Remaining', String(requestLimit.hourlyRemaining));
+    }
+    if (!requestLimit.allowed) {
+      res.setHeader('Retry-After', String(requestLimit.retryAfterSeconds));
+      return res.status(429).json({
+        error: requestedEnglish
+          ? 'Too many analysis requests. Try again after the cooldown.'
+          : 'تم إرسال طلبات تحليل كثيرة. حاول مجددًا بعد انتهاء فترة الانتظار.',
+        code: 'ANALYSIS_CLIENT_RATE_LIMITED',
+        retryAfterSeconds: requestLimit.retryAfterSeconds
       });
     }
 
