@@ -1002,12 +1002,14 @@ if (!failures.length) {
   if (sw.includes("cache.addAll(SHELL)).catch(() => undefined)")) {
     failures.push('Service worker must not swallow shell precache failures');
   }
-  if (!sw.includes('/lib/i18n.js') ||
+  if (!sw.includes('/app.js') ||
+      !sw.includes('/app-module.js') ||
+      !sw.includes('/lib/i18n.js') ||
       !sw.includes('/lib/runtime-config.js') ||
       !sw.includes('/lib/total-check.js') ||
       !sw.includes('/lib/image-optimization.js') ||
       !sw.includes('/lib/identity.js')) {
-    failures.push('PWA shell missing localization/runtime/total-check/image-optimization/identity modules');
+    failures.push('PWA shell missing external client/localization/runtime/total-check/image-optimization/identity modules');
   }
 
   try {
@@ -1021,13 +1023,19 @@ if (!failures.length) {
     const headerRule = (vercelConfig.headers || []).find(item => item.source === '/(.*)');
     const headerMap = new Map((headerRule?.headers || []).map(item => [item.key, item.value]));
     const csp = headerMap.get('Content-Security-Policy') || '';
+    const scriptDirective = csp
+      .split(';')
+      .map(part => part.trim())
+      .find(part => part.startsWith('script-src')) || '';
     if (!headerRule ||
         !csp.includes("frame-ancestors 'none'") ||
         !csp.includes("object-src 'none'") ||
         !csp.includes("connect-src 'self'") ||
+        scriptDirective !== "script-src 'self'" ||
+        scriptDirective.includes("'unsafe-inline'") ||
         headerMap.get('X-Frame-Options') !== 'DENY' ||
         headerMap.get('X-Content-Type-Options') !== 'nosniff') {
-      failures.push('Vercel browser security headers are incomplete');
+      failures.push('Vercel browser security headers are incomplete or allow inline JavaScript');
     }
   } catch {
     failures.push('vercel.json is invalid JSON or security headers cannot be read');
