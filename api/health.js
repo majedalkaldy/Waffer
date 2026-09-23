@@ -1,6 +1,7 @@
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { getMarketConfig } from '../lib/market-config.js';
 import { probeCatalogHealth } from '../lib/catalog-health-probe.js';
+import { hasConfiguredPriceProvider } from '../lib/price-provider.js';
 
 export default async function handler(req, res) {
   res.setHeader('Allow', 'GET');
@@ -19,7 +20,8 @@ export default async function handler(req, res) {
 
   const configured = {
     analysis: Boolean(process.env.OPENAI_API_KEY),
-    catalog: Boolean(process.env.AUTOPARTS_API_KEY)
+    catalog: Boolean(process.env.AUTOPARTS_API_KEY),
+    pricing: hasConfiguredPriceProvider(marketConfig.market)
   };
 
   const upstream = {
@@ -70,13 +72,14 @@ export default async function handler(req, res) {
       analysisEngineVersion: RUNTIME_CONFIG.engineVersion,
       acceptanceMetadata: true,
       requestTraceability: true,
-      marketConfig: true
+      marketConfig: true,
+      priceProviderInterface: true
     },
     capabilities: {
       quoteAnalysis: configured.analysis,
       quoteAnalysisVerified: false,
       vinAndCatalog: configured.catalog && upstream.catalog === 'reachable',
-      verifiedMarketPricing: false,
+      verifiedMarketPricing: configured.pricing,
       persistentAccounts: false
     },
     configured,
