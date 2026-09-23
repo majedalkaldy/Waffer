@@ -55,6 +55,7 @@ const required = [
   'lib/catalog-abuse-guard.js',
   'tests/catalog-abuse-guard.test.mjs',
   'tests/catalog-guard-integration.test.mjs',
+  'tests/catalog-failure-propagation.test.mjs',
   'tests/runtime-resilience.test.mjs',
   'lib/catalog-health-probe.js',
   'tests/catalog-health-probe.test.mjs',
@@ -622,6 +623,25 @@ if (!failures.length) {
   }
   if (!matcher.includes("return 'بديل كتالوج — يحتاج تحقق';")) {
     failures.push('Catalog quality label must remain neutral without verified quality evidence');
+  }
+  for (const hardCode of [
+    'CATALOG_CLIENT_RATE_LIMITED',
+    'CATALOG_CROSS_SITE_BLOCKED',
+    'CATALOG_ORIGIN_MISMATCH',
+    'CATALOG_ORIGIN_INVALID'
+  ]) {
+    if (!matcher.includes(hardCode)) {
+      failures.push('Catalog matcher is missing hard-block propagation for ' + hardCode);
+    }
+  }
+  if (!matcher.includes('throw error;') ||
+      !matcher.includes("status: error?.code === 'CATALOG_TIMEOUT'")) {
+    failures.push('Catalog matcher must propagate hard failures after recording state');
+  }
+  if (!index.includes("matchError?.code==='CATALOG_CLIENT_RATE_LIMITED'") ||
+      !index.includes("matchError?.code==='CATALOG_TIMEOUT'") ||
+      !index.includes("'CATALOG_ORIGIN_MISMATCH'")) {
+    failures.push('Catalog UI does not distinguish rate-limit, timeout, and security-block failures');
   }
   const matcherPrecondition = matcher.match(/if \(!analysis \|\| !vehicleId \|\| !items\.length\) \{([\s\S]*?)\n    \}\n\n    try/);
   if (matcherPrecondition?.[1]?.includes('error?.message')) {

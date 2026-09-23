@@ -336,7 +336,8 @@
       if (!response.ok) {
         const error = new Error(data?.error || data?.message || 'Catalog request failed');
         error.code = data?.code || 'CATALOG_UPSTREAM_ERROR';
-        error.retryAfterSeconds = Number(data?.retryAfterSeconds) || null;
+        error.retryAfterSeconds =
+          Number(data?.retryAfterSeconds || response.headers?.get?.('retry-after')) || null;
         throw error;
       }
       return data;
@@ -365,6 +366,15 @@
     return Array.isArray(data.products) ? data.products : [];
   }
 
+  function isCatalogHardBlock(error) {
+    return [
+      'CATALOG_CLIENT_RATE_LIMITED',
+      'CATALOG_CROSS_SITE_BLOCKED',
+      'CATALOG_ORIGIN_MISMATCH',
+      'CATALOG_ORIGIN_INVALID'
+    ].includes(error?.code);
+  }
+
   async function loadArticles(vehicleId, productId, signal) {
     try {
       const data = await fetchCatalogJson(
@@ -377,7 +387,7 @@
       );
       return Array.isArray(data.articles) ? data.articles : [];
     } catch (error) {
-      if (error?.name === 'AbortError' || error?.code === 'CATALOG_CLIENT_RATE_LIMITED') throw error;
+      if (error?.name === 'AbortError' || isCatalogHardBlock(error)) throw error;
       console.error('Article lookup error:', error);
       return [];
     }
@@ -394,7 +404,7 @@
       if (Array.isArray(data.criteria?.array)) return data.criteria.array;
       return [];
     } catch (error) {
-      if (error?.name === 'AbortError' || error?.code === 'CATALOG_CLIENT_RATE_LIMITED') throw error;
+      if (error?.name === 'AbortError' || isCatalogHardBlock(error)) throw error;
       console.error('Article criteria error:', articleId, error);
       return [];
     }
@@ -673,14 +683,17 @@
           ? 'TIMED_OUT'
           : error?.code === 'CATALOG_CLIENT_RATE_LIMITED'
             ? 'RATE_LIMITED'
-            : 'FAILED',
+            : isCatalogHardBlock(error)
+              ? 'BLOCKED'
+              : 'FAILED',
         matched: 0,
         totalItems: items.length,
         error: String(error?.message || error),
+        code: error?.code || null,
+        retryAfterSeconds: error?.retryAfterSeconds || null,
         runId
       };
-      emitMatches([]);
-      return [];
+      throw error;
     }
   }
 
