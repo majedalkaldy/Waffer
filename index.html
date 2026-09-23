@@ -648,27 +648,29 @@ function render(){
    const labor=allItems.filter(i=>i.itemType==='labor').length;
    const service=allItems.filter(i=>i.itemType==='service').length;
    const fee=allItems.filter(i=>i.itemType==='fee').length;
-   typeSummary.textContent='التصنيف: قطع '+parts+' • عمل '+labor+' • خدمات '+service+' • رسوم '+fee;
+   typeSummary.textContent=ui('التصنيف: قطع '+parts+' • عمل '+labor+' • خدمات '+service+' • رسوم '+fee,'Classification: parts '+parts+' • labor '+labor+' • services '+service+' • fees '+fee);
  }
  document.getElementById('itemsBody').innerHTML=allItems.map(i=>{
- const typeLabels={part:'قطعة',labor:'أجرة عمل',service:'خدمة',fee:'رسوم'};
- const label=typeLabels[i.itemType]||'قطعة';
- return `<tr><td>${esc(i.name)}</td><td>${esc(label)}</td><td>${esc(i.partNumber||'غير ظاهر')}</td><td>${esc(i.price)}</td><td>${esc(i.identityConfidence)}%</td><td>${esc(i.compatibility)}</td><td>${esc(i.priceAssessment)}</td><td>${esc(i.conflict)}</td></tr>`;
-}).join('')||'<tr><td colspan="8">لم تُستخرج بنود واضحة.</td></tr>'; document.getElementById('nextActions').innerHTML=(analysis.nextActions||[]).map((x,n)=>'<div class="alert">'+(n+1)+'. '+esc(x)+'</div>').join('')||'<div class="note">لا توجد خطوات إضافية مستخرجة.</div>'; 
+ const typeLabels=window.wafferLocale?.startsWith('en')
+   ? {part:'Part',labor:'Labor',service:'Service',fee:'Fee'}
+   : {part:'قطعة',labor:'أجرة عمل',service:'خدمة',fee:'رسوم'};
+ const label=typeLabels[i.itemType]||ui('قطعة','Part');
+ return `<tr><td>${esc(i.name)}</td><td>${esc(label)}</td><td>${esc(i.partNumber||ui('غير ظاهر','not visible'))}</td><td>${esc(i.price)}</td><td>${esc(i.identityConfidence)}%</td><td>${esc(i.compatibility)}</td><td>${esc(i.priceAssessment)}</td><td>${esc(i.conflict)}</td></tr>`;
+}).join('')||'<tr><td colspan="8">'+esc(ui('لم تُستخرج بنود واضحة.','No clear line items were extracted.'))+'</td></tr>'; document.getElementById('nextActions').innerHTML=(analysis.nextActions||[]).map((x,n)=>'<div class="alert">'+(n+1)+'. '+esc(x)+'</div>').join('')||'<div class="note">'+esc(ui('لا توجد خطوات إضافية مستخرجة.','No additional actions were extracted.'))+'</div>'; 
  const priceBox=document.querySelector('#advanced .price');
  if(priceBox){
-   priceBox.textContent='التوفير المؤكد: غير محسوب';
+   priceBox.textContent=ui('التوفير المؤكد: غير محسوب','Confirmed savings: not calculated');
  }
  const decision=document.getElementById('decisionSummary');
  if(decision){
    const missingCount=Array.isArray(analysis.missing)?analysis.missing.length:0;
    const conflictCount=Array.isArray(analysis.conflicts)?analysis.conflicts.length:0;
    const verifiedVehicle=Boolean(window.wafferVehicle?.vehicleId);
-   decision.textContent='ملخص قبل الموافقة: '+(verifiedVehicle?'هوية السيارة موثقة. ':'تحقق من هوية السيارة. ')+(missingCount?'بيانات ناقصة: '+missingCount+'. ':'')+(conflictCount?'نقاط تحتاج تحقق: '+conflictCount+'. ':'')+'لا تعتمد أي توفير مالي قبل ظهور مصدر سعر موثوق.';
+   decision.textContent=ui('ملخص قبل الموافقة: ','Before approval: ')+(verifiedVehicle?ui('هوية السيارة موثقة. ','Vehicle identity verified. '):ui('تحقق من هوية السيارة. ','Verify the vehicle identity. '))+(missingCount?ui('بيانات ناقصة: '+missingCount+'. ','Missing data: '+missingCount+'. '):'')+(conflictCount?ui('نقاط تحتاج تحقق: '+conflictCount+'. ','Verification points: '+conflictCount+'. '):'')+ui('لا تعتمد أي توفير مالي قبل ظهور مصدر سعر موثوق.','Do not rely on any savings figure until a trusted price source is available.');
  }
- const generatedMessage=analysis.workshopMessage||'السلام عليكم، أرجو تزويدي بتفاصيل القطع وأرقامها والشركة المصنعة والكمية وأجرة العمل والضريبة والضمان قبل اعتماد العرض. وشكرًا.';
+ const generatedMessage=analysis.workshopMessage||ui('السلام عليكم، أرجو تزويدي بتفاصيل القطع وأرقامها والشركة المصنعة والكمية وأجرة العمل والضريبة والضمان قبل اعتماد العرض. وشكرًا.','Hello, please provide the important missing part details, part numbers, manufacturer, quantity, labor, tax, and warranty before I approve the estimate. Thank you.');
  const vehicleLabel=formatVehicleForMessage();
- document.getElementById('message').textContent=(vehicleLabel?'السيارة: '+vehicleLabel+'\n\n':'')+generatedMessage;
+ document.getElementById('message').textContent=(vehicleLabel?ui('السيارة: ','Vehicle: ')+vehicleLabel+'\n\n':'')+generatedMessage;
 }
 function advanced(){show('advanced')}
 function messageWorkshop(){show('msg')}
@@ -788,20 +790,20 @@ function exportDebugReport(){
 }
 async function shareSummary(){
  if(!analysis)return;
- const vehicle=formatVehicleForMessage()||'غير محددة';
+ const vehicle=formatVehicleForMessage()||ui('غير محددة','not specified');
  const text=[
-   'وفّر — ملخص فحص عرض الصيانة',
-   'السيارة: '+vehicle,
-   'الإجمالي الظاهر: '+(analysis.total||'غير واضح'),
-   'درجة الثقة: '+(analysis.overallConfidence??0)+'/100',
-   'بيانات ناقصة: '+(Array.isArray(analysis.missing)?analysis.missing.length:0),
-   'نقاط تحقق: '+(Array.isArray(analysis.conflicts)?analysis.conflicts.length:0),
-   'التوفير المؤكد: غير محسوب دون مصدر سعر موثوق',
-   analysis.requestId?('معرف التحليل: '+analysis.requestId):''
+   ui('وفّر — ملخص فحص عرض الصيانة','Waffer — repair estimate summary'),
+   ui('السيارة: ','Vehicle: ')+vehicle,
+   ui('الإجمالي الظاهر: ','Displayed total: ')+(analysis.total||ui('غير واضح','unclear')),
+   ui('درجة الثقة: ','Confidence: ')+(analysis.overallConfidence??0)+'/100',
+   ui('بيانات ناقصة: ','Missing data: ')+(Array.isArray(analysis.missing)?analysis.missing.length:0),
+   ui('نقاط تحقق: ','Verification points: ')+(Array.isArray(analysis.conflicts)?analysis.conflicts.length:0),
+   ui('التوفير المؤكد: غير محسوب دون مصدر سعر موثوق','Confirmed savings: not calculated without a trusted price source'),
+   analysis.requestId?(ui('معرف التحليل: ','Analysis ID: ')+analysis.requestId):''
  ].filter(Boolean).join('\n');
  try{
-   if(navigator.share)await navigator.share({title:'وفّر — نتيجة الفحص',text});
-   else{await navigator.clipboard.writeText(text);alert('تم نسخ ملخص النتيجة');}
+   if(navigator.share)await navigator.share({title:ui('وفّر — نتيجة الفحص','Waffer — analysis result'),text});
+   else{await navigator.clipboard.writeText(text);alert(ui('تم نسخ ملخص النتيجة','Result summary copied'));}
  }catch(e){
    if(e?.name!=='AbortError')console.error('Share error:',e);
  }
