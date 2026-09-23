@@ -117,6 +117,15 @@ if (!failures.length) {
       /Boolean\(vehicle\.vehicleId \|\| vehicle\.vin\)/.test(priceCompare)) {
     failures.push('Price comparison still accepts unverified identity placeholders');
   }
+  if (!priceCompare.includes("code: 'PART_IDENTITY_REQUIRED'") ||
+      !priceCompare.includes("workshopPrice: priceValid ? 'VALID' : 'INVALID_OR_MISSING'") ||
+      !priceCompare.includes("quantity: quantityValid ? 'VALID' : 'DEFAULTED_TO_1'")) {
+    failures.push('Price comparison input validation contract is incomplete');
+  }
+  if (!priceCompare.includes('Number.isFinite(rawPrice) && rawPrice >= 0') ||
+      !priceCompare.includes('Number.isFinite(rawQuantity) && rawQuantity > 0')) {
+    failures.push('Price comparison numeric validation is incomplete');
+  }
 
   if (vinUi.includes('vehicles[0]')) {
     failures.push('VIN resolver must not silently choose the first vehicle variant');
