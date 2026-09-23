@@ -1011,7 +1011,7 @@ async function loadManufacturers(){
  try{
    let r,d;
    try{
-     r=await fetch('/api/vehicles',{cache:'no-store',signal:controller.signal});
+     r=await fetch('/api/vehicles',{signal:controller.signal});
      d=await r.json();
    }finally{
      clearTimeout(timer);
