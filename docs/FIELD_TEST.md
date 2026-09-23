@@ -1,5 +1,7 @@
 # Waffer Field Test Protocol
 
+> راجع أيضًا `docs/LAUNCH_READINESS.md` لمعرفة موانع الإطلاق الحالية، و`docs/FIELD_TEST_AUTOMATION.json` لمعرفة ما تغطيه المحاكاة الآلية.
+
 هذه الخطة مخصصة لمرحلة `field-test` الحالية، ولا تعني جاهزية الإطلاق التجاري.
 
 ## قبل كل اختبار
