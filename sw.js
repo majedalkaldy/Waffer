@@ -1,16 +1,21 @@
-const CACHE_NAME = 'waffer-shell-v26';
+const CACHE_NAME = 'waffer-shell-v27';
 const SHELL = ['/', '/index.html', '/vin-ui.js', '/parts-match.js', '/manifest.webmanifest', '/lib/i18n.js', '/lib/runtime-config.js', '/lib/total-check.js', '/lib/image-optimization.js', '/lib/identity.js'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL)).catch(() => undefined)
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(SHELL))
+      .then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
+    caches.keys().then(keys => Promise.all(
+      keys
+        .filter(key => key.startsWith('waffer-shell-') && key !== CACHE_NAME)
+        .map(key => caches.delete(key))
+    ))
   );
   self.clients.claim();
 });
