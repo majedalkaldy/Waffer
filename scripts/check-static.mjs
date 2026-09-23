@@ -48,7 +48,11 @@ const required = [
   'lib/analysis-prompt.js',
   'tests/analysis-prompt.test.mjs',
   'tests/normalizer-locale.test.mjs',
-  'tests/price-localization.test.mjs'
+  'tests/price-localization.test.mjs',
+  'lib/analysis-abuse-guard.js',
+  'tests/analysis-abuse-guard.test.mjs',
+  'tests/analyze-guard-integration.test.mjs',
+  'docs/VERCEL_FIREWALL_PLAN.md'
 ];
 
 const failures = [];
@@ -108,6 +112,7 @@ if (!failures.length) {
   }
 
   const analyze = read('api/analyze.js');
+  const abuseGuard = read('lib/analysis-abuse-guard.js');
   const matcher = read('parts-match.js');
   const vinUi = read('vin-ui.js');
   const vehiclesApi = read('api/vehicles.js');
@@ -147,6 +152,28 @@ if (!failures.length) {
   if (!priceCompare.includes('Number.isFinite(rawPrice) && rawPrice >= 0') ||
       !priceCompare.includes('Number.isFinite(rawQuantity) && rawQuantity > 0')) {
     failures.push('Price comparison numeric validation is incomplete');
+  }
+
+  if (!analyze.includes("from '../lib/analysis-abuse-guard.js'") ||
+      !analyze.includes('checkAnalysisRequestProvenance(req)') ||
+      !analyze.includes('checkAnalysisRequestLimit(req, RUNTIME_CONFIG)') ||
+      !analyze.includes("code: 'ANALYSIS_CLIENT_RATE_LIMITED'")) {
+    failures.push('Analysis abuse guard is not fully wired before paid upstream work');
+  }
+  if (!abuseGuard.includes("headerValue(req?.headers, 'x-forwarded-for')") ||
+      !abuseGuard.includes("createHash('sha256')") ||
+      !abuseGuard.includes("fetchSite === 'cross-site'")) {
+    failures.push('Analysis abuse guard must use Vercel client IP hashing and cross-site protection');
+  }
+  const guardIndex = analyze.indexOf('checkAnalysisRequestLimit(req, RUNTIME_CONFIG)');
+  const validationIndex = analyze.indexOf('if (!uploadValidation.ok)');
+  const openAiIndex = analyze.indexOf("fetch('https://api.openai.com/v1/");
+  if (!(guardIndex > validationIndex && openAiIndex > guardIndex)) {
+    failures.push('Analysis rate guard must run after basic validation and before OpenAI');
+  }
+  if (!index.includes('ANALYSIS_CLIENT_RATE_LIMITED') ||
+      !index.includes('ANALYSIS_CROSS_SITE_BLOCKED')) {
+    failures.push('Client UI is missing abuse-guard error messages');
   }
 
   if (vinUi.includes('vehicles[0]')) {
@@ -262,7 +289,8 @@ if (!failures.length) {
   for (const requiredBoundary of [
     'الاختبار الميداني الحقيقي',
     'price-compare',
-    'NEEDS DECISION',
+    'IMPLEMENTED IN CODE',
+    'WAF PENDING',
     'BLOCKED BY ACCESS',
     'GitHub Rulesets = []'
   ]) {
@@ -325,6 +353,12 @@ if (!failures.length) {
   if (!runtime.includes("engineVersion: 'mvp-2026-09'")) failures.push('Unexpected engine version');
   if (!runtime.includes('maxUploadBytes')) failures.push('Runtime upload limit missing');
   if (!runtime.includes('clientAnalysisTimeoutMs')) failures.push('Client analysis timeout is missing');
+  if (!runtime.includes('analysisRateLimitBurstWindowMs') ||
+      !runtime.includes('analysisRateLimitBurstMax') ||
+      !runtime.includes('analysisRateLimitHourlyWindowMs') ||
+      !runtime.includes('analysisRateLimitHourlyMax')) {
+    failures.push('Analysis rate-limit configuration is missing');
+  }
   if (!runtime.includes('pdfCleanupTimeoutMs')) failures.push('PDF cleanup timeout is missing');
   if (!runtime.includes('clientManufacturersTimeoutMs')) failures.push('Client manufacturers timeout is missing');
   if (!runtime.includes('clientVinTimeoutMs')) failures.push('Client VIN timeout is missing');
@@ -539,6 +573,12 @@ if (!failures.length) {
     if (RUNTIME_CONFIG.launchPhase !== 'field-test') failures.push('Unexpected launch phase');
     if (!(RUNTIME_CONFIG.clientAnalysisTimeoutMs > RUNTIME_CONFIG.analysisTimeoutMs)) {
       failures.push('Client analysis timeout must exceed the server analysis timeout');
+    }
+    if (!(RUNTIME_CONFIG.analysisRateLimitBurstWindowMs > 0 &&
+          RUNTIME_CONFIG.analysisRateLimitBurstMax > 0 &&
+          RUNTIME_CONFIG.analysisRateLimitHourlyWindowMs > RUNTIME_CONFIG.analysisRateLimitBurstWindowMs &&
+          RUNTIME_CONFIG.analysisRateLimitHourlyMax >= RUNTIME_CONFIG.analysisRateLimitBurstMax)) {
+      failures.push('Analysis rate-limit configuration is invalid');
     }
     if (!(RUNTIME_CONFIG.pdfCleanupTimeoutMs > 0 && RUNTIME_CONFIG.pdfCleanupTimeoutMs <= 10000)) {
       failures.push('PDF cleanup timeout must be positive and bounded');

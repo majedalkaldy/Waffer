@@ -163,6 +163,10 @@ function apiErrorMessage(payload, fallbackAr='تعذر التحليل', fallback
    MIME_SIGNATURE_MISMATCH:['امتداد/نوع الملف لا يطابق محتواه.','The file type does not match its contents.'],
    ANALYSIS_TIMEOUT:['انتهت مهلة خدمة التحليل. حاول مرة أخرى.','The analysis service timed out. Try again.'],
    ANALYSIS_RATE_LIMITED:['خدمة التحليل مشغولة حاليًا. انتظر قليلًا ثم حاول مرة أخرى.','The analysis service is busy. Wait briefly and try again.'],
+   ANALYSIS_CLIENT_RATE_LIMITED:['وصلت إلى حد التحليلات المؤقت. انتظر قليلًا ثم حاول مرة أخرى.','You reached the temporary analysis limit. Wait briefly and try again.'],
+   ANALYSIS_CROSS_SITE_BLOCKED:['تم حظر طلب التحليل لأنه لم يصدر من موقع وفّر.','The analysis request was blocked because it did not originate from Waffer.'],
+   ANALYSIS_ORIGIN_MISMATCH:['تم حظر طلب التحليل بسبب عدم تطابق مصدر الطلب.','The analysis request was blocked because the request origin did not match.'],
+   ANALYSIS_ORIGIN_INVALID:['تم حظر طلب التحليل بسبب مصدر طلب غير صالح.','The analysis request was blocked because the request origin was invalid.'],
    ANALYSIS_UPSTREAM_INVALID:['أعاد مزود التحليل استجابة غير صالحة. حاول مرة أخرى.','The analysis provider returned an invalid response. Try again.'],
    ANALYSIS_UPSTREAM_ERROR:['تعذر الوصول إلى مزود التحليل. حاول مرة أخرى.','The analysis provider failed. Try again.'],
    UNSUPPORTED_MARKET:['السوق المطلوب غير مدعوم حاليًا.','The requested market is not supported yet.']
