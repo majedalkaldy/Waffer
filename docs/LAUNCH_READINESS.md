@@ -18,7 +18,7 @@
 | ضغط صورة كبيرة >3MB | **MANUAL REQUIRED** | المسار يعتمد على Canvas في المتصفح؛ لا يغطيه Node CI حاليًا | تجربة فعلية على هاتف/متصفح |
 | VIN حي مع المزود | **LIVE EVIDENCE REQUIRED** | downstream matching مغطى آليًا، لكن VIN حقيقي مدعوم لم يُسجل كدليل ميداني | اختبار VIN فعلي ومراجعة الفئة/Vehicle ID |
 | مصدر أسعار موثوق | **MISSING** | `price-compare` يتعمد إرجاع marketPrice=null وsaving=NOT_CALCULATED | اختيار وربط مزود أسعار قبل عرض نطاق سوق/توفير |
-| حماية تكلفة `/api/analyze` | **IMPLEMENTED IN CODE / WAF PENDING** | الحارس الداخلي يحد الطلبات المدفوعة إلى 4/دقيقة و20/ساعة لكل IP داخل كل runtime، يخزن hash فقط، يحظر browser cross-site، ويعيد 429 + Retry-After قبل OpenAI | إعادة تفويض Vercel ثم تطبيق `docs/VERCEL_FIREWALL_PLAN.md` لأن الحارس المحلي لا يغني عن rate limiting موزع عبر WAF |
+| حماية تكلفة `/api/analyze` | **IMPLEMENTED IN CODE / WAF PENDING** | الحارس الداخلي يحد الطلبات المدفوعة إلى 4/دقيقة و20/ساعة لكل IP داخل كل runtime، يخزن hash فقط، يحظر browser cross-site، ويعيد 429 + Retry-After قبل OpenAI | وصول Vercel عاد؛ المتبقي إنشاء قاعدة WAF من لوحة Vercel أو CLI/API لأن موصل الجلسة لا يعرّض كتابة القواعد |
 | وصول Vercel الحي | **READ ACCESS RESTORED / WAF WRITE TOOL UNAVAILABLE** | Team `waffer` والمشروع والـdeployments والسجلات أصبحت مرئية، وتم التحقق أن deployment الأمني `d475d53` هو Production/READY؛ موصل الجلسة لا يعرّض عملية كتابة WAF | إنشاء قاعدة WAF من لوحة Vercel أو Vercel CLI/API ثم متابعة المراقبة من الموصل |
 | حماية `main` | **UNVERIFIED** | GitHub Rulesets = []؛ legacy branch-protection endpoint غير متاح لتكامل GitHub الحالي (403) | التحقق من إعدادات حماية الفرع يدويًا أو بصلاحية Admin؛ ويفضل فرض CI قبل الدمج |
 
