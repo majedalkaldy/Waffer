@@ -313,7 +313,7 @@ if (!failures.length) {
   const readinessDoc = read('docs/LAUNCH_READINESS.md');
   for (const requiredBoundary of [
     'الاختبار الميداني الحقيقي',
-    'price-compare',
+    'CONTRACT READY / PROVIDER MISSING',
     'IMPLEMENTED IN CODE',
     'WAF MONITORING ACTIVE',
     'READ ACCESS RESTORED / WAF WRITE TOOL UNAVAILABLE',
