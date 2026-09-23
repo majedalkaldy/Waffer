@@ -42,7 +42,9 @@ const required = [
   'docs/FIELD_TEST_AUTOMATION.json',
   'docs/LAUNCH_READINESS.md',
   'lib/total-check.js',
-  'tests/field-scenarios-synthetic.test.mjs'
+  'tests/field-scenarios-synthetic.test.mjs',
+  'lib/image-optimization.js',
+  'tests/image-optimization.test.mjs'
 ];
 
 const failures = [];
@@ -286,6 +288,17 @@ if (!failures.length) {
     if (index.includes(legacyRuntimeText)) {
       failures.push('Unlocalized core runtime text remains: ' + legacyRuntimeText);
     }
+  }
+
+  const imagePolicy = read('lib/image-optimization.js');
+  if (!imagePolicy.includes('export function fitWithinMaxDimension') ||
+      !imagePolicy.includes('export function shouldOptimizeImage') ||
+      !imagePolicy.includes('JPEG_QUALITY_LADDER')) {
+    failures.push('Shared image optimization policy is incomplete');
+  }
+  if (!index.includes('window.wafferFitImageWithinMaxDimension=fitWithinMaxDimension') ||
+      !index.includes('window.wafferShouldOptimizeImage=shouldOptimizeImage')) {
+    failures.push('Browser upload flow is not wired to shared image optimization policy');
   }
 
   const totalCheckModule = read('lib/total-check.js');
@@ -700,8 +713,9 @@ if (!failures.length) {
   const sw = read('sw.js');
   if (!sw.includes('/lib/i18n.js') ||
       !sw.includes('/lib/runtime-config.js') ||
-      !sw.includes('/lib/total-check.js')) {
-    failures.push('PWA shell missing localization/runtime/total-check modules');
+      !sw.includes('/lib/total-check.js') ||
+      !sw.includes('/lib/image-optimization.js')) {
+    failures.push('PWA shell missing localization/runtime/total-check/image-optimization modules');
   }
 
   try {

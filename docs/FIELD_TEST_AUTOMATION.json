@@ -2,15 +2,86 @@
   "purpose": "Automated regression coverage only. This file is not field-test evidence and does not change launch-gate PASS/PENDING/FAIL results.",
   "updatedAt": "2026-09-23",
   "scenarios": [
-    {"id":1,"coverage":"COVERED","evidence":["tests/field-scenarios-synthetic.test.mjs"],"notes":"JPEG analysis without VIN; compatibility confidence cap verified."},
-    {"id":2,"coverage":"NOT_AUTOMATED","evidence":[],"notes":"Client-side large-image compression depends on browser Canvas and remains a real/manual scenario."},
-    {"id":3,"coverage":"COVERED","evidence":["tests/analyze-cleanup.test.mjs"],"notes":"Small PDF upload/analysis path is exercised with mocked OpenAI upload and response."},
-    {"id":4,"coverage":"COVERED","evidence":["tests/field-scenarios-synthetic.test.mjs"],"notes":"Oversized PDF rejected with FILE_TOO_LARGE before upstream calls."},
-    {"id":5,"coverage":"PARTIAL","evidence":["tests/pipeline-contract.test.mjs"],"notes":"Downstream vehicle-specific matching is covered, but a real supported VIN against the live provider is not."},
-    {"id":6,"coverage":"COVERED","evidence":["tests/field-scenarios-synthetic.test.mjs"],"notes":"Invalid VIN rejected before upstream lookup."},
-    {"id":7,"coverage":"COVERED","evidence":["tests/pipeline-contract.test.mjs"],"notes":"Part/labor/service classification and non-part skipping are exercised end to end."},
-    {"id":8,"coverage":"COVERED","evidence":["tests/pipeline-contract.test.mjs"],"notes":"Front/rear Fitting Position criteria and axle filtering are exercised."},
-    {"id":9,"coverage":"COVERED","evidence":["tests/field-scenarios-synthetic.test.mjs","tests/identity-contract.test.mjs"],"notes":"Missing/placeholder part numbers cap identity and price confidence."},
-    {"id":10,"coverage":"COVERED","evidence":["tests/field-scenarios-synthetic.test.mjs"],"notes":"Printed vs calculated total mismatch is detected deterministically."}
+    {
+      "id": 1,
+      "coverage": "COVERED",
+      "evidence": [
+        "tests/field-scenarios-synthetic.test.mjs"
+      ],
+      "notes": "JPEG analysis without VIN; compatibility confidence cap verified."
+    },
+    {
+      "id": 2,
+      "coverage": "PARTIAL",
+      "evidence": [
+        "tests/image-optimization.test.mjs"
+      ],
+      "notes": "Resize policy, upload-limit decision, and JPEG quality ladder are covered. Actual Canvas encoding/compression remains a browser/manual field test."
+    },
+    {
+      "id": 3,
+      "coverage": "COVERED",
+      "evidence": [
+        "tests/analyze-cleanup.test.mjs"
+      ],
+      "notes": "Small PDF upload/analysis path is exercised with mocked OpenAI upload and response."
+    },
+    {
+      "id": 4,
+      "coverage": "COVERED",
+      "evidence": [
+        "tests/field-scenarios-synthetic.test.mjs"
+      ],
+      "notes": "Oversized PDF rejected with FILE_TOO_LARGE before upstream calls."
+    },
+    {
+      "id": 5,
+      "coverage": "PARTIAL",
+      "evidence": [
+        "tests/pipeline-contract.test.mjs"
+      ],
+      "notes": "Downstream vehicle-specific matching is covered, but a real supported VIN against the live provider is not."
+    },
+    {
+      "id": 6,
+      "coverage": "COVERED",
+      "evidence": [
+        "tests/field-scenarios-synthetic.test.mjs"
+      ],
+      "notes": "Invalid VIN rejected before upstream lookup."
+    },
+    {
+      "id": 7,
+      "coverage": "COVERED",
+      "evidence": [
+        "tests/pipeline-contract.test.mjs"
+      ],
+      "notes": "Part/labor/service classification and non-part skipping are exercised end to end."
+    },
+    {
+      "id": 8,
+      "coverage": "COVERED",
+      "evidence": [
+        "tests/pipeline-contract.test.mjs"
+      ],
+      "notes": "Front/rear Fitting Position criteria and axle filtering are exercised."
+    },
+    {
+      "id": 9,
+      "coverage": "COVERED",
+      "evidence": [
+        "tests/field-scenarios-synthetic.test.mjs",
+        "tests/identity-contract.test.mjs"
+      ],
+      "notes": "Missing/placeholder part numbers cap identity and price confidence."
+    },
+    {
+      "id": 10,
+      "coverage": "COVERED",
+      "evidence": [
+        "tests/field-scenarios-synthetic.test.mjs"
+      ],
+      "notes": "Printed vs calculated total mismatch is detected deterministically."
+    }
   ]
 }
