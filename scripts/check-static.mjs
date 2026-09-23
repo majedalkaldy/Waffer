@@ -61,6 +61,7 @@ const required = [
   'tests/catalog-guard-integration.test.mjs',
   'tests/catalog-failure-propagation.test.mjs',
   'tests/security-headers.test.mjs',
+  'tests/client-script-externalization.test.mjs',
   'tests/runtime-resilience.test.mjs',
   'lib/catalog-health-probe.js',
   'tests/catalog-health-probe.test.mjs',
