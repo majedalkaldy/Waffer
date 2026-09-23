@@ -107,6 +107,12 @@ export default async function handler(req, res) {
       catalogProductsTimeoutMs: RUNTIME_CONFIG.catalogProductsTimeoutMs,
       catalogArticlesTimeoutMs: RUNTIME_CONFIG.catalogArticlesTimeoutMs,
       catalogCriteriaTimeoutMs: RUNTIME_CONFIG.catalogCriteriaTimeoutMs,
+      catalogRateLimitBurstMax: RUNTIME_CONFIG.catalogRateLimitBurstMax,
+      catalogRateLimitHourlyMax: RUNTIME_CONFIG.catalogRateLimitHourlyMax,
+      vinRateLimitBurstMax: RUNTIME_CONFIG.vinRateLimitBurstMax,
+      vinRateLimitHourlyMax: RUNTIME_CONFIG.vinRateLimitHourlyMax,
+      manufacturersRateLimitBurstMax: RUNTIME_CONFIG.manufacturersRateLimitBurstMax,
+      manufacturersRateLimitHourlyMax: RUNTIME_CONFIG.manufacturersRateLimitHourlyMax,
       healthCatalogTimeoutMs: RUNTIME_CONFIG.healthCatalogTimeoutMs,
       healthCatalogCacheMs: RUNTIME_CONFIG.healthCatalogCacheMs
     },
