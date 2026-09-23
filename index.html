@@ -1081,52 +1081,73 @@ window.addEventListener('wafferPartsMatched', function(event){
    const totalItems=Array.isArray(analysis?.items)?analysis.items.filter(i=>(i.itemType||'part')==='part').length:0;
    const matchedCount=matched.filter(m=>m?.productId).length;
    coverage.textContent=totalItems
-     ? '🔎 تغطية التحقق من الكتالوج: '+matchedCount+' من '+totalItems+' بنود قطع ('+Math.round((matchedCount/totalItems)*100)+'%).'
-     : '🔎 لا توجد بنود قطع واضحة تحتاج مطابقة كتالوج.';
+     ? ui(
+         '🔎 تغطية التحقق من الكتالوج: '+matchedCount+' من '+totalItems+' بنود قطع ('+Math.round((matchedCount/totalItems)*100)+'%).',
+         '🔎 Catalog verification coverage: '+matchedCount+' of '+totalItems+' part lines ('+Math.round((matchedCount/totalItems)*100)+'%).'
+       )
+     : ui('🔎 لا توجد بنود قطع واضحة تحتاج مطابقة كتالوج.','🔎 No clear part line items require catalog matching.');
  }
+
  const priceReadiness=document.getElementById('priceReadiness');
  if(priceReadiness){
    const withArticles=matched.filter(m=>Array.isArray(m.articles)&&m.articles.length);
    priceReadiness.textContent=withArticles.length
-     ? '💰 تم التحقق من هوية بدائل لبعض البنود. يلزم الآن ربط مصدر أسعار موثوق لحساب نطاق السوق والتوفير.'
-     : '💰 لم تكتمل هوية قطعة قابلة للتسعير بعد؛ لن يعرض وفّر توفيرًا تقديريًا.';
+     ? ui(
+         '💰 تم التحقق من هوية بدائل لبعض البنود. يلزم الآن ربط مصدر أسعار موثوق لحساب نطاق السوق والتوفير.',
+         '💰 Alternative identities were verified for some items. A trusted price source is still required for market range and savings.'
+       )
+     : ui(
+         '💰 لم تكتمل هوية قطعة قابلة للتسعير بعد؛ لن يعرض وفّر توفيرًا تقديريًا.',
+         '💰 No price-ready part identity is complete yet; Waffer will not show estimated savings.'
+       );
  }
+
  if(summary){
    summary.textContent=matched.length
-     ? '✅ تمت مطابقة '+matched.length+' من بنود العرض مع كتالوج السيارة.'+(elapsed?' ('+(elapsed/1000).toFixed(1)+' ث)':'')
-     : '⚠️ اكتمل فحص الكتالوج ولم تظهر مطابقة مناسبة.';
+     ? ui(
+         '✅ تمت مطابقة '+matched.length+' من بنود العرض مع كتالوج السيارة.',
+         '✅ Matched '+matched.length+' estimate line items against the vehicle catalog.'
+       )+(elapsed?' ('+(elapsed/1000).toFixed(1)+' '+ui('ث','s')+')':'')
+     : ui('⚠️ اكتمل فحص الكتالوج ولم تظهر مطابقة مناسبة.','⚠️ Catalog checking finished with no suitable match.');
  }
 
  if(!matched.length){
-   box.innerHTML='<h3>🔎 مطابقة كتالوج القطع</h3>'+
-     '<div class="note">تم فحص الكتالوج، لكن لم يتم العثور على مطابقة مناسبة للبنود المستخرجة.</div>';
+   box.innerHTML='<h3>🔎 '+esc(ui('مطابقة كتالوج القطع','Parts catalog matching'))+'</h3>'+
+     '<div class="note">'+esc(ui('تم فحص الكتالوج، لكن لم يتم العثور على مطابقة مناسبة للبنود المستخرجة.','The catalog was checked, but no suitable match was found for the extracted items.'))+'</div>';
    return;
  }
 
- box.innerHTML='<h3>🔎 مطابقة كتالوج القطع</h3>'+
-   '<p class="note">تمت مقارنة بنود عرض الورشة بكتالوج السيارة، ويعرض وفّر حتى 3 بدائل مميزة فقط لكل بند بدل إظهار مئات النتائج.</p>'+
+ box.innerHTML='<h3>🔎 '+esc(ui('مطابقة كتالوج القطع','Parts catalog matching'))+'</h3>'+
+   '<p class="note">'+esc(ui(
+     'تمت مقارنة بنود عرض الورشة بكتالوج السيارة، ويعرض وفّر حتى 3 بدائل مميزة فقط لكل بند بدل إظهار مئات النتائج.',
+     'Estimate items were compared with the vehicle catalog. Waffer shows up to 3 distinct alternatives per item instead of hundreds of results.'
+   ))+'</p>'+
    matched.map(m=>{
      const articles=Array.isArray(m.articles)?m.articles.slice(0,3):[];
      const articleHtml=articles.length?articles.map(a=>{
        const image=a.image||a.s3image||'';
+       const rawQuality=String(a.qualityLabel||'');
+       const displayQuality=rawQuality==='بديل كتالوج — يحتاج تحقق'
+         ? ui('بديل كتالوج — يحتاج تحقق','Catalog alternative — verify before approval')
+         : (rawQuality||ui('غير مصنف','unclassified'));
        return '<div style="margin-top:10px;padding:10px;background:#eef8f4;border-radius:10px">'+
-         '<div>رقم القطعة: <strong>'+esc(a.articleNo||'غير متوفر')+'</strong></div>'+
-         '<div>المصنع: <strong>'+esc(a.supplierName||'غير متوفر')+'</strong></div>'+
-         '<div>الوصف: '+esc(a.articleProductName||'')+'</div>'+
-         '<div>التصنيف: '+esc(a.qualityLabel||'بديل كتالوج — يحتاج تحقق')+'</div>'+
+         '<div>'+esc(ui('رقم القطعة: ','Part number: '))+'<strong>'+esc(a.articleNo||ui('غير متوفر','not available'))+'</strong></div>'+
+         '<div>'+esc(ui('المصنع: ','Supplier: '))+'<strong>'+esc(a.supplierName||ui('غير متوفر','not available'))+'</strong></div>'+
+         '<div>'+esc(ui('الوصف: ','Description: '))+esc(a.articleProductName||'')+'</div>'+
+         '<div>'+esc(ui('التصنيف: ','Classification: '))+esc(displayQuality)+'</div>'+
          (image?'<img src="'+esc(image)+'" alt="" loading="lazy" style="width:70px;height:70px;object-fit:contain;border-radius:10px;margin-top:8px;background:#fff">':'')+
          '</div>';
-     }).join(''):'<div class="note">تم تحديد نوع القطعة، لكن لم تُحمّل أرقام بديلة.</div>';
+     }).join(''):'<div class="note">'+esc(ui('تم تحديد نوع القطعة، لكن لم تُحمّل أرقام بديلة.','The part type was identified, but no alternative part numbers were loaded.'))+'</div>';
 
      return '<div style="margin:16px 0;padding:14px;border:1px solid #e1e7e4;border-radius:14px">'+
-       '<b>'+esc(m.workshopItem||'قطعة')+'</b>'+
-       '<div style="margin-top:8px">مطابقة الكتالوج: <strong>'+esc(m.productName||'-')+'</strong></div>'+
+       '<b>'+esc(m.workshopItem||ui('قطعة','Part'))+'</b>'+
+       '<div style="margin-top:8px">'+esc(ui('مطابقة الكتالوج: ','Catalog match: '))+'<strong>'+esc(m.productName||'-')+'</strong></div>'+
        '<div>Product ID: '+esc(m.productId)+'</div>'+
-       '<div>درجة المطابقة: '+esc(m.matchScore??0)+'%</div>'+
-       (m.requestedAxle?'<div>الموضع المطلوب: <strong>'+(m.requestedAxle==='front'?'أمامي':'خلفي')+'</strong></div>':'')+
-       (m.requestedAxle?'<div>نتائج تم التحقق من موضعها: '+esc(m.verifiedByAxle??0)+'</div>':'')+
-       '<div>عدد النتائج المتوافقة في الكتالوج: '+esc(m.countArticles??0)+'</div>'+
-       '<div class="note">البدائل أدناه مختصرة للمراجعة، ولا تعني ترتيبًا سعريًا قبل ربط مصدر أسعار موثوق.</div>'+
+       '<div>'+esc(ui('درجة المطابقة: ','Match score: '))+esc(m.matchScore??0)+'%</div>'+
+       (m.requestedAxle?'<div>'+esc(ui('الموضع المطلوب: ','Requested position: '))+'<strong>'+esc(m.requestedAxle==='front'?ui('أمامي','front'):ui('خلفي','rear'))+'</strong></div>':'')+
+       (m.requestedAxle?'<div>'+esc(ui('نتائج تم التحقق من موضعها: ','Position-verified results: '))+esc(m.verifiedByAxle??0)+'</div>':'')+
+       '<div>'+esc(ui('عدد النتائج المتوافقة في الكتالوج: ','Compatible catalog results: '))+esc(m.countArticles??0)+'</div>'+
+       '<div class="note">'+esc(ui('البدائل أدناه مختصرة للمراجعة، ولا تعني ترتيبًا سعريًا قبل ربط مصدر أسعار موثوق.','The alternatives below are a review shortlist, not a price ranking; a trusted price source is still required.'))+'</div>'+
        articleHtml+
        '</div>';
    }).join('');
