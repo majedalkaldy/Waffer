@@ -290,7 +290,7 @@ if (!failures.length) {
     'الاختبار الميداني الحقيقي',
     'price-compare',
     'IMPLEMENTED IN CODE',
-    'WAF PENDING',
+    'WAF MONITORING ACTIVE',
     'READ ACCESS RESTORED / WAF WRITE TOOL UNAVAILABLE',
     'GitHub Rulesets = []'
   ]) {
