@@ -18,12 +18,11 @@ export default async function handler(req, res) {
       currency = 'SAR'
     } = req.body || {};
 
-    if (!partName && !partNumber) {
-      return res.status(400).json({ error: 'يلزم اسم القطعة أو رقم القطعة.' });
-    }
-
     const safePartName = String(partName || '').trim().slice(0, 240);
     const safePartNumber = String(partNumber || '').trim().slice(0, 120);
+    if (!safePartName && !safePartNumber) {
+      return res.status(400).json({ error: 'يلزم اسم القطعة أو رقم القطعة.', code: 'PART_IDENTITY_REQUIRED' });
+    }
     const rawPrice = Number(workshopPrice);
     const priceValid = Number.isFinite(rawPrice) && rawPrice >= 0;
     const price = priceValid ? rawPrice : null;
