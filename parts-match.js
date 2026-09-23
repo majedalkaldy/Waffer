@@ -335,7 +335,8 @@
       const data = await response.json();
       if (!response.ok) {
         const error = new Error(data?.error || data?.message || 'Catalog request failed');
-        error.code = 'CATALOG_UPSTREAM_ERROR';
+        error.code = data?.code || 'CATALOG_UPSTREAM_ERROR';
+        error.retryAfterSeconds = Number(data?.retryAfterSeconds) || null;
         throw error;
       }
       return data;
@@ -376,7 +377,7 @@
       );
       return Array.isArray(data.articles) ? data.articles : [];
     } catch (error) {
-      if (error?.name === 'AbortError') throw error;
+      if (error?.name === 'AbortError' || error?.code === 'CATALOG_CLIENT_RATE_LIMITED') throw error;
       console.error('Article lookup error:', error);
       return [];
     }
@@ -393,7 +394,7 @@
       if (Array.isArray(data.criteria?.array)) return data.criteria.array;
       return [];
     } catch (error) {
-      if (error?.name === 'AbortError') throw error;
+      if (error?.name === 'AbortError' || error?.code === 'CATALOG_CLIENT_RATE_LIMITED') throw error;
       console.error('Article criteria error:', articleId, error);
       return [];
     }
@@ -668,7 +669,11 @@
       );
 
       window.wafferCatalogState = {
-        status: error?.code === 'CATALOG_TIMEOUT' ? 'TIMED_OUT' : 'FAILED',
+        status: error?.code === 'CATALOG_TIMEOUT'
+          ? 'TIMED_OUT'
+          : error?.code === 'CATALOG_CLIENT_RATE_LIMITED'
+            ? 'RATE_LIMITED'
+            : 'FAILED',
         matched: 0,
         totalItems: items.length,
         error: String(error?.message || error),
