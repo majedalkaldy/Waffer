@@ -133,6 +133,7 @@ function invalidateAnalysisRun(){
 }
 function isCurrentAnalysisRun(runId){return runId===analysisRunId;}
 const debugMode=new URLSearchParams(location.search).get('debug')==='1';
+function ui(ar,en){return window.wafferLocale?.startsWith('en')?en:ar;}
 document.body.classList.toggle('debug-mode',debugMode);
 function show(id){
  ids.forEach(x=>{
@@ -297,8 +298,8 @@ async function start(){
    if(el)el.textContent=(window.wafferLocale?.startsWith('en')?'Elapsed: ':'الوقت المنقضي: ')+seconds+(window.wafferLocale?.startsWith('en')?' s':' ث');
  },1000);
  const loadingStage=document.getElementById('loadingStage');
- const setStage=text=>{if(loadingStage)loadingStage.innerHTML='المرحلة الحالية: <strong>'+esc(text)+'</strong>';};
- setStage('قراءة بيانات السيارة والملف');
+ const setStage=text=>{if(loadingStage)loadingStage.innerHTML=ui('المرحلة الحالية: ','Current stage: ')+'<strong>'+esc(text)+'</strong>';};
+ setStage(ui('قراءة بيانات السيارة والملف','Reading vehicle and file data'));
 
  try{
    if(vin){
@@ -308,7 +309,7 @@ async function start(){
      if(typeof window.ensureWafferVehicle!=='function'){
        throw new Error(en?'VIN verification module did not load.':'وحدة التحقق من VIN لم يتم تحميلها');
      }
-     setStage('التحقق من رقم الهيكل VIN');
+     setStage(ui('التحقق من رقم الهيكل VIN','Verifying VIN'));
      const vehicleData=await window.ensureWafferVehicle();
      if(vehicleData?.ambiguous){
        throw new Error(en?'Choose the exact vehicle variant shown under the VIN field, then analyze again.':'اختر فئة السيارة الصحيحة الظاهرة أسفل رقم VIN ثم أعد التحليل.');
@@ -365,7 +366,7 @@ async function start(){
    let d;
    try{d=await resp.json();}catch(parseError){
      if(analysisController.signal.aborted)throw parseError;
-     throw new Error('استجابة التحليل غير صالحة. حاول مرة أخرى.');
+     throw new Error(ui('استجابة التحليل غير صالحة. حاول مرة أخرى.','The analysis response is invalid. Try again.'));
    }
    if(!isCurrentAnalysisRun(runId))return;
    if(!resp.ok){
@@ -380,13 +381,13 @@ async function start(){
    if(!isCurrentAnalysisRun(runId))return;
    analysis=d;
    window.analysis=d;
-   setStage('إعداد النتيجة');
+   setStage(ui('إعداد النتيجة','Preparing the result'));
    render();
    show('result');
 
    const catalogSummary=document.getElementById('catalogSummary');
    if(window.wafferVehicleId && typeof window.matchWafferParts==='function'){
-     if(catalogSummary)catalogSummary.textContent='🔎 جارٍ مطابقة البنود مع كتالوج السيارة...';
+     if(catalogSummary)catalogSummary.textContent=ui('🔎 جارٍ مطابقة البنود مع كتالوج السيارة...','🔎 Matching line items against the vehicle catalog...');
      const catalogController=new AbortController();
      activeCatalogController=catalogController;
      let catalogTimedOut=false;
@@ -402,17 +403,17 @@ async function start(){
        );
        if(!isCurrentAnalysisRun(runId))return;
        if(catalogSummary && catalogTimedOut){
-         catalogSummary.textContent='⚠️ استغرقت مطابقة الكتالوج وقتًا أطول من المتوقع. نتيجة تحليل العرض متاحة.';
+         catalogSummary.textContent=ui('⚠️ استغرقت مطابقة الكتالوج وقتًا أطول من المتوقع. نتيجة تحليل العرض متاحة.','⚠️ Catalog matching took longer than expected. The estimate analysis is still available.');
        }else if(catalogSummary && Array.isArray(matches) && !matches.length){
-         catalogSummary.textContent='⚠️ اكتمل فحص الكتالوج ولم تظهر مطابقة مناسبة.';
+         catalogSummary.textContent=ui('⚠️ اكتمل فحص الكتالوج ولم تظهر مطابقة مناسبة.','⚠️ Catalog checking finished with no suitable match.');
        }
      }catch(matchError){
        if(!isCurrentAnalysisRun(runId))return;
        console.error('Parts matching error:',matchError);
        if(catalogSummary){
          catalogSummary.textContent=catalogTimedOut||matchError?.name==='AbortError'
-           ? '⚠️ استغرقت مطابقة الكتالوج وقتًا أطول من المتوقع. نتيجة تحليل العرض متاحة.'
-           : '⚠️ تعذر إكمال مطابقة الكتالوج. نتيجة تحليل العرض متاحة.';
+           ? ui('⚠️ استغرقت مطابقة الكتالوج وقتًا أطول من المتوقع. نتيجة تحليل العرض متاحة.','⚠️ Catalog matching took longer than expected. The estimate analysis is still available.')
+           : ui('⚠️ تعذر إكمال مطابقة الكتالوج. نتيجة تحليل العرض متاحة.','⚠️ Catalog matching could not be completed. The estimate analysis is still available.');
        }
      }finally{
        clearTimeout(catalogTimeout);
@@ -420,8 +421,8 @@ async function start(){
      }
    }else if(catalogSummary && isCurrentAnalysisRun(runId)){
      catalogSummary.textContent=vin
-       ? '⚠️ تعذر تحديد السيارة للكتالوج.'
-       : 'ℹ️ أدخل VIN لتفعيل مطابقة القطع مع السيارة.';
+       ? ui('⚠️ تعذر تحديد السيارة للكتالوج.','⚠️ The vehicle could not be identified for catalog matching.')
+       : ui('ℹ️ أدخل VIN لتفعيل مطابقة القطع مع السيارة.','ℹ️ Enter a VIN to enable vehicle-specific parts matching.');
    }
  }catch(e){
    if(!isCurrentAnalysisRun(runId))return;
@@ -717,13 +718,13 @@ function resetAnalysis(){
  if(candidateSelect)candidateSelect.replaceChildren(new Option(window.wafferLocale?.startsWith('en')?'Choose the matching vehicle variant':'اختر فئة السيارة المطابقة',''));
 
  const catalogSummary=document.getElementById('catalogSummary');
- if(catalogSummary)catalogSummary.textContent='🔎 حالة مطابقة الكتالوج: بانتظار التحليل.';
+ if(catalogSummary)catalogSummary.textContent=ui('🔎 حالة مطابقة الكتالوج: بانتظار التحليل.','🔎 Catalog matching status: waiting for analysis.');
 
  const coverage=document.getElementById('rCatalogCoverage');
- if(coverage)coverage.textContent='🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.';
+ if(coverage)coverage.textContent=ui('🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.','🔎 Catalog verification coverage: waiting for matching.');
 
  const catalogGate=document.getElementById('rCatalogGate');
- if(catalogGate)catalogGate.textContent='🔎 فحص الكتالوج: بانتظار المطابقة.';
+ if(catalogGate)catalogGate.textContent=ui('🔎 فحص الكتالوج: بانتظار المطابقة.','🔎 Catalog check: waiting for matching.');
 
  const axleGate=document.getElementById('rAxleGate');
  if(axleGate)axleGate.textContent='';
@@ -737,12 +738,12 @@ function resetAnalysis(){
    : '💰 مقارنة الأسعار: بانتظار هوية قطعة قابلة للتحقق ومصدر سعر موثوق.';
 
  const catalogMatches=document.getElementById('catalogMatches');
- if(catalogMatches)catalogMatches.innerHTML='<h3>🔎 مطابقة كتالوج القطع</h3><div class="note">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>';
+ if(catalogMatches)catalogMatches.innerHTML='<h3>🔎 '+esc(ui('مطابقة كتالوج القطع','Parts catalog matching'))+'</h3><div class="note">'+esc(ui('سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.','Catalog results will appear here after matching completes.'))+'</div>';
 
  updateFormHint();
  show('home');
 }
-async function copyMsg(){try{await navigator.clipboard.writeText(document.getElementById('message').innerText);alert('تم نسخ الرسالة')}catch(e){alert('حدد النص وانسخه يدويًا')}}
+async function copyMsg(){try{await navigator.clipboard.writeText(document.getElementById('message').innerText);alert(ui('تم نسخ الرسالة','Message copied'))}catch(e){alert(ui('حدد النص وانسخه يدويًا','Select the text and copy it manually'))}}
 function exportDebugReport(){
  if(!analysis)return;
  const vehicle=window.wafferVehicle||{};
