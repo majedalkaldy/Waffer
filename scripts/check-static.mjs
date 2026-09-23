@@ -215,6 +215,16 @@ if (!failures.length) {
       failures.push(label + ' is missing the catalog abuse guard');
     }
   }
+  if (!matcher.includes("data?.code || 'CATALOG_UPSTREAM_ERROR'") ||
+      !matcher.includes("error?.code === 'CATALOG_CLIENT_RATE_LIMITED'")) {
+    failures.push('Parts matcher must preserve catalog rate-limit state');
+  }
+  if (!vinUi.includes("result?.code === 'CATALOG_CLIENT_RATE_LIMITED'")) {
+    failures.push('VIN UI must show explicit catalog rate-limit feedback');
+  }
+  if (!index.includes("matchError?.code==='CATALOG_CLIENT_RATE_LIMITED'")) {
+    failures.push('Result UI must show explicit catalog rate-limit feedback');
+  }
 
   if (vinUi.includes('vehicles[0]')) {
     failures.push('VIN resolver must not silently choose the first vehicle variant');
