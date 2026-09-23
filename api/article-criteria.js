@@ -48,6 +48,11 @@ export default async function handler(req, res) {
     if (!response.ok) return res.status(response.status >= 500 ? 502 : response.status).json({ error: 'Article criteria lookup failed', code: 'CATALOG_UPSTREAM_ERROR', details: data });
 
     const criteria = Array.isArray(data) ? data : Array.isArray(data?.criteria) ? data.criteria : [];
+    res.setHeader(
+      'Vercel-CDN-Cache-Control',
+      'public, max-age=' + RUNTIME_CONFIG.catalogCriteriaCdnCacheSeconds +
+        ', stale-while-revalidate=' + RUNTIME_CONFIG.catalogCriteriaCdnStaleSeconds
+    );
     return res.status(200).json({
       market, langId, countryFilterId,
       articleId: Number(articleId),
