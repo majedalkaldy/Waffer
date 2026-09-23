@@ -569,7 +569,7 @@ function render(){
    const hasVin=Boolean(window.wafferVehicle?.vehicleId);
    const items=Array.isArray(analysis.items)?analysis.items:[];
    const partItems=items.filter(i=>(i.itemType||'part')==='part');
-   const withPartNo=partItems.filter(i=>i.partNumber&&!/غير ظاهر|غير متوفر/i.test(String(i.partNumber))).length;
+   const withPartNo=partItems.filter(i=>typeof window.wafferHasUsablePartNumber==='function'&&window.wafferHasUsablePartNumber(i.partNumber)).length;
    const en=window.wafferLocale?.startsWith('en');
    verificationSummary.textContent=en
      ? 'Verification snapshot: '+(hasVin?'vehicle identified by VIN':'vehicle not verified by VIN')+' • '+withPartNo+'/'+partItems.length+' part lines include a visible part number.'
@@ -589,7 +589,7 @@ function render(){
  if(evidenceLevel){
    const hasVin=Boolean(window.wafferVehicle?.vehicleId);
    const items=Array.isArray(analysis.items)?analysis.items:[];
-   const withPartNumbers=items.filter(i=>i.partNumber && !/غير ظاهر|غير متوفر/i.test(String(i.partNumber))).length;
+   const withPartNumbers=items.filter(i=>typeof window.wafferHasUsablePartNumber==='function'&&window.wafferHasUsablePartNumber(i.partNumber)).length;
    let label=ui('محدودة','limited');
    if(hasVin && withPartNumbers>0)label=ui('متوسطة','moderate');
    if(hasVin && items.length>0 && withPartNumbers===items.length)label=ui('مرتفعة مبدئيًا','provisionally high');
@@ -1169,8 +1169,10 @@ import {
   shouldOptimizeImage,
   JPEG_QUALITY_LADDER
 } from '/lib/image-optimization.js';
+import { hasUsablePartNumber } from '/lib/identity.js';
 window.WAFFER_RUNTIME=RUNTIME_CONFIG;
 window.wafferCompareDisplayedTotals=compareDisplayedTotals;
+window.wafferHasUsablePartNumber=hasUsablePartNumber;
 window.wafferFitImageWithinMaxDimension=fitWithinMaxDimension;
 window.wafferShouldOptimizeImage=shouldOptimizeImage;
 window.WAFFER_IMAGE_QUALITY_LADDER=[...JPEG_QUALITY_LADDER];
