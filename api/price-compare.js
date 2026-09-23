@@ -22,14 +22,20 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'يلزم اسم القطعة أو رقم القطعة.' });
     }
 
-    const price = Number(workshopPrice);
-    const qty = Math.max(1, Number(quantity) || 1);
+    const safePartName = String(partName || '').trim().slice(0, 240);
+    const safePartNumber = String(partNumber || '').trim().slice(0, 120);
+    const rawPrice = Number(workshopPrice);
+    const priceValid = Number.isFinite(rawPrice) && rawPrice >= 0;
+    const price = priceValid ? rawPrice : null;
+    const rawQuantity = Number(quantity);
+    const quantityValid = Number.isFinite(rawQuantity) && rawQuantity > 0;
+    const qty = quantityValid ? rawQuantity : 1;
     const marketConfig = getMarketConfig({ market, locale, currency });
     if (!marketConfig.supported) return res.status(400).json({ error: 'Unsupported market', code: 'UNSUPPORTED_MARKET', requestedMarket: marketConfig.requestedMarket });
     const normalizedMarket = marketConfig.market;
     const normalizedLocale = marketConfig.locale;
     const normalizedCurrency = marketConfig.currency;
-    const hasPartIdentity = hasUsablePartNumber(partNumber);
+    const hasPartIdentity = hasUsablePartNumber(safePartNumber);
     const hasVehicleIdentity = hasUsableVehicleIdentity(vehicle);
 
     return res.status(200).json({
@@ -39,8 +45,8 @@ export default async function handler(req, res) {
         currency: normalizedCurrency
       },
       part: {
-        name: partName || 'غير محدد',
-        number: partNumber || null,
+        name: safePartName || 'غير محدد',
+        number: safePartNumber || null,
         quantity: qty
       },
       vehicle: {
@@ -51,8 +57,12 @@ export default async function handler(req, res) {
         vin: vehicle.vin || null
       },
       workshop: {
-        unitPrice: Number.isFinite(price) ? price : null,
-        totalPrice: Number.isFinite(price) ? price * qty : null
+        unitPrice: price,
+        totalPrice: price !== null && Number.isFinite(price * qty) ? price * qty : null
+      },
+      inputValidation: {
+        workshopPrice: priceValid ? 'VALID' : 'INVALID_OR_MISSING',
+        quantity: quantityValid ? 'VALID' : 'DEFAULTED_TO_1'
       },
       verification: {
         identity: hasPartIdentity ? 'PART_NUMBER_PRESENT' : 'PART_NUMBER_MISSING',
