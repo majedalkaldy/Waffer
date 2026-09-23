@@ -1,4 +1,5 @@
 import { getMarketConfig } from '../lib/market-config.js';
+import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { hasUsablePartNumber, hasUsableVehicleIdentity } from '../lib/identity.js';
 import {
   lookupVerifiedPricing,
@@ -60,7 +61,8 @@ export default async function handler(req, res) {
         number: safePartNumber
       },
       vehicle,
-      quantity: qty
+      quantity: qty,
+      timeoutMs: RUNTIME_CONFIG.priceProviderTimeoutMs
     });
     const saving = calculateVerifiedOfferSaving({
       workshopUnitPrice: price,
@@ -73,6 +75,7 @@ export default async function handler(req, res) {
       INSUFFICIENT_IDENTITY: 'INSUFFICIENT_IDENTITY_FOR_PRICE_LOOKUP',
       PROVIDER_INVALID: 'PRICE_SOURCE_MISCONFIGURED',
       PROVIDER_ERROR: 'PRICE_SOURCE_UNAVAILABLE',
+      PROVIDER_TIMEOUT: 'PRICE_SOURCE_TIMEOUT',
       NO_VERIFIED_PRICE: 'NO_VERIFIED_PRICE_AVAILABLE',
       VERIFIED: 'VERIFIED_PRICE_DATA_AVAILABLE'
     }[pricing.status] || 'WAITING_FOR_VERIFIED_PRICE_SOURCE';
@@ -82,6 +85,11 @@ export default async function handler(req, res) {
         return isEnglish
           ? 'Verified price data is available from the connected source. Savings are calculated only when a verified in-stock offer is available.'
           : 'تتوفر بيانات سعر موثقة من المصدر المتصل. لا يُحسب التوفير إلا عند توفر عرض شراء موثق ومتاح.';
+      }
+      if (pricing.status === 'PROVIDER_TIMEOUT') {
+        return isEnglish
+          ? 'The trusted price source took too long to respond. No market price or savings were guessed.'
+          : 'استغرق مصدر الأسعار الموثوق وقتًا أطول من المتوقع. لم يتم تخمين سعر سوق أو توفير.';
       }
       if (pricing.status === 'PROVIDER_ERROR') {
         return isEnglish

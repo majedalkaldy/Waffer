@@ -116,7 +116,8 @@ export default async function handler(req, res) {
       catalogCriteriaCdnCacheSeconds: RUNTIME_CONFIG.catalogCriteriaCdnCacheSeconds,
       catalogCriteriaCdnStaleSeconds: RUNTIME_CONFIG.catalogCriteriaCdnStaleSeconds,
       healthCatalogTimeoutMs: RUNTIME_CONFIG.healthCatalogTimeoutMs,
-      healthCatalogCacheMs: RUNTIME_CONFIG.healthCatalogCacheMs
+      healthCatalogCacheMs: RUNTIME_CONFIG.healthCatalogCacheMs,
+      priceProviderTimeoutMs: RUNTIME_CONFIG.priceProviderTimeoutMs
     },
     timestamp: new Date().toISOString()
   });
