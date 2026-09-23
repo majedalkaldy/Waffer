@@ -620,15 +620,13 @@ function render(){
  }
  const totalCheck=document.getElementById('rTotalCheck');
  if(totalCheck){
-   const printed=String(analysis.total||'').trim();
-   const calculated=String(analysis.calculatedTotal||'').trim();
-   const pNum=Number((printed.match(/[\d,.]+/)||[])[0]?.replace(/,/g,''));
-   const cNum=Number((calculated.match(/[\d,.]+/)||[])[0]?.replace(/,/g,''));
-   if(Number.isFinite(pNum)&&Number.isFinite(cNum)){
-     const diff=Math.abs(pNum-cNum);
-     totalCheck.textContent=diff<0.01
+   const comparison=typeof window.wafferCompareDisplayedTotals==='function'
+     ? window.wafferCompareDisplayedTotals(analysis.total,analysis.calculatedTotal)
+     : {comparable:false,matches:false,difference:null};
+   if(comparison.comparable){
+     totalCheck.textContent=comparison.matches
        ? ui('🧮 الإجمالي المطبوع يطابق مجموع البنود الظاهرة.','🧮 The printed total matches the sum of visible line items.')
-       : ui('🧮 يوجد فرق حسابي قدره '+diff.toFixed(2)+' بين الإجمالي المطبوع ومجموع البنود الظاهرة؛ يحتاج مراجعة.','🧮 There is a '+diff.toFixed(2)+' difference between the printed total and the visible line-item sum; review is needed.');
+       : ui('🧮 يوجد فرق حسابي قدره '+comparison.difference.toFixed(2)+' بين الإجمالي المطبوع ومجموع البنود الظاهرة؛ يحتاج مراجعة.','🧮 There is a '+comparison.difference.toFixed(2)+' difference between the printed total and the visible line-item sum; review is needed.');
    }else{
      totalCheck.textContent=ui('🧮 تعذر التحقق حسابيًا من الإجمالي بسبب نقص أو غموض القيم الظاهرة.','🧮 The total could not be verified mathematically because visible values are missing or unclear.');
    }
@@ -1156,7 +1154,9 @@ window.addEventListener('wafferPartsMatched', function(event){
 <script type="module">
 import { t } from '/lib/i18n.js';
 import { RUNTIME_CONFIG } from '/lib/runtime-config.js';
+import { compareDisplayedTotals } from '/lib/total-check.js';
 window.WAFFER_RUNTIME=RUNTIME_CONFIG;
+window.wafferCompareDisplayedTotals=compareDisplayedTotals;
 
 const localeSelect=document.getElementById('localeSelect');
 function applyLocale(locale){
