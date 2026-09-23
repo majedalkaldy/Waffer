@@ -95,6 +95,7 @@ export default async function handler(req, res) {
       supportedMimeTypes: RUNTIME_CONFIG.supportedMimeTypes,
       catalogMatchTimeoutMs: RUNTIME_CONFIG.catalogMatchTimeoutMs,
       analysisTimeoutMs: RUNTIME_CONFIG.analysisTimeoutMs,
+      clientAnalysisSafetyMarginMs: RUNTIME_CONFIG.clientAnalysisSafetyMarginMs,
       clientAnalysisTimeoutMs: RUNTIME_CONFIG.clientAnalysisTimeoutMs,
       analysisRateLimitBurstWindowMs: RUNTIME_CONFIG.analysisRateLimitBurstWindowMs,
       analysisRateLimitBurstMax: RUNTIME_CONFIG.analysisRateLimitBurstMax,

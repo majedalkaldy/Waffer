@@ -52,6 +52,7 @@ const required = [
   'lib/analysis-abuse-guard.js',
   'tests/analysis-abuse-guard.test.mjs',
   'tests/analyze-guard-integration.test.mjs',
+  'tests/runtime-resilience.test.mjs',
   'docs/VERCEL_FIREWALL_PLAN.md'
 ];
 
@@ -353,6 +354,7 @@ if (!failures.length) {
   if (!runtime.includes("engineVersion: 'mvp-2026-09'")) failures.push('Unexpected engine version');
   if (!runtime.includes('maxUploadBytes')) failures.push('Runtime upload limit missing');
   if (!runtime.includes('clientAnalysisTimeoutMs')) failures.push('Client analysis timeout is missing');
+  if (!runtime.includes('clientAnalysisSafetyMarginMs')) failures.push('Client analysis safety margin is missing');
   if (!runtime.includes('analysisRateLimitBurstWindowMs') ||
       !runtime.includes('analysisRateLimitBurstMax') ||
       !runtime.includes('analysisRateLimitHourlyWindowMs') ||
@@ -571,8 +573,14 @@ if (!failures.length) {
 
     if (RUNTIME_CONFIG.engineVersion !== 'mvp-2026-09') failures.push('Runtime engine version mismatch');
     if (RUNTIME_CONFIG.launchPhase !== 'field-test') failures.push('Unexpected launch phase');
-    if (!(RUNTIME_CONFIG.clientAnalysisTimeoutMs > RUNTIME_CONFIG.analysisTimeoutMs)) {
-      failures.push('Client analysis timeout must exceed the server analysis timeout');
+    if (!(RUNTIME_CONFIG.clientAnalysisSafetyMarginMs >= 10000)) {
+      failures.push('Client analysis safety margin must be at least 10 seconds');
+    }
+    if (!(RUNTIME_CONFIG.clientAnalysisTimeoutMs >=
+          RUNTIME_CONFIG.pdfUploadTimeoutMs +
+          RUNTIME_CONFIG.analysisTimeoutMs +
+          RUNTIME_CONFIG.clientAnalysisSafetyMarginMs)) {
+      failures.push('Client analysis timeout must cover PDF upload + analysis + safety margin');
     }
     if (!(RUNTIME_CONFIG.analysisRateLimitBurstWindowMs > 0 &&
           RUNTIME_CONFIG.analysisRateLimitBurstMax > 0 &&
@@ -788,6 +796,15 @@ if (!failures.length) {
   }
 
   const sw = read('sw.js');
+  if (!sw.includes("key.startsWith('waffer-shell-') && key !== CACHE_NAME")) {
+    failures.push('Service worker must only delete obsolete Waffer shell caches');
+  }
+  if (sw.includes("keys.filter(key => key !== CACHE_NAME)")) {
+    failures.push('Service worker still deletes unrelated origin caches');
+  }
+  if (sw.includes("cache.addAll(SHELL)).catch(() => undefined)")) {
+    failures.push('Service worker must not swallow shell precache failures');
+  }
   if (!sw.includes('/lib/i18n.js') ||
       !sw.includes('/lib/runtime-config.js') ||
       !sw.includes('/lib/total-check.js') ||
