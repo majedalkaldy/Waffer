@@ -56,6 +56,9 @@ const required = [
   'lib/catalog-health-probe.js',
   'tests/catalog-health-probe.test.mjs',
   'tests/manufacturers-cdn-cache.test.mjs',
+  'lib/price-provider.js',
+  'tests/price-provider-contract.test.mjs',
+  'docs/PRICE_PROVIDER_CONTRACT.md',
   'docs/VERCEL_FIREWALL_PLAN.md'
 ];
 
@@ -126,6 +129,7 @@ if (!failures.length) {
   const vinApi = read('api/vin.js');
   const health = read('api/health.js');
   const identity = read('lib/identity.js');
+  const priceProvider = read('lib/price-provider.js');
   const priceCompare = read('api/price-compare.js');
 
   if (!identity.includes('hasUsablePartNumber') || !identity.includes('hasUsableVehicleIdentity')) {
@@ -156,6 +160,16 @@ if (!failures.length) {
   if (!priceCompare.includes('Number.isFinite(rawPrice) && rawPrice >= 0') ||
       !priceCompare.includes('Number.isFinite(rawQuantity) && rawQuantity > 0')) {
     failures.push('Price comparison numeric validation is incomplete');
+  }
+  if (!priceCompare.includes("from '../lib/price-provider.js'") ||
+      !priceCompare.includes('lookupVerifiedPricing({') ||
+      !priceCompare.includes('calculateVerifiedOfferSaving({')) {
+    failures.push('Price comparison is not wired to the trusted price-provider contract');
+  }
+  if (!priceProvider.includes('normalizeVerifiedMarketRange') ||
+      !priceProvider.includes('normalizeVerifiedOffer') ||
+      !priceProvider.includes("'CALCULATED_FROM_VERIFIED_OFFER'")) {
+    failures.push('Trusted price-provider validation contract is incomplete');
   }
 
   if (!analyze.includes("from '../lib/analysis-abuse-guard.js'") ||
@@ -289,10 +303,17 @@ if (!failures.length) {
     }
   }
 
+  const priceProviderDoc = read('docs/PRICE_PROVIDER_CONTRACT.md');
+  for (const requiredPricingBoundary of ['Market Range','Verified Offer','NOT_CALCULATED','finalUnitPrice']) {
+    if (!priceProviderDoc.includes(requiredPricingBoundary)) {
+      failures.push('Price provider contract document is missing boundary: ' + requiredPricingBoundary);
+    }
+  }
+
   const readinessDoc = read('docs/LAUNCH_READINESS.md');
   for (const requiredBoundary of [
     'الاختبار الميداني الحقيقي',
-    'price-compare',
+    'CONTRACT READY / PROVIDER MISSING',
     'IMPLEMENTED IN CODE',
     'WAF MONITORING ACTIVE',
     'READ ACCESS RESTORED / WAF WRITE TOOL UNAVAILABLE',
@@ -443,6 +464,11 @@ if (!failures.length) {
   }
   if (!health.includes('quoteAnalysisVerified: false')) {
     failures.push('Health capabilities overstate analysis verification');
+  }
+  if (!health.includes("from '../lib/price-provider.js'") ||
+      !health.includes('priceProviderInterface: true') ||
+      !health.includes('verifiedMarketPricing: configured.pricing')) {
+    failures.push('Health does not expose price-provider readiness truthfully');
   }
   const healthFunctionStart = index.indexOf('async function checkSystemHealth(){');
   const healthFunctionEnd = index.indexOf('checkSystemHealth();', healthFunctionStart);

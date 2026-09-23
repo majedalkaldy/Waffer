@@ -34,8 +34,15 @@ test('English price comparison returns English human-readable message with stabl
   assert.equal(res.body.context.locale, 'en-SA');
   assert.equal(res.body.context.currency, 'SAR');
   assert.equal(res.body.status, 'WAITING_FOR_VERIFIED_PRICE_SOURCE');
+  assert.equal(res.body.pricingProvider.status, 'NOT_CONFIGURED');
+  assert.equal(res.body.marketPrice.min, null);
+  assert.equal(res.body.marketPrice.median, null);
+  assert.equal(res.body.marketPrice.max, null);
+  assert.equal(res.body.bestOffer, null);
+  assert.equal(res.body.saving.amount, null);
   assert.equal(res.body.saving.status, 'NOT_CALCULATED');
   assert.equal(res.body.verification.identity, 'PART_NUMBER_PRESENT');
+  assert.equal(res.body.verification.priceSource, 'NOT_CONFIGURED');
   assert.ok(res.body.message.startsWith('Market price and savings were not calculated'));
   assert.equal(/[\u0600-\u06FF]/.test(res.body.message), false);
 });

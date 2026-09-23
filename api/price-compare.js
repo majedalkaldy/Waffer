@@ -1,5 +1,9 @@
 import { getMarketConfig } from '../lib/market-config.js';
 import { hasUsablePartNumber, hasUsableVehicleIdentity } from '../lib/identity.js';
+import {
+  lookupVerifiedPricing,
+  calculateVerifiedOfferSaving
+} from '../lib/price-provider.js';
 
 export default async function handler(req, res) {
   res.setHeader('Allow', 'POST');
@@ -49,6 +53,56 @@ export default async function handler(req, res) {
     const hasPartIdentity = hasUsablePartNumber(safePartNumber);
     const hasVehicleIdentity = hasUsableVehicleIdentity(vehicle);
 
+    const pricing = await lookupVerifiedPricing({
+      marketConfig,
+      part: {
+        name: safePartName,
+        number: safePartNumber
+      },
+      vehicle,
+      quantity: qty
+    });
+    const saving = calculateVerifiedOfferSaving({
+      workshopUnitPrice: price,
+      quantity: qty,
+      bestOffer: pricing.bestOffer
+    });
+
+    const responseStatus = {
+      NOT_CONFIGURED: 'WAITING_FOR_VERIFIED_PRICE_SOURCE',
+      INSUFFICIENT_IDENTITY: 'INSUFFICIENT_IDENTITY_FOR_PRICE_LOOKUP',
+      PROVIDER_INVALID: 'PRICE_SOURCE_MISCONFIGURED',
+      PROVIDER_ERROR: 'PRICE_SOURCE_UNAVAILABLE',
+      NO_VERIFIED_PRICE: 'NO_VERIFIED_PRICE_AVAILABLE',
+      VERIFIED: 'VERIFIED_PRICE_DATA_AVAILABLE'
+    }[pricing.status] || 'WAITING_FOR_VERIFIED_PRICE_SOURCE';
+
+    const responseMessage = (() => {
+      if (pricing.status === 'VERIFIED') {
+        return isEnglish
+          ? 'Verified price data is available from the connected source. Savings are calculated only when a verified in-stock offer is available.'
+          : 'تتوفر بيانات سعر موثقة من المصدر المتصل. لا يُحسب التوفير إلا عند توفر عرض شراء موثق ومتاح.';
+      }
+      if (pricing.status === 'PROVIDER_ERROR') {
+        return isEnglish
+          ? 'The trusted price source is temporarily unavailable. No market price or savings were guessed.'
+          : 'مصدر الأسعار الموثوق غير متاح مؤقتًا. لم يتم تخمين سعر سوق أو توفير.';
+      }
+      if (pricing.status === 'NO_VERIFIED_PRICE') {
+        return isEnglish
+          ? 'The connected price source returned no verified price data for this part.'
+          : 'لم يُرجع مصدر الأسعار المتصل بيانات سعر موثقة لهذه القطعة.';
+      }
+      if (pricing.status === 'INSUFFICIENT_IDENTITY') {
+        return isEnglish
+          ? 'More part and vehicle identity is required before a trusted price lookup can run.'
+          : 'يلزم استكمال هوية القطعة والسيارة قبل إجراء بحث سعر موثوق.';
+      }
+      return isEnglish
+        ? 'Market price and savings were not calculated because no trusted external price source is connected for this market.'
+        : 'لم يتم احتساب سعر السوق أو التوفير لعدم وجود مصدر أسعار خارجي موثوق ومربوط بهذا السوق.';
+    })();
+
     return res.status(200).json({
       context: {
         market: normalizedMarket,
@@ -77,28 +131,42 @@ export default async function handler(req, res) {
       },
       verification: {
         identity: hasPartIdentity ? 'PART_NUMBER_PRESENT' : 'PART_NUMBER_MISSING',
-        compatibility: hasPartIdentity && hasVehicleIdentity ? 'READY_FOR_VERIFICATION' : 'INSUFFICIENT_IDENTITY'
+        compatibility: hasPartIdentity && hasVehicleIdentity ? 'READY_FOR_VERIFICATION' : 'INSUFFICIENT_IDENTITY',
+        priceSource: pricing.status
+      },
+      pricingProvider: {
+        status: pricing.status,
+        id: pricing.providerId,
+        sourceLabel: pricing.sourceLabel,
+        checkedAt: pricing.checkedAt
       },
       marketPrice: {
-        min: null,
-        median: null,
-        max: null,
-        source: null,
-        checkedAt: null
+        min: pricing.marketRange?.min ?? null,
+        median: pricing.marketRange?.median ?? null,
+        max: pricing.marketRange?.max ?? null,
+        sampleSize: pricing.marketRange?.sampleSize ?? null,
+        source: pricing.marketRange ? pricing.sourceLabel : null,
+        checkedAt: pricing.marketRange ? pricing.checkedAt : null
       },
+      bestOffer: pricing.bestOffer
+        ? {
+            ...pricing.bestOffer,
+            source: pricing.sourceLabel,
+            checkedAt: pricing.checkedAt,
+            totalPrice: saving.offerTotal
+          }
+        : null,
       saving: {
-        amount: null,
-        status: 'NOT_CALCULATED'
+        amount: saving.amount,
+        status: saving.status
       },
       confidence: {
         identity: hasPartIdentity ? 60 : 25,
         compatibility: hasPartIdentity && hasVehicleIdentity ? 50 : 20,
-        price: 0
+        price: pricing.bestOffer ? 95 : pricing.marketRange ? 75 : 0
       },
-      status: 'WAITING_FOR_VERIFIED_PRICE_SOURCE',
-      message: isEnglish
-        ? 'Market price and savings were not calculated because no trusted external price source is connected for this market.'
-        : 'لم يتم احتساب سعر السوق أو التوفير لعدم وجود مصدر أسعار خارجي موثوق ومربوط بهذا السوق.'
+      status: responseStatus,
+      message: responseMessage
     });
   } catch (error) {
     console.error('Waffer price compare error:', error);
