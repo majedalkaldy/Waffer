@@ -66,6 +66,8 @@ const required = [
   'tests/catalog-data-cdn-cache.test.mjs',
   'lib/price-provider.js',
   'tests/price-provider-contract.test.mjs',
+  'lib/pricing-client.js',
+  'tests/pricing-client.test.mjs',
   'docs/PRICE_PROVIDER_CONTRACT.md',
   'docs/VERCEL_FIREWALL_PLAN.md'
 ];
@@ -139,6 +141,7 @@ if (!failures.length) {
   const health = read('api/health.js');
   const identity = read('lib/identity.js');
   const priceProvider = read('lib/price-provider.js');
+  const pricingClient = read('lib/pricing-client.js');
   const priceCompare = read('api/price-compare.js');
 
   if (!identity.includes('hasUsablePartNumber') || !identity.includes('hasUsableVehicleIdentity')) {
@@ -188,6 +191,31 @@ if (!failures.length) {
   if (!priceCompare.includes('timeoutMs: RUNTIME_CONFIG.priceProviderTimeoutMs') ||
       !priceCompare.includes("PROVIDER_TIMEOUT: 'PRICE_SOURCE_TIMEOUT'")) {
     failures.push('Price comparison does not enforce the configured provider timeout');
+  }
+  if (!pricingClient.includes('selectPriceableItems') ||
+      !pricingClient.includes('buildPriceComparePayload') ||
+      !pricingClient.includes('summarizeVerifiedPricing')) {
+    failures.push('Trusted pricing client helpers are incomplete');
+  }
+  if (!index.includes("window.wafferVerifiedMarketPricing=d?.capabilities?.verifiedMarketPricing===true")) {
+    failures.push('UI does not bind pricing capability to live health');
+  }
+  const pricingFunctionStart = index.indexOf('async function refreshVerifiedPricing');
+  const pricingFunctionEnd = index.indexOf('function resetAnalysis()', pricingFunctionStart);
+  const pricingFunction = pricingFunctionStart >= 0 && pricingFunctionEnd > pricingFunctionStart
+    ? index.slice(pricingFunctionStart, pricingFunctionEnd)
+    : '';
+  const capabilityGuardIndex = pricingFunction.indexOf('if(!window.wafferVerifiedMarketPricing)');
+  const pricingFetchIndex = pricingFunction.indexOf("fetch('/api/price-compare'");
+  if (!(capabilityGuardIndex >= 0 && pricingFetchIndex > capabilityGuardIndex)) {
+    failures.push('Client must gate /api/price-compare behind verifiedMarketPricing capability');
+  }
+  if (!pricingFunction.includes('{maxItems:10}') || !pricingFunction.includes('offset+=2')) {
+    failures.push('Trusted pricing client must bound item count and request concurrency');
+  }
+  if (!index.includes("saving.status==='CALCULATED_FROM_VERIFIED_OFFER'") &&
+      !pricingClient.includes("data?.saving?.status === 'CALCULATED_FROM_VERIFIED_OFFER'")) {
+    failures.push('Client confirmed-saving summary must use verified-offer status only');
   }
 
   if (!analyze.includes("from '../lib/analysis-abuse-guard.js'") ||
@@ -988,8 +1016,9 @@ if (!failures.length) {
       !sw.includes('/lib/runtime-config.js') ||
       !sw.includes('/lib/total-check.js') ||
       !sw.includes('/lib/image-optimization.js') ||
-      !sw.includes('/lib/identity.js')) {
-    failures.push('PWA shell missing localization/runtime/total-check/image-optimization/identity modules');
+      !sw.includes('/lib/identity.js') ||
+      !sw.includes('/lib/pricing-client.js')) {
+    failures.push('PWA shell missing localization/runtime/total-check/image-optimization/identity/pricing modules');
   }
 
   try {
