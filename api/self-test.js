@@ -38,6 +38,8 @@ export default async function handler(req, res) {
       Number(RUNTIME_CONFIG.healthCatalogTimeoutMs),
     manufacturersTimeout: Number(RUNTIME_CONFIG.manufacturersTimeoutMs) > 0 &&
       Number(RUNTIME_CONFIG.clientManufacturersTimeoutMs) > Number(RUNTIME_CONFIG.manufacturersTimeoutMs),
+    manufacturersCdnCache: Number(RUNTIME_CONFIG.manufacturersCdnCacheSeconds) > 0 &&
+      Number(RUNTIME_CONFIG.manufacturersCdnStaleSeconds) >= Number(RUNTIME_CONFIG.manufacturersCdnCacheSeconds),
     vinTimeout: Number(RUNTIME_CONFIG.vinTimeoutMs) > 0 &&
       Number(RUNTIME_CONFIG.clientVinTimeoutMs) > Number(RUNTIME_CONFIG.vinTimeoutMs),
     saMarket: sa.supported === true && sa.market === 'SA' && sa.currency === 'SAR',
