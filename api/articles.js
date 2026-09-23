@@ -48,6 +48,11 @@ export default async function handler(req, res) {
     if (!response.ok) return res.status(response.status >= 500 ? 502 : response.status).json({ error: 'Parts catalog request failed', code: 'CATALOG_UPSTREAM_ERROR', details: data });
 
     const articles = Array.isArray(data?.articles) ? data.articles : Array.isArray(data) ? data : [];
+    res.setHeader(
+      'Vercel-CDN-Cache-Control',
+      'public, max-age=' + RUNTIME_CONFIG.catalogDataCdnCacheSeconds +
+        ', stale-while-revalidate=' + RUNTIME_CONFIG.catalogDataCdnStaleSeconds
+    );
     return res.status(200).json({ market, langId, vehicleId: Number(vehicleId), productId: Number(productId), count: articles.length, articles });
   } catch (error) {
     console.error('Compatible articles error:', error);
