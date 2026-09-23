@@ -44,7 +44,9 @@ const required = [
   'lib/total-check.js',
   'tests/field-scenarios-synthetic.test.mjs',
   'lib/image-optimization.js',
-  'tests/image-optimization.test.mjs'
+  'tests/image-optimization.test.mjs',
+  'lib/analysis-prompt.js',
+  'tests/analysis-prompt.test.mjs'
 ];
 
 const failures = [];
@@ -392,6 +394,23 @@ if (!failures.length) {
   }
   if (!healthClient.includes('Core services ready') || !healthClient.includes('الخدمات الأساسية جاهزة')) {
     failures.push('Health status is not localized for Arabic and English');
+  }
+
+  const analysisPrompt = read('lib/analysis-prompt.js');
+  if (!analyze.includes("from '../lib/analysis-prompt.js'") ||
+      !analyze.includes('buildAnalysisPrompt({')) {
+    failures.push('Analysis API is not wired to the shared locale-aware prompt builder');
+  }
+  if (analyze.includes('استخدم العربية الواضحة والمختصرة') ||
+      analyze.includes('رسالة عربية مهذبة')) {
+    failures.push('Analysis API still contains a hard-coded Arabic-only output prompt');
+  }
+  if (!analysisPrompt.includes("locale: 'en-SA'") && !analysisPrompt.includes("startsWith('en')")) {
+    failures.push('Analysis prompt builder has no explicit English locale branch');
+  }
+  if (!analysisPrompt.includes('All human-readable string values in the JSON must be concise English') ||
+      !analysisPrompt.includes('جميع القيم النصية المقروءة للمستخدم في JSON يجب أن تكون بالعربية')) {
+    failures.push('Analysis prompt builder must enforce output language for both English and Arabic');
   }
 
   if (analyze.includes('res.locals.openaiFileId')) {

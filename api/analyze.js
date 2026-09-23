@@ -2,6 +2,7 @@ import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { getMarketConfig } from '../lib/market-config.js';
 import { normalizeAnalysisResult } from '../lib/analysis-normalizer.js';
 import { validateBase64Upload } from '../lib/upload-validation.js';
+import { buildAnalysisPrompt } from '../lib/analysis-prompt.js';
 
 async function cleanupOpenAIFile(fileId, apiKey) {
   if (!fileId || !apiKey) return;
@@ -84,24 +85,12 @@ export default async function handler(req, res) {
       vin: String(vehicle.vin || 'غير متوفر').toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '').slice(0, 17) || 'غير متوفر'
     };
 
-    const prompt = `أنت محرك تحليل مستقل لعروض صيانة السيارات باسم «وفّر». السوق الحالي ${market}، اللغة/المنطقة ${locale}، العملة ${currency}. السيارة: الشركة ${safeVehicle.make}، الموديل ${safeVehicle.model}، السنة ${safeVehicle.year}، VIN ${safeVehicle.vin}.
-
-حلّل المستند وفق التسلسل: Identity → Compatibility → Price → Conflict → Confidence.
-أعد JSON فقط دون markdown بهذه البنية:
-{"total":"الإجمالي المطبوع حرفيًا أو غير مذكور","calculatedTotal":"مجموع الأسعار الظاهرة حسابيًا إن أمكن أو غير محسوب","tax":"الضريبة المطبوعة حرفيًا أو غير مذكورة","laborTotal":"إجمالي أجور العمل إن ظهر منفصلًا أو غير مذكور","warranty":"الضمان المطبوع أو غير مذكور","status":"خلاصة قصيرة ومحايدة","transparency":0,"identityConfidence":0,"compatibilityConfidence":0,"priceConfidence":0,"overallConfidence":0,"missing":["..."],"conflicts":["..."],"nextActions":["..."],"items":[{"name":"","partNumber":"غير ظاهر","manufacturer":"غير ظاهر","quantity":"غير ظاهرة","price":"","itemType":"part|labor|service|fee","identityConfidence":0,"compatibility":"غير قابل للتحقق|متوافق مبدئيًا|يحتاج تحقق","priceAssessment":"غير قابل للمقارنة|يحتاج مصدر سعر|قابل للمقارنة بعد التحقق","conflict":"لا يظهر|يحتاج تحقق|وصف مختصر","judgment":""}],"workshopMessage":"رسالة عربية مهذبة ومختصرة للورشة تطلب فقط البيانات الناقصة المهمة"}
-
-قواعد إلزامية:
-- لا تخترع رقم قطعة أو مصنعًا أو كمية أو سعر سوق أو توافقًا.
-- itemType يجب أن يكون واحدًا فقط من: part للقطعة المادية بما فيها السوائل والزيوت، labor لأجرة العمل، service لخدمة غير مادية، fee للرسوم/الضريبة/المصاريف الأخرى.
-- فرّق بوضوح بين الإجمالي المطبوع في المستند وبين مجموع تحسبه أنت من الأسعار الظاهرة.
-- لا تقل إن السعر مرتفع/منخفض/عادل ولا تدّع توفيرًا ماليًا ما لم توجد هوية قطعة قابلة للمطابقة ومصدر سعر موثوق داخل المدخلات؛ في هذه النسخة لا توجد أداة بحث أسعار، لذا استخدم «غير قابل للمقارنة» أو «يحتاج مصدر سعر» عند اللزوم.
-- افحص رقم القطعة، المصنع، الكمية، أجرة العمل، الضريبة، الضمان، وتوافق سنة/فئة السيارة.
-- لا تستنتج ضريبة أو أجرة عمل غير مطبوعة؛ أعد القيمة حرفيًا أو «غير مذكور».
-- conflicts للتكرار أو التداخل المحتمل فقط، ولا تجزم بالتعارض إن لم يكن واضحًا.
-- الدرجات من 0 إلى 100 وتعكس مقدار الدليل المتاح لا جودة الورشة.
-- nextActions من 1 إلى 5 خطوات عملية مرتبة قبل الدفع، ولا تكرر نفس الطلب بصياغات مختلفة.
-- workshopMessage يجب أن تطلب فقط البيانات الناقصة المهمة التي ظهرت فعليًا في التحليل، ولا تطلب معلومات موجودة بوضوح في المستند.
-- استخدم العربية الواضحة والمختصرة.`
+    const prompt = buildAnalysisPrompt({
+      market,
+      locale,
+      currency,
+      vehicle: safeVehicle
+    });
 
     let attachment;
     if (normalizedMimeType === 'application/pdf') {
