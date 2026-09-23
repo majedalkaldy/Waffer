@@ -39,6 +39,10 @@ export default async function handler(req, res) {
       RUNTIME_CONFIG.catalogArticlesTimeoutMs,
       RUNTIME_CONFIG.catalogCriteriaTimeoutMs
     ].every(value => Number(value) > 0 && Number(value) <= Number(RUNTIME_CONFIG.catalogMatchTimeoutMs)),
+    catalogCdnCache: Number(RUNTIME_CONFIG.catalogDataCdnCacheSeconds) > 0 &&
+      Number(RUNTIME_CONFIG.catalogDataCdnStaleSeconds) >= Number(RUNTIME_CONFIG.catalogDataCdnCacheSeconds) &&
+      Number(RUNTIME_CONFIG.catalogCriteriaCdnCacheSeconds) >= Number(RUNTIME_CONFIG.catalogDataCdnCacheSeconds) &&
+      Number(RUNTIME_CONFIG.catalogCriteriaCdnStaleSeconds) >= Number(RUNTIME_CONFIG.catalogCriteriaCdnCacheSeconds),
     healthCatalogTimeout: Number(RUNTIME_CONFIG.healthCatalogTimeoutMs) > 0,
     healthCatalogCache: Number(RUNTIME_CONFIG.healthCatalogCacheMs) >=
       Number(RUNTIME_CONFIG.healthCatalogTimeoutMs),
