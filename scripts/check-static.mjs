@@ -331,6 +331,14 @@ if (!failures.length) {
   if (!matcher.includes("(supplier || 'unknown-supplier') + '|' + number")) {
     failures.push('Catalog article dedupe key must include supplier plus part number');
   }
+  if (matcher.includes("product.includes('oe')") ||
+      matcher.includes("product.includes('original equipment')") ||
+      matcher.includes('مرشح OE')) {
+    failures.push('Catalog text must not infer OE/OEM quality without explicit provider evidence');
+  }
+  if (!matcher.includes("return 'بديل كتالوج — يحتاج تحقق';")) {
+    failures.push('Catalog quality label must remain neutral without verified quality evidence');
+  }
   const matcherPrecondition = matcher.match(/if \(!analysis \|\| !vehicleId \|\| !items\.length\) \{([\s\S]*?)\n    \}\n\n    try/);
   if (matcherPrecondition?.[1]?.includes('error?.message')) {
     failures.push('Catalog precondition references an undefined error variable');

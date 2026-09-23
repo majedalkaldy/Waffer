@@ -54,7 +54,7 @@ test('catalog shortlist keeps same part number from different suppliers but remo
         ok: true,
         json: async () => ({
           articles: [
-            { articleId: 1, articleNo: 'AF-100', supplierName: 'Brand A', articleProductName: 'Air Filter' },
+            { articleId: 1, articleNo: 'AF-100', supplierName: 'Brand A', articleProductName: 'Air Filter Shoe' },
             { articleId: 2, articleNo: 'AF-100', supplierName: 'Brand A', articleProductName: 'Air Filter duplicate' },
             { articleId: 3, articleNo: 'AF-100', supplierName: 'Brand B', articleProductName: 'Air Filter' }
           ]
@@ -83,5 +83,7 @@ test('catalog shortlist keeps same part number from different suppliers but remo
     Array.from(matches[0].articles, article => article.supplierName).sort(),
     ['Brand A', 'Brand B']
   );
+  assert.equal(matches[0].articles[0].qualityLabel, 'بديل كتالوج — يحتاج تحقق');
+  assert.ok(matches[0].articles.every(article => !String(article.qualityLabel).includes('OE')));
   assert.equal(events.length, 1);
 });

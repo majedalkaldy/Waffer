@@ -437,9 +437,8 @@
     const supplier = norm(supplierName(article));
     const product = norm(article?.articleProductName || article?.productName || '');
     if (!supplier && !product) return 'غير مصنف';
-    // This is deliberately descriptive, not a claim of OEM status.
-    if (product.includes('oe') || product.includes('original equipment')) return 'مرشح OE — يحتاج تحقق';
-    return 'بديل كتالوج متوافق — يحتاج تحقق';
+    // Catalog presence and text alone do not establish OEM/OE status.
+    return 'بديل كتالوج — يحتاج تحقق';
   }
 
   function articleKey(article) {
