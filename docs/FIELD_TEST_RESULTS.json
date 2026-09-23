@@ -1,0 +1,16 @@
+{
+  "protocol": "docs/FIELD_TEST.md",
+  "updatedAt": null,
+  "scenarios": [
+    {"id":1,"title":"صورة JPG واضحة بدون VIN","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
+    {"id":2,"title":"صورة هاتف أكبر من 3MB","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
+    {"id":3,"title":"PDF أقل من 3MB","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
+    {"id":4,"title":"PDF أكبر من 3MB","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
+    {"id":5,"title":"VIN صحيح مع عرض قطع","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
+    {"id":6,"title":"VIN غير صحيح","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
+    {"id":7,"title":"عرض قطع مع أجور وخدمات","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
+    {"id":8,"title":"فحمات أو أقراص أمامية وخلفية","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
+    {"id":9,"title":"عرض بلا أرقام قطع","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
+    {"id":10,"title":"إجمالي مطبوع لا يطابق مجموع البنود","status":"PENDING","testedAt":null,"evidence":null,"notes":""}
+  ]
+}
