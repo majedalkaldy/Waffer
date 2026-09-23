@@ -10,6 +10,7 @@
 - الاختبار التكاملي يغطي: تحليل مستند mocked، تطبيع النتيجة، مطابقة الكتالوج، Front/Rear، تخطي labor/service، وحدود عقد التسعير.
 - بوابة الإطلاق تمنع `public-beta` و`production` حتى تكون السيناريوهات العشرة الميدانية `PASS`.
 - واجهات AutoParts المكلفة محمية داخل التطبيق بحارس مشترك واسع يمنع الاستنزاف المباشر ويعمل بعد validation وقبل الاتصال بالمزود.
+- فحص Production حي موثق في `docs/LIVE_SMOKE_RESULTS.json`: self-test وhealth = 200/ready، الكتالوج reachable، ولا توجد runtime errors في نافذة الفحص.
 
 ## الموانع الحالية
 
@@ -20,8 +21,8 @@
 | VIN حي مع المزود | **LIVE EVIDENCE REQUIRED** | downstream matching مغطى آليًا، لكن VIN حقيقي مدعوم لم يُسجل كدليل ميداني | اختبار VIN فعلي ومراجعة الفئة/Vehicle ID |
 | مصدر أسعار موثوق | **CONTRACT READY / PROVIDER MISSING** | عقد `lib/price-provider.js` يفرض تحقق العملة وهوية القطعة والسيارة والمخزون والدليل؛ الإنتاج ما زال يعيد marketPrice=null وsaving=NOT_CALCULATED | اختيار وربط مزود موثوق واختباره حيًا قبل عرض نطاق السوق أو التوفير |
 | حماية تكلفة `/api/analyze` | **IMPLEMENTED IN CODE / WAF MONITORING ACTIVE** | الحارس الداخلي يحد الطلبات المدفوعة إلى 4/دقيقة و20/ساعة لكل IP داخل كل runtime، يخزن hash فقط، يحظر browser cross-site، ويعيد 429 + Retry-After قبل OpenAI | تم نشر قاعدة المراقبة على Production؛ المتبقي مراقبة الحركة قبل تحويلها إلى حظر فعلي |
-| وصول Vercel الحي | **READ ACCESS RESTORED / WAF WRITE TOOL UNAVAILABLE** | Team `waffer` والمشروع والـdeployments والسجلات أصبحت مرئية، وتم التحقق أن deployment الأمني `d475d53` هو Production/READY؛ موصل الجلسة لا يعرّض عملية كتابة WAF | إنشاء قاعدة WAF من لوحة Vercel أو Vercel CLI/API ثم متابعة المراقبة من الموصل |
-| حماية `main` | **UNVERIFIED** | GitHub Rulesets = []؛ legacy branch-protection endpoint غير متاح لتكامل GitHub الحالي (403) | التحقق من إعدادات حماية الفرع يدويًا أو بصلاحية Admin؛ ويفضل فرض CI قبل الدمج |
+| وصول Vercel الحي | **ACTIVE** | Team `waffer` والمشروع والـdeployments والسجلات مرئية، وWAF monitor تم نشره يدويًا على Production | الاستمرار في مراقبة السجلات وWAF قبل تحويله من Log إلى enforcement |
+| حماية `main` | **ACTION REQUIRED** | القراءة المباشرة للفرع تؤكد `protected=false` وrequired status checks = off | تفعيل Branch Protection/Ruleset يدويًا وفرض Waffer CI قبل الدمج |
 
 ## ما لا يُعد دليل إطلاق
 
