@@ -192,6 +192,38 @@ test('insufficient identity prevents provider lookup entirely', async () => {
   assert.equal(calls, 0);
 });
 
+test('price provider timeout aborts the adapter and returns PROVIDER_TIMEOUT', async () => {
+  let capturedSignal = null;
+  const provider = {
+    id:'slow-provider',
+    async lookup(input) {
+      capturedSignal = input.signal;
+      return new Promise((resolve, reject) => {
+        input.signal.addEventListener('abort', () => {
+          const error = new Error('aborted');
+          error.name = 'AbortError';
+          reject(error);
+        }, { once:true });
+      });
+    }
+  };
+
+  const started = Date.now();
+  const result = await lookupVerifiedPricing({
+    provider,
+    marketConfig,
+    part:{ name:'Brake pad', number:'BRK-123' },
+    vehicle,
+    timeoutMs:20
+  });
+
+  assert.equal(result.status, 'PROVIDER_TIMEOUT');
+  assert.equal(result.marketRange, null);
+  assert.equal(result.bestOffer, null);
+  assert.equal(capturedSignal?.aborted, true);
+  assert.ok(Date.now() - started < 500);
+});
+
 test('provider failures and untraceable responses never create verified price data', async () => {
   const failed = await lookupVerifiedPricing({
     provider:{
