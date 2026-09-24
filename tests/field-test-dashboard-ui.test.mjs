@@ -27,6 +27,7 @@ test('field-test dashboard is diagnostic-only and exposes all operator controls'
     'fieldTestFixtureResult',
     'fieldTestCaptureBtn',
     'fieldTestExportBtn',
+    'fieldTestCandidateBtn',
     'fieldTestClearBtn',
     'fieldTestScenarioList'
   ]){
@@ -50,6 +51,7 @@ test('module bootstrap exposes field-test helpers and signals readiness',()=>{
   assert.ok(appModule.includes('window.wafferSummarizeFieldTestSession=summarizeFieldTestSession'));
   assert.ok(appModule.includes('window.wafferValidateFieldTestScenarioEvidence=validateFieldTestScenarioEvidence'));
   assert.ok(appModule.includes('window.wafferValidateFieldTestDraft=validateFieldTestDraft'));
+  assert.ok(appModule.includes('window.wafferBuildOfficialFieldTestResultsFromDraft=buildOfficialFieldTestResultsFromDraft'));
   assert.ok(appModule.includes("new CustomEvent('wafferClientModulesReady')"));
   assert.ok(app.includes("window.addEventListener('wafferClientModulesReady'"));
 });
@@ -148,6 +150,24 @@ test('guided field-test session shows next scenario and validates full draft bef
 
 test('guided session export remains draft-only and never writes official results',()=>{
   const start=app.indexOf('function exportFieldTestDraft()');
+  const end=app.indexOf('function clearFieldTestDraft()',start);
+  assert.ok(start>=0 && end>start);
+  const source=app.slice(start,end);
+  assert.ok(source.includes('downloadJsonFile'));
+  assert.equal(source.includes("fetch('/docs/FIELD_TEST_RESULTS.json'"),false);
+  assert.equal(source.includes("method:'POST'"),false);
+  assert.equal(source.includes("method:'PUT'"),false);
+});
+
+
+test('browser candidate export is gated by promotionCandidate and remains local-only',()=>{
+  assert.ok(app.includes('function exportFieldTestCandidate()'));
+  assert.ok(app.includes("candidateButton.disabled=!draftCheck?.validation?.promotionCandidate"));
+  assert.ok(app.includes('window.wafferBuildOfficialFieldTestResultsFromDraft'));
+  assert.ok(app.includes('Candidate export requires a valid 10/10 PASS draft with complete evidence.'));
+  assert.ok(app.includes("fieldTestCandidateBtn: () => exportFieldTestCandidate()"));
+
+  const start=app.indexOf('function exportFieldTestCandidate()');
   const end=app.indexOf('function clearFieldTestDraft()',start);
   assert.ok(start>=0 && end>start);
   const source=app.slice(start,end);

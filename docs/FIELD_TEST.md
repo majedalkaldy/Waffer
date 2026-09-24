@@ -110,6 +110,15 @@ npm run validate:field-test-draft -- path/to/waffer-field-test-draft.json
 
 ## إنشاء Candidate للمراجعة
 
+إذا أصبحت المسودة في لوحة `?debug=1` صالحة 10/10 PASS حسب الـValidator، يتفعّل زر **تصدير Candidate للمراجعة**. هذا الزر:
+- يستخدم نفس `buildOfficialFieldTestResultsFromDraft` المستخدم في مسار CLI.
+- ينشئ ملفًا محليًا مطابقًا لبنية النتائج الرسمية.
+- لا يكتب إلى GitHub ولا يغيّر `docs/FIELD_TEST_RESULTS.json`.
+- يبقى معطّلًا إذا كانت المسودة ليست `promotionCandidate`.
+
+بديل CLI بعد نجاح الـValidator:
+
+
 بعد نجاح الـValidator:
 
 ```bash

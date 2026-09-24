@@ -27,7 +27,8 @@ import {
 } from '/lib/field-test-fixtures.js';
 import {
   validateFieldTestScenarioEvidence,
-  validateFieldTestDraft
+  validateFieldTestDraft,
+  buildOfficialFieldTestResultsFromDraft
 } from '/lib/field-test-evidence-validator.js';
 window.WAFFER_RUNTIME=RUNTIME_CONFIG;
 window.wafferCompareDisplayedTotals=compareDisplayedTotals;
@@ -46,6 +47,7 @@ window.wafferBuildFieldTestPdfBytes=buildFieldTestPdfBytes;
 window.wafferPadFieldTestBytes=padFieldTestBytes;
 window.wafferValidateFieldTestScenarioEvidence=validateFieldTestScenarioEvidence;
 window.wafferValidateFieldTestDraft=validateFieldTestDraft;
+window.wafferBuildOfficialFieldTestResultsFromDraft=buildOfficialFieldTestResultsFromDraft;
 window.wafferFitImageWithinMaxDimension=fitWithinMaxDimension;
 window.wafferShouldOptimizeImage=shouldOptimizeImage;
 window.WAFFER_IMAGE_QUALITY_LADDER=[...JPEG_QUALITY_LADDER];
