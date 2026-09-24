@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   validateFieldTestDraft,
+  validateOfficialFieldTestResults,
   buildOfficialFieldTestResultsFromDraft
 } from '../lib/field-test-evidence-validator.js';
 
@@ -219,4 +220,37 @@ test('invalid draft cannot be converted into official results',()=>{
     ()=>buildOfficialFieldTestResultsFromDraft(draft,{}),
     error=>error?.validation?.valid===false
   );
+});
+
+
+test('official results reject handwritten PASS without required runtime evidence',()=>{
+  const official={
+    protocol:'docs/FIELD_TEST.md',
+    updatedAt:'2026-09-24T12:00:00.000Z',
+    scenarios:Array.from({length:10},(_,index)=>({
+      id:index+1,
+      title:'Scenario '+(index+1),
+      status:'PASS',
+      testedAt:null,
+      evidence:null,
+      notes:''
+    }))
+  };
+  const result=validateOfficialFieldTestResults(official);
+  assert.equal(result.valid,false);
+  assert.equal(result.promotionCandidate,false);
+  assert.ok(result.errors.some(x=>x.includes('valid testedAt')));
+  assert.ok(result.errors.some(x=>x.includes('captured runtime evidence')));
+});
+
+test('official all-pending results are valid but never promotion-ready',()=>{
+  const official={
+    protocol:'docs/FIELD_TEST.md',
+    updatedAt:null,
+    scenarios:Array.from({length:10},(_,index)=>baseScenario(index+1,'PENDING'))
+  };
+  const result=validateOfficialFieldTestResults(official);
+  assert.equal(result.valid,true);
+  assert.equal(result.promotionCandidate,false);
+  assert.deepEqual(result.counts,{passed:0,failed:0,pending:10,expected:10});
 });
