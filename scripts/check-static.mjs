@@ -6,6 +6,8 @@ import { execFileSync } from 'node:child_process';
 
 const required = [
   'index.html',
+  'app.js',
+  'app-module.js',
   'parts-match.js',
   'vin-ui.js',
   'api/analyze.js',
@@ -60,6 +62,7 @@ const required = [
   'tests/catalog-guard-integration.test.mjs',
   'tests/catalog-failure-propagation.test.mjs',
   'tests/security-headers.test.mjs',
+  'tests/client-script-externalization.test.mjs',
   'tests/runtime-resilience.test.mjs',
   'lib/catalog-health-probe.js',
   'tests/catalog-health-probe.test.mjs',
@@ -91,6 +94,9 @@ if (!failures.length) {
   }
 
   const index = read('index.html');
+  const app = read('app.js');
+  const appModule = read('app-module.js');
+  const clientSource = [app, appModule].join('\n');
 
   const inlineScripts = [...index.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/gi)]
     .filter(match => !/\bsrc\s*=/.test(match[1] || ''));
@@ -117,16 +123,27 @@ if (!failures.length) {
     if (count > 1) failures.push(`Duplicate DOM id: ${id}`);
   }
 
-  const refs = [...index.matchAll(/getElementById\(['"]([^'"]+)['"]\)/g)].map(m => m[1]);
+  const refs = [...clientSource.matchAll(/getElementById\(['"]([^'"]+)['"]\)/g)].map(m => m[1]);
   for (const ref of new Set(refs)) {
     if (!idCounts.has(ref)) failures.push(`Missing DOM element referenced by JS: ${ref}`);
   }
 
-  const handlers = [...index.matchAll(/\bonclick="([A-Za-z_$][\w$]*)\s*\(/g)].map(m => m[1]);
-  for (const name of new Set(handlers)) {
-    const fn = new RegExp(`function\\s+${name}\\s*\\(`);
-    const variable = new RegExp(`(?:const|let|var)\\s+${name}\\s*=`);
-    if (!fn.test(index) && !variable.test(index)) failures.push(`Undefined onclick handler: ${name}`);
+  const inlineHandlers = [...index.matchAll(/\son[a-z]+\s*=\s*["']/gi)];
+  if (inlineHandlers.length) {
+    failures.push('Inline event handlers are forbidden; bind UI events from app.js');
+  }
+  const remainingInlineScripts = [...index.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/gi)]
+    .filter(match => !/\bsrc\s*=/.test(match[1] || ''));
+  if (remainingInlineScripts.length) {
+    failures.push('Inline JavaScript is forbidden; use app.js/app-module.js');
+  }
+  if (!index.includes('<script src="/app.js"></script>') ||
+      !index.includes('<script type="module" src="/app-module.js"></script>')) {
+    failures.push('External client script tags are missing from index.html');
+  }
+  if (!app.includes('function bindUiActions()') ||
+      !app.includes("addEventListener('click', handler)")) {
+    failures.push('External UI action binding is missing');
   }
 
   const analyze = read('api/analyze.js');
@@ -198,13 +215,13 @@ if (!failures.length) {
       !pricingClient.includes('summarizeVerifiedPricing')) {
     failures.push('Trusted pricing client helpers are incomplete');
   }
-  if (!index.includes("window.wafferVerifiedMarketPricing=d?.capabilities?.verifiedMarketPricing===true")) {
+  if (!clientSource.includes("window.wafferVerifiedMarketPricing=d?.capabilities?.verifiedMarketPricing===true")) {
     failures.push('UI does not bind pricing capability to live health');
   }
-  const pricingFunctionStart = index.indexOf('async function refreshVerifiedPricing');
-  const pricingFunctionEnd = index.indexOf('function resetAnalysis()', pricingFunctionStart);
+  const pricingFunctionStart = app.indexOf('async function refreshVerifiedPricing');
+  const pricingFunctionEnd = app.indexOf('function resetAnalysis()', pricingFunctionStart);
   const pricingFunction = pricingFunctionStart >= 0 && pricingFunctionEnd > pricingFunctionStart
-    ? index.slice(pricingFunctionStart, pricingFunctionEnd)
+    ? app.slice(pricingFunctionStart, pricingFunctionEnd)
     : '';
   const capabilityGuardIndex = pricingFunction.indexOf('if(!window.wafferVerifiedMarketPricing)');
   const pricingFetchIndex = pricingFunction.indexOf("fetch('/api/price-compare'");
@@ -214,7 +231,7 @@ if (!failures.length) {
   if (!pricingFunction.includes('{maxItems:10}') || !pricingFunction.includes('offset+=2')) {
     failures.push('Trusted pricing client must bound item count and request concurrency');
   }
-  if (!index.includes("saving.status==='CALCULATED_FROM_VERIFIED_OFFER'") &&
+  if (!clientSource.includes("saving.status==='CALCULATED_FROM_VERIFIED_OFFER'") &&
       !pricingClient.includes("data?.saving?.status === 'CALCULATED_FROM_VERIFIED_OFFER'")) {
     failures.push('Client confirmed-saving summary must use verified-offer status only');
   }
@@ -236,8 +253,8 @@ if (!failures.length) {
   if (!(guardIndex > validationIndex && openAiIndex > guardIndex)) {
     failures.push('Analysis rate guard must run after basic validation and before OpenAI');
   }
-  if (!index.includes('ANALYSIS_CLIENT_RATE_LIMITED') ||
-      !index.includes('ANALYSIS_CROSS_SITE_BLOCKED')) {
+  if (!clientSource.includes('ANALYSIS_CLIENT_RATE_LIMITED') ||
+      !clientSource.includes('ANALYSIS_CROSS_SITE_BLOCKED')) {
     failures.push('Client UI is missing abuse-guard error messages');
   }
 
@@ -265,7 +282,7 @@ if (!failures.length) {
   if (!vinUi.includes("result?.code === 'CATALOG_CLIENT_RATE_LIMITED'")) {
     failures.push('VIN UI must show explicit catalog rate-limit feedback');
   }
-  if (!index.includes("matchError?.code==='CATALOG_CLIENT_RATE_LIMITED'")) {
+  if (!clientSource.includes("matchError?.code==='CATALOG_CLIENT_RATE_LIMITED'")) {
     failures.push('Result UI must show explicit catalog rate-limit feedback');
   }
 
@@ -275,15 +292,15 @@ if (!failures.length) {
   if (!index.includes('id="vehicleCandidates"') || !index.includes('id="candidateSelect"')) {
     failures.push('VIN ambiguity UI is missing');
   }
-  if (!index.includes('vehicleData?.ambiguous')) {
+  if (!clientSource.includes('vehicleData?.ambiguous')) {
     failures.push('Analysis flow must stop until an ambiguous VIN variant is selected');
   }
-  if (!index.includes("year=String(document.getElementById('year').value||'').trim();")) {
+  if (!clientSource.includes("year=String(document.getElementById('year').value||'').trim();")) {
     failures.push('Analysis must refresh model year after VIN resolution');
   }
-  if (!index.includes("makeId:document.getElementById('make').value") ||
-      !index.includes("make:document.getElementById('make').selectedOptions?.[0]?.text||''") ||
-      !index.includes("vehicleId:window.wafferVehicleId||null")) {
+  if (!clientSource.includes("makeId:document.getElementById('make').value") ||
+      !clientSource.includes("make:document.getElementById('make').selectedOptions?.[0]?.text||''") ||
+      !clientSource.includes("vehicleId:window.wafferVehicleId||null")) {
     failures.push('Analysis vehicle context must include make ID, display name, and resolved vehicle ID');
   }
 
@@ -444,7 +461,7 @@ if (!failures.length) {
     }
   }
 
-  if (!index.includes("function ui(ar,en){return window.wafferLocale?.startsWith('en')?en:ar;}")) {
+  if (!clientSource.includes("function ui(ar,en){return window.wafferLocale?.startsWith('en')?en:ar;}")) {
     failures.push('Core bilingual runtime helper is missing');
   }
   for (const legacyRuntimeText of [
@@ -452,7 +469,7 @@ if (!failures.length) {
     "typeSummary.textContent='التصنيف:",
     "decision.textContent='ملخص قبل الموافقة:"
   ]) {
-    if (index.includes(legacyRuntimeText)) {
+    if (clientSource.includes(legacyRuntimeText)) {
       failures.push('Unlocalized core runtime text remains: ' + legacyRuntimeText);
     }
   }
@@ -463,8 +480,8 @@ if (!failures.length) {
       !imagePolicy.includes('JPEG_QUALITY_LADDER')) {
     failures.push('Shared image optimization policy is incomplete');
   }
-  if (!index.includes('window.wafferFitImageWithinMaxDimension=fitWithinMaxDimension') ||
-      !index.includes('window.wafferShouldOptimizeImage=shouldOptimizeImage')) {
+  if (!clientSource.includes('window.wafferFitImageWithinMaxDimension=fitWithinMaxDimension') ||
+      !clientSource.includes('window.wafferShouldOptimizeImage=shouldOptimizeImage')) {
     failures.push('Browser upload flow is not wired to shared image optimization policy');
   }
 
@@ -472,10 +489,10 @@ if (!failures.length) {
   if (!totalCheckModule.includes('export function compareDisplayedTotals')) {
     failures.push('Shared displayed-total comparison helper is missing');
   }
-  if (!index.includes("window.wafferCompareDisplayedTotals=compareDisplayedTotals")) {
+  if (!clientSource.includes("window.wafferCompareDisplayedTotals=compareDisplayedTotals")) {
     failures.push('UI does not expose the shared total comparison helper');
   }
-  if (index.includes("printed.match(/[\\d,.]+/)")) {
+  if (clientSource.includes("printed.match(/[\\d,.]+/)")) {
     failures.push('Legacy inline total parsing remains in the UI');
   }
 
@@ -539,10 +556,10 @@ if (!failures.length) {
     failures.push('VIN client timeout/body-abort handling is incomplete');
   }
 
-  const manufacturersLoaderStart = index.indexOf('async function loadManufacturers(){');
-  const manufacturersLoaderEnd = index.indexOf("window.addEventListener('wafferPartsMatched'", manufacturersLoaderStart);
+  const manufacturersLoaderStart = app.indexOf('async function loadManufacturers(){');
+  const manufacturersLoaderEnd = app.indexOf("window.addEventListener('wafferPartsMatched'", manufacturersLoaderStart);
   const manufacturersLoader = manufacturersLoaderStart >= 0 && manufacturersLoaderEnd > manufacturersLoaderStart
-    ? index.slice(manufacturersLoaderStart, manufacturersLoaderEnd)
+    ? app.slice(manufacturersLoaderStart, manufacturersLoaderEnd)
     : '';
   if (!index.includes('id="retryMakes"') || !manufacturersLoader.includes('manufacturersController?.abort()')) {
     failures.push('Manufacturers loader is not recoverable/abortable');
@@ -581,7 +598,7 @@ if (!failures.length) {
   if (!(manufacturerCacheHeader > manufacturerUpstreamGuard)) {
     failures.push('Manufacturer CDN cache header must only be applied after successful upstream validation');
   }
-  if (index.includes("fetch('/api/vehicles',{cache:'no-store'")) {
+  if (clientSource.includes("fetch('/api/vehicles',{cache:'no-store'")) {
     failures.push('Manufacturer client request still bypasses the Vercel CDN cache');
   }
 
@@ -602,10 +619,10 @@ if (!failures.length) {
       !health.includes('verifiedMarketPricing: configured.pricing')) {
     failures.push('Health does not expose price-provider readiness truthfully');
   }
-  const healthFunctionStart = index.indexOf('async function checkSystemHealth(){');
-  const healthFunctionEnd = index.indexOf('checkSystemHealth();', healthFunctionStart);
+  const healthFunctionStart = app.indexOf('async function checkSystemHealth(){');
+  const healthFunctionEnd = app.indexOf('checkSystemHealth();', healthFunctionStart);
   const healthClient = healthFunctionStart >= 0 && healthFunctionEnd > healthFunctionStart
-    ? index.slice(healthFunctionStart, healthFunctionEnd)
+    ? app.slice(healthFunctionStart, healthFunctionEnd)
     : '';
   if (!healthClient.includes('d=await r.json()') ||
       healthClient.indexOf('d=await r.json()') > healthClient.indexOf('clearTimeout(timer)')) {
@@ -624,8 +641,8 @@ if (!failures.length) {
       !normalizerSource.includes("partNumber: 'غير ظاهر'")) {
     failures.push('Analysis normalizer locale-aware fallback contract is incomplete');
   }
-  if (!index.includes('window.wafferHasUsablePartNumber=hasUsablePartNumber') ||
-      index.includes("!/غير ظاهر|غير متوفر/i.test(String(i.partNumber))")) {
+  if (!clientSource.includes('window.wafferHasUsablePartNumber=hasUsablePartNumber') ||
+      clientSource.includes("!/غير ظاهر|غير متوفر/i.test(String(i.partNumber))")) {
     failures.push('Result evidence UI must use shared part-identity rules instead of locale-specific regexes');
   }
 
@@ -669,13 +686,13 @@ if (!failures.length) {
     failures.push('Malformed upstream/model JSON is not classified explicitly');
   }
 
-  if (!index.includes('signal:analysisController.signal')) {
+  if (!clientSource.includes('signal:analysisController.signal')) {
     failures.push('Analysis request is not abortable from the client');
   }
-  if (!index.includes('{signal:catalogController.signal,runId}')) {
+  if (!clientSource.includes('{signal:catalogController.signal,runId}')) {
     failures.push('Catalog matcher is not bound to the active analysis run');
   }
-  if (!index.includes('event.detail?.wafferRunId') || !index.includes('window.wafferAnalysisRunId')) {
+  if (!clientSource.includes('event.detail?.wafferRunId') || !clientSource.includes('window.wafferAnalysisRunId')) {
     failures.push('Stale catalog event guard is missing');
   }
   if (/Promise\.race\(\[\s*window\.matchWafferParts/.test(index)) {
@@ -710,9 +727,9 @@ if (!failures.length) {
       !matcher.includes("status: error?.code === 'CATALOG_TIMEOUT'")) {
     failures.push('Catalog matcher must propagate hard failures after recording state');
   }
-  if (!index.includes("matchError?.code==='CATALOG_CLIENT_RATE_LIMITED'") ||
-      !index.includes("matchError?.code==='CATALOG_TIMEOUT'") ||
-      !index.includes("'CATALOG_ORIGIN_MISMATCH'")) {
+  if (!clientSource.includes("matchError?.code==='CATALOG_CLIENT_RATE_LIMITED'") ||
+      !clientSource.includes("matchError?.code==='CATALOG_TIMEOUT'") ||
+      !clientSource.includes("'CATALOG_ORIGIN_MISMATCH'")) {
     failures.push('Catalog UI does not distinguish rate-limit, timeout, and security-block failures');
   }
   const matcherPrecondition = matcher.match(/if \(!analysis \|\| !vehicleId \|\| !items\.length\) \{([\s\S]*?)\n    \}\n\n    try/);
@@ -753,7 +770,7 @@ if (!failures.length) {
       }
     }
 
-    const usedKeys = [...index.matchAll(/\bt\(locale,\s*['"]([^'"]+)['"]\)/g)].map(match => match[1]);
+    const usedKeys = [...clientSource.matchAll(/\bt\(locale,\s*['"]([^'"]+)['"]\)/g)].map(match => match[1]);
     for (const key of new Set(usedKeys)) {
       if (!baseKeys.has(key)) failures.push(`UI references missing i18n key "${key}"`);
     }
@@ -1026,7 +1043,9 @@ if (!failures.length) {
   if (sw.includes("cache.addAll(SHELL)).catch(() => undefined)")) {
     failures.push('Service worker must not swallow shell precache failures');
   }
-  if (!sw.includes('/lib/i18n.js') ||
+  if (!sw.includes('/app.js') ||
+      !sw.includes('/app-module.js') ||
+      !sw.includes('/lib/i18n.js') ||
       !sw.includes('/lib/runtime-config.js') ||
       !sw.includes('/lib/total-check.js') ||
       !sw.includes('/lib/image-optimization.js') ||
@@ -1046,13 +1065,19 @@ if (!failures.length) {
     const headerRule = (vercelConfig.headers || []).find(item => item.source === '/(.*)');
     const headerMap = new Map((headerRule?.headers || []).map(item => [item.key, item.value]));
     const csp = headerMap.get('Content-Security-Policy') || '';
+    const scriptDirective = csp
+      .split(';')
+      .map(part => part.trim())
+      .find(part => part.startsWith('script-src')) || '';
     if (!headerRule ||
         !csp.includes("frame-ancestors 'none'") ||
         !csp.includes("object-src 'none'") ||
         !csp.includes("connect-src 'self'") ||
+        scriptDirective !== "script-src 'self'" ||
+        scriptDirective.includes("'unsafe-inline'") ||
         headerMap.get('X-Frame-Options') !== 'DENY' ||
         headerMap.get('X-Content-Type-Options') !== 'nosniff') {
-      failures.push('Vercel browser security headers are incomplete');
+      failures.push('Vercel browser security headers are incomplete or allow inline JavaScript');
     }
   } catch {
     failures.push('vercel.json is invalid JSON or security headers cannot be read');

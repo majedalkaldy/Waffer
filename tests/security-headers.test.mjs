@@ -41,11 +41,16 @@ test('CSP preserves current image compression and catalog image requirements',()
   assert.ok(csp.includes("manifest-src 'self'"));
 });
 
-test('legacy inline UI remains explicitly allowed until scripts/styles are externalized',()=>{
+test('scripts require same-origin files while styles retain temporary inline compatibility',()=>{
   const csp=headers.get('Content-Security-Policy')||'';
-  assert.ok(csp.includes("script-src 'self' 'unsafe-inline'"));
-  assert.ok(csp.includes("style-src 'self' 'unsafe-inline'"));
+  const scriptDirective=csp
+    .split(';')
+    .map(part=>part.trim())
+    .find(part=>part.startsWith('script-src'))||'';
+  assert.equal(scriptDirective,"script-src 'self'");
+  assert.equal(scriptDirective.includes("'unsafe-inline'"),false);
   assert.equal(csp.includes("'unsafe-eval'"),false);
+  assert.ok(csp.includes("style-src 'self' 'unsafe-inline'"));
 });
 
 test('browser metadata headers use restrictive values',()=>{
