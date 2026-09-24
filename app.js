@@ -47,9 +47,11 @@ function invalidateAnalysisRun(){
 function isCurrentAnalysisRun(runId){return runId===analysisRunId;}
 const debugMode=new URLSearchParams(location.search).get('debug')==='1';
 const FIELD_TEST_DRAFT_KEY='waffer-field-test-draft-v1';
+const FIELD_TEST_PREFLIGHT_KEY='waffer-field-test-preflight-v1';
 let fieldTestOfficial={scenarios:[]};
 let fieldTestAutomation={scenarios:[]};
 let fieldTestDraft={version:1,scenarios:[]};
+let fieldTestPreflight=null;
 let fieldTestSelectedId=1;
 let fieldTestSelectedStatus='PENDING';
 let fieldTestDashboardInitialized=false;
@@ -874,7 +876,8 @@ function currentFieldTestDashboard(){
  return window.wafferNormalizeFieldTestDashboard({
    official:fieldTestOfficial,
    automation:fieldTestAutomation,
-   draft:fieldTestDraft
+   draft:fieldTestDraft,
+   preflight:fieldTestPreflight
  });
 }
 function renderFieldTestRequirements(scenarioId,en){
@@ -905,6 +908,238 @@ function renderFieldTestRequirements(scenarioId,en){
  }
  box.appendChild(list);
 }
+function fieldTestPreflightFromStorage(){
+ try{
+   const raw=localStorage.getItem(FIELD_TEST_PREFLIGHT_KEY);
+   if(!raw)return null;
+   const parsed=JSON.parse(raw);
+   return parsed?.format==='waffer-browser-preflight-v1'?parsed:null;
+ }catch{return null;}
+}
+function saveFieldTestPreflight(){
+ try{
+   if(fieldTestPreflight)localStorage.setItem(FIELD_TEST_PREFLIGHT_KEY,JSON.stringify(fieldTestPreflight));
+   else localStorage.removeItem(FIELD_TEST_PREFLIGHT_KEY);
+ }catch{}
+}
+function preflightDirective(csp,name){
+ return String(csp||'')
+   .split(';')
+   .map(part=>part.trim())
+   .find(part=>part.startsWith(name+' '))||'';
+}
+function pushPreflightCheck(checks,id,ok,details,severity='critical'){
+ checks.push({
+   id:String(id),
+   ok:ok===true,
+   severity:severity==='warning'?'warning':'critical',
+   details:String(details||'')
+ });
+}
+async function runFieldTestPreflight(){
+ if(!debugMode)return;
+ const button=document.getElementById('fieldTestPreflightBtn');
+ if(button){
+   button.disabled=true;
+   button.textContent=ui('جارٍ تشغيل فحص ما قبل الاختبار...','Running browser preflight...');
+ }
+ const checks=[];
+ let readiness=null;
+ try{
+   const runtime=window.WAFFER_RUNTIME||{};
+   const limit=Number(runtime.maxUploadBytes);
+   pushPreflightCheck(
+     checks,
+     'runtime-config',
+     Number.isFinite(limit)&&limit>0&&String(runtime.launchPhase)==='field-test',
+     'engine='+String(runtime.engineVersion||'unknown')+' • uploadLimit='+String(limit||0)
+   );
+
+   const optimizerReady=
+     typeof window.wafferShouldOptimizeImage==='function'&&
+     typeof window.wafferFitImageWithinMaxDimension==='function'&&
+     Array.isArray(window.WAFFER_IMAGE_QUALITY_LADDER)&&
+     window.wafferShouldOptimizeImage(limit+1,limit)===true;
+   pushPreflightCheck(
+     checks,
+     'image-optimizer',
+     optimizerReady,
+     optimizerReady?'image optimization helpers loaded':'image optimization helpers unavailable'
+   );
+
+   try{
+     const canvas=document.createElement('canvas');
+     canvas.width=64;
+     canvas.height=64;
+     const ctx=canvas.getContext('2d',{alpha:false});
+     if(!ctx)throw new Error('2D context unavailable');
+     ctx.fillStyle='#fff';
+     ctx.fillRect(0,0,64,64);
+     ctx.fillStyle='#0d7657';
+     ctx.fillRect(8,8,48,48);
+     const encoded=canvas.toDataURL('image/jpeg',0.78);
+     pushPreflightCheck(
+       checks,
+       'canvas-jpeg',
+       encoded.startsWith('data:image/jpeg')&&dataUrlBytes(encoded)>0,
+       'Canvas JPEG encoding available'
+     );
+   }catch(error){
+     pushPreflightCheck(checks,'canvas-jpeg',false,error?.message||'Canvas JPEG encoding failed');
+   }
+
+   try{
+     const key='waffer-preflight-'+Date.now();
+     localStorage.setItem(key,'ok');
+     const storageOk=localStorage.getItem(key)==='ok';
+     localStorage.removeItem(key);
+     pushPreflightCheck(checks,'local-storage',storageOk,storageOk?'localStorage available':'localStorage unavailable');
+   }catch(error){
+     pushPreflightCheck(checks,'local-storage',false,error?.message||'localStorage unavailable');
+   }
+
+   if('serviceWorker' in navigator){
+     try{
+       const registration=await navigator.serviceWorker.getRegistration();
+       const active=Boolean(registration?.active||navigator.serviceWorker.controller);
+       pushPreflightCheck(
+         checks,
+         'service-worker',
+         active,
+         active?'service worker active':'service worker supported but not active yet',
+         'warning'
+       );
+     }catch(error){
+       pushPreflightCheck(checks,'service-worker',false,error?.message||'service worker lookup failed','warning');
+     }
+   }else{
+     pushPreflightCheck(checks,'service-worker',false,'service worker not supported','warning');
+   }
+
+   pushPreflightCheck(
+     checks,
+     'network-online',
+     navigator.onLine!==false,
+     navigator.onLine===false?'browser reports offline':'browser reports online',
+     'warning'
+   );
+
+   try{
+     const response=await fetch('/api/readiness',{cache:'no-store'});
+     readiness=await response.json();
+     pushPreflightCheck(
+       checks,
+       'readiness-endpoint',
+       response.ok&&readiness?.ok===true&&readiness?.service==='waffer-readiness',
+       'status='+String(readiness?.status||response.status)
+     );
+     pushPreflightCheck(
+       checks,
+       'runtime-configuration',
+       readiness?.configured?.analysis===true&&readiness?.configured?.catalog===true,
+       'analysis='+String(readiness?.configured?.analysis)+' • catalog='+String(readiness?.configured?.catalog)
+     );
+     pushPreflightCheck(
+       checks,
+       'field-test-integrity',
+       readiness?.fieldTest?.schemaValid===true&&
+         readiness?.fieldTest?.evidenceValid===true&&
+         readiness?.fieldTest?.integrityValid===true,
+       'schema='+String(readiness?.fieldTest?.schemaValid)+
+         ' • evidence='+String(readiness?.fieldTest?.evidenceValid)+
+         ' • integrity='+String(readiness?.fieldTest?.integrityValid)
+     );
+   }catch(error){
+     pushPreflightCheck(checks,'readiness-endpoint',false,error?.message||'readiness endpoint unavailable');
+   }
+
+   try{
+     const response=await fetch('/index.html',{cache:'no-store'});
+     const csp=response.headers.get('content-security-policy')||'';
+     const scriptDirective=preflightDirective(csp,'script-src');
+     const styleDirective=preflightDirective(csp,'style-src');
+     const strict=
+       scriptDirective==="script-src 'self'"&&
+       styleDirective==="style-src 'self'"&&
+       !csp.includes("'unsafe-inline'")&&
+       !csp.includes("'unsafe-eval'");
+     pushPreflightCheck(
+       checks,
+       'csp',
+       response.ok&&strict,
+       strict?'strict same-origin script/style CSP':'CSP is missing or not strict'
+     );
+   }catch(error){
+     pushPreflightCheck(checks,'csp',false,error?.message||'CSP check failed');
+   }
+ }catch(error){
+   pushPreflightCheck(checks,'preflight-runtime',false,error?.message||'Preflight runtime failure');
+ }
+
+ const criticalFailures=checks.filter(check=>check.severity==='critical'&&!check.ok);
+ const warnings=checks.filter(check=>check.severity==='warning'&&!check.ok);
+ const status=criticalFailures.length?'FAIL':warnings.length?'WARN':'PASS';
+ fieldTestPreflight={
+   format:'waffer-browser-preflight-v1',
+   ranAt:new Date().toISOString(),
+   status,
+   checks,
+   deployment:{
+     environment:readiness?.deployment?.environment||null,
+     commit:readiness?.deployment?.commit||null,
+     engineVersion:readiness?.engineVersion||window.WAFFER_RUNTIME?.engineVersion||null
+   },
+   readiness:{
+     launchPhase:readiness?.launchPhase||window.WAFFER_RUNTIME?.launchPhase||null,
+     configuredAnalysis:readiness?.configured?.analysis===true,
+     configuredCatalog:readiness?.configured?.catalog===true,
+     verifiedPricingReady:readiness?.promotion?.verifiedPricingReady===true,
+     fieldTestPassed:Number(readiness?.fieldTest?.passed)||0,
+     fieldTestPending:Number(readiness?.fieldTest?.pending)||0
+   },
+   note:'Preflight only. This does not mark any field-test scenario PASS.'
+ };
+ saveFieldTestPreflight();
+ renderFieldTestPreflight();
+ if(button){
+   button.disabled=false;
+   button.textContent=ui('تشغيل فحص ما قبل الاختبار','Run browser preflight');
+ }
+}
+function renderFieldTestPreflight(){
+ const box=document.getElementById('fieldTestPreflightResult');
+ if(!box)return;
+ box.replaceChildren();
+ box.classList.remove('is-pass','is-warn','is-fail');
+ const en=window.wafferLocale?.startsWith('en');
+ if(!fieldTestPreflight){
+   const note=document.createElement('span');
+   note.className='preflight-muted';
+   note.textContent=en
+     ? 'Preflight has not been run on this browser yet.'
+     : 'لم يتم تشغيل فحص ما قبل الاختبار على هذا المتصفح بعد.';
+   box.appendChild(note);
+   return;
+ }
+ const status=String(fieldTestPreflight.status||'FAIL').toUpperCase();
+ box.classList.add(status==='PASS'?'is-pass':status==='WARN'?'is-warn':'is-fail');
+ const heading=document.createElement('strong');
+ heading.textContent=(en?'Browser preflight: ':'فحص ما قبل الاختبار: ')+status;
+ box.appendChild(heading);
+ const list=document.createElement('ul');
+ for(const check of Array.isArray(fieldTestPreflight.checks)?fieldTestPreflight.checks:[]){
+   const item=document.createElement('li');
+   item.textContent=(check.ok?'✓ ':'⚠ ')+check.id+' — '+check.details;
+   list.appendChild(item);
+ }
+ box.appendChild(list);
+ const note=document.createElement('div');
+ note.className='preflight-muted';
+ note.textContent=en
+   ? 'Diagnostic only; it never counts as a field-test PASS.'
+   : 'فحص تشخيصي فقط؛ لا يُحتسب أبدًا كـ PASS للاختبار الميداني.';
+ box.appendChild(note);
+}
 function renderFieldTestDashboard(){
  if(!debugMode)return;
  const dashboard=currentFieldTestDashboard();
@@ -914,6 +1149,7 @@ function renderFieldTestDashboard(){
  document.getElementById('fieldTestDashboardTitle').textContent=en?'🧪 Field test dashboard':'🧪 لوحة الاختبار الميداني';
  document.getElementById('fieldTestScenarioLabel').textContent=en?'Scenario':'السيناريو';
  document.getElementById('fieldTestNotesLabel').textContent=en?'Test notes':'ملاحظات الاختبار';
+ document.getElementById('fieldTestPreflightBtn').textContent=en?'Run browser preflight':'تشغيل فحص ما قبل الاختبار';
  document.getElementById('fieldTestCaptureBtn').textContent=en?'Save status with current evidence':'حفظ الحالة مع دليل التحليل الحالي';
  document.getElementById('fieldTestExportBtn').textContent=en?'Export evidence draft':'تصدير مسودة الأدلة';
  document.getElementById('fieldTestClearBtn').textContent=en?'Clear local draft':'مسح المسودة المحلية';
@@ -974,6 +1210,7 @@ function renderFieldTestDashboard(){
    row.append(id,title,badges);
    list.appendChild(row);
  }
+ renderFieldTestPreflight();
 }
 function currentFieldTestCaptureInput(){
  const notes=document.getElementById('fieldTestNotes')?.value||'';
@@ -1086,7 +1323,11 @@ function clearFieldTestDraft(){
  const approved=confirm(ui('مسح مسودة الاختبار المحلية من هذا الجهاز؟','Clear the local field-test draft from this device?'));
  if(!approved)return;
  fieldTestDraft={version:1,scenarios:[]};
- try{localStorage.removeItem(FIELD_TEST_DRAFT_KEY);}catch{}
+ fieldTestPreflight=null;
+ try{
+   localStorage.removeItem(FIELD_TEST_DRAFT_KEY);
+   localStorage.removeItem(FIELD_TEST_PREFLIGHT_KEY);
+ }catch{}
  fieldTestSelectedId=1;
  fieldTestSelectedStatus='PENDING';
  renderFieldTestDashboard();
@@ -1106,6 +1347,7 @@ async function initFieldTestDashboard(){
    fieldTestOfficial=await officialResponse.json();
    fieldTestAutomation=await automationResponse.json();
    fieldTestDraft=fieldTestDraftFromStorage();
+   fieldTestPreflight=fieldTestPreflightFromStorage();
    renderFieldTestDashboard();
  }catch(e){
    fieldTestDashboardInitialized=false;
@@ -1548,6 +1790,7 @@ function bindUiActions(){
     fieldTestPassBtn: () => setFieldTestSelectedStatus('PASS'),
     fieldTestFailBtn: () => setFieldTestSelectedStatus('FAIL'),
     fieldTestPendingBtn: () => setFieldTestSelectedStatus('PENDING'),
+    fieldTestPreflightBtn: () => {void runFieldTestPreflight();},
     fieldTestCaptureBtn: () => captureFieldTestResult(),
     fieldTestExportBtn: () => exportFieldTestDraft(),
     fieldTestClearBtn: () => clearFieldTestDraft(),

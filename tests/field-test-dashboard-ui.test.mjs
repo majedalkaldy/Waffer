@@ -18,6 +18,8 @@ test('field-test dashboard is diagnostic-only and exposes all operator controls'
     'fieldTestNotes',
     'fieldTestRequirements',
     'fieldTestEvidencePreview',
+    'fieldTestPreflightBtn',
+    'fieldTestPreflightResult',
     'fieldTestCaptureBtn',
     'fieldTestExportBtn',
     'fieldTestClearBtn',
@@ -73,4 +75,30 @@ test('dashboard previews current evidence and blocks invalid non-pending capture
 
 test('PWA caches the live field evidence validator module',()=>{
   assert.ok(sw.includes("'/lib/field-test-evidence-validator.js'"));
+});
+
+test('browser preflight is cost-free, diagnostic-only, and exported separately',()=>{
+  assert.ok(app.includes('async function runFieldTestPreflight()'));
+  assert.ok(app.includes("fetch('/api/readiness',{cache:'no-store'})"));
+  assert.ok(app.includes("fetch('/index.html',{cache:'no-store'})"));
+  assert.ok(app.includes("document.createElement('canvas')"));
+  assert.ok(app.includes("navigator.serviceWorker.getRegistration()"));
+  assert.ok(app.includes("preflight:fieldTestPreflight"));
+
+  const start=app.indexOf('async function runFieldTestPreflight()');
+  const end=app.indexOf('function renderFieldTestPreflight()',start);
+  assert.ok(start>=0 && end>start);
+  const source=app.slice(start,end);
+  for(const paidPath of [
+    '/api/analyze',
+    '/api/vin',
+    '/api/vehicles',
+    '/api/products',
+    '/api/articles',
+    '/api/article-criteria',
+    '/api/price-compare'
+  ]){
+    assert.equal(source.includes(paidPath),false,paidPath);
+  }
+  assert.ok(app.includes('Preflight only. This does not mark any field-test scenario PASS.'));
 });
