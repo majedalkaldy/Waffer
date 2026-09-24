@@ -122,5 +122,6 @@ if(savedLocale && Array.from(localeSelect.options).some(o=>o.value===savedLocale
 localeSelect.addEventListener('change',()=>{
  localStorage.setItem('waffer-locale',localeSelect.value);
  applyLocale(localeSelect.value);
+window.dispatchEvent(new CustomEvent('wafferClientModulesReady'));
 });
 applyLocale(localeSelect.value);
