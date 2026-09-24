@@ -536,6 +536,12 @@ if (!failures.length) {
   }
 
   const readinessApi = read('api/readiness.js');
+  if (!readinessApi.includes('manualReviewRequired') ||
+      !readinessApi.includes('publicBetaReady') ||
+      !readinessApi.includes('DEPLOYMENT_PROTECTION_REVIEW_REQUIRED') ||
+      !readinessApi.includes("deploymentProtection: 'NOT_EVALUATED_BY_RUNTIME'")) {
+    failures.push('Readiness endpoint must preserve explicit manual public-beta gates');
+  }
   if (!readinessApi.includes("service: 'waffer-readiness'") ||
       !readinessApi.includes('evidenceValid: fieldTest.evidenceValid') ||
       !readinessApi.includes('integrityValid: fieldTest.integrityValid') ||
