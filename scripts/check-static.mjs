@@ -48,6 +48,7 @@ const required = [
   'docs/LIVE_SMOKE_RESULTS.json',
   'docs/LAUNCH_READINESS.md',
   'docs/MAIN_BRANCH_PROTECTION.md',
+  'docs/PUBLIC_BETA_CHECKLIST.md',
   'lib/total-check.js',
   'tests/field-scenarios-synthetic.test.mjs',
   'lib/image-optimization.js',
@@ -543,6 +544,20 @@ if (!failures.length) {
   }
   if (readinessApi.includes('fetch(')) {
     failures.push('Readiness endpoint must remain cost-free and perform no upstream fetch');
+  }
+
+  const publicBetaChecklist = read('docs/PUBLIC_BETA_CHECKLIST.md');
+  for (const boundary of [
+    'Field-test evidence',
+    'Trusted pricing',
+    'GitHub main protection',
+    'Vercel Deployment Protection',
+    'WAF enforcement review',
+    'Final public smoke'
+  ]) {
+    if (!publicBetaChecklist.includes(boundary)) {
+      failures.push('Public beta checklist is missing boundary: ' + boundary);
+    }
   }
 
   const readinessDoc = read('docs/LAUNCH_READINESS.md');
