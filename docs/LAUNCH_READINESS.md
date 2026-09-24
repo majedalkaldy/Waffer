@@ -17,6 +17,7 @@
 - `launch-gate` يتحقق أيضًا من أدلة `docs/FIELD_TEST_RESULTS.json` الرسمية؛ 10/10 PASS بلا دليل صالح لا تُعد جاهزية للترقية.
 - مسار اعتماد الأدلة أصبح: draft → Validator → Candidate آمن غير قابل للكتابة فوق الملف الرسمي → مراجعة/PR.
 - `/api/readiness` يعطي ملخصًا machine-readable غير مكلف لحالة الأدلة والبوابة والتكوين؛ لا يتصل بـOpenAI أو AutoParts ولا يعرض scenarios/evidence/notes.
+- `/api/readiness` يفصل الآن بين `runtimePromotionReady` و`publicBetaReady`؛ الـruntime لا يستطيع منح موافقة Public Beta بنفسه، ويعيد `manualReviewRequired=true` حتى مراجعة حماية `main` وWAF وDeployment Protection.
 - لوحة `?debug=1` تتضمن Browser Preflight غير مدفوع يفحص Canvas/تحسين الصور وService Worker وCSP وreadiness قبل بدء السيناريوهات، ويُصدّر كبيانات تشخيصية منفصلة لا تُحتسب PASS.
 - لوحة الاختبار تستطيع توليد Fixtures محلية قياسية للسيناريوهات 1–10 لتقليل الاعتماد على ملفات شخصية؛ اختبارات VIN/Front-Rear التي تتطلب المزود تبقى بحاجة إلى VIN حقيقي مدعوم.
 

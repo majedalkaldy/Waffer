@@ -11,6 +11,12 @@ import { hasConfiguredPriceProvider } from '../lib/price-provider.js';
 const require = createRequire(import.meta.url);
 const FIELD_TEST_RESULTS = require('../docs/FIELD_TEST_RESULTS.json');
 
+const MANUAL_REVIEW_BLOCKERS = Object.freeze([
+  'MAIN_BRANCH_PROTECTION_REVIEW_REQUIRED',
+  'WAF_ENFORCEMENT_REVIEW_REQUIRED',
+  'DEPLOYMENT_PROTECTION_REVIEW_REQUIRED'
+]);
+
 function blockerCodes({
   fieldTest,
   pricingProviderConfigured,
@@ -26,7 +32,7 @@ function blockerCodes({
   if (!configured.analysis) blockers.push('ANALYSIS_NOT_CONFIGURED');
   if (!configured.catalog) blockers.push('CATALOG_NOT_CONFIGURED');
 
-  return [...new Set(blockers)];
+  return [...new Set([...blockers, ...MANUAL_REVIEW_BLOCKERS])];
 }
 
 export default async function handler(req, res) {
@@ -75,13 +81,17 @@ export default async function handler(req, res) {
     pricingProviderConfigured &&
     configured.analysis &&
     configured.catalog;
+  const manualReviewRequired = true;
+  const publicBetaReady = runtimePromotionReady && !manualReviewRequired;
+  const manualBlockerCount = MANUAL_REVIEW_BLOCKERS.length;
+  const machineBlockerCount = Math.max(0, knownBlockers.length - manualBlockerCount);
 
   return res.status(200).json({
     ok: true,
     service: 'waffer-readiness',
     engineVersion: RUNTIME_CONFIG.engineVersion,
     launchPhase: RUNTIME_CONFIG.launchPhase,
-    status: runtimePromotionReady ? 'runtime_promotion_ready' : 'not_promotion_ready',
+    status: runtimePromotionReady ? 'runtime_ready_manual_review_required' : 'not_promotion_ready',
     deployment: {
       environment: process.env.VERCEL_ENV || null,
       commit: process.env.VERCEL_GIT_COMMIT_SHA
@@ -110,13 +120,19 @@ export default async function handler(req, res) {
       fieldTestPromotionReady: publicBetaGate.promotionReady,
       verifiedPricingReady: pricingProviderConfigured,
       runtimePromotionReady,
-      blockerCount: knownBlockers.length
+      manualReviewRequired,
+      publicBetaReady,
+      blockerCount: knownBlockers.length,
+      machineBlockerCount,
+      manualBlockerCount
     },
     configured,
     knownBlockers,
     manualChecks: {
       mainBranchProtection: 'NOT_EVALUATED_BY_RUNTIME',
-      wafEnforcement: 'NOT_EVALUATED_BY_RUNTIME'
+      wafEnforcement: 'NOT_EVALUATED_BY_RUNTIME',
+      deploymentProtection: 'NOT_EVALUATED_BY_RUNTIME',
+      note: 'Runtime readiness never authorizes Public Beta without manual release-gate review.'
     },
     timestamp: new Date().toISOString()
   });

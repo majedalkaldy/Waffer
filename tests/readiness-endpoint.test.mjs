@@ -58,6 +58,10 @@ test('readiness v2 summarizes official evidence state without upstream calls or 
     assert.equal(res.body.promotion.fieldTestPromotionReady, false);
     assert.equal(res.body.promotion.verifiedPricingReady, false);
     assert.equal(res.body.promotion.runtimePromotionReady, false);
+    assert.equal(res.body.promotion.manualReviewRequired, true);
+    assert.equal(res.body.promotion.publicBetaReady, false);
+    assert.equal(res.body.promotion.manualBlockerCount, 3);
+    assert.equal(res.body.promotion.machineBlockerCount, 2);
 
     assert.equal(res.body.configured.analysis, true);
     assert.equal(res.body.configured.catalog, true);
@@ -65,7 +69,12 @@ test('readiness v2 summarizes official evidence state without upstream calls or 
 
     assert.ok(res.body.knownBlockers.includes('FIELD_TEST_INCOMPLETE'));
     assert.ok(res.body.knownBlockers.includes('VERIFIED_PRICE_PROVIDER_MISSING'));
+    assert.ok(res.body.knownBlockers.includes('MAIN_BRANCH_PROTECTION_REVIEW_REQUIRED'));
+    assert.ok(res.body.knownBlockers.includes('WAF_ENFORCEMENT_REVIEW_REQUIRED'));
+    assert.ok(res.body.knownBlockers.includes('DEPLOYMENT_PROTECTION_REVIEW_REQUIRED'));
     assert.equal(res.body.knownBlockers.includes('FIELD_TEST_EVIDENCE_INVALID'), false);
+    assert.equal(res.body.manualChecks.deploymentProtection, 'NOT_EVALUATED_BY_RUNTIME');
+    assert.match(res.body.manualChecks.note,/never authorizes Public Beta/i);
     assert.equal(fetchCalls, 0);
 
     const serialized = JSON.stringify(res.body);
@@ -103,6 +112,10 @@ test('readiness v2 reports missing service configuration without network calls',
     assert.equal(res.body.configured.catalog, false);
     assert.ok(res.body.knownBlockers.includes('ANALYSIS_NOT_CONFIGURED'));
     assert.ok(res.body.knownBlockers.includes('CATALOG_NOT_CONFIGURED'));
+    assert.equal(res.body.promotion.publicBetaReady, false);
+    assert.equal(res.body.promotion.manualReviewRequired, true);
+    assert.equal(res.body.promotion.machineBlockerCount, 4);
+    assert.equal(res.body.promotion.manualBlockerCount, 3);
     assert.equal(fetchCalls, 0);
   } finally {
     globalThis.fetch = originalFetch;
@@ -129,4 +142,15 @@ test('readiness v2 allows GET only', async () => {
 
   assert.equal(res.statusCode, 405);
   assert.equal(res.headers.Allow, 'GET');
+});
+
+test('readiness v2 never self-authorizes Public Beta from runtime checks alone', async () => {
+  const source = await import('node:fs').then(fs =>
+    fs.readFileSync(new URL('../api/readiness.js', import.meta.url), 'utf8')
+  );
+
+  assert.ok(source.includes('const manualReviewRequired = true;'));
+  assert.ok(source.includes('const publicBetaReady = runtimePromotionReady && !manualReviewRequired;'));
+  assert.equal(source.includes('publicBetaReady: runtimePromotionReady'), false);
+  assert.ok(source.includes("'DEPLOYMENT_PROTECTION_REVIEW_REQUIRED'"));
 });
