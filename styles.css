@@ -59,6 +59,10 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 .field-test-pass{background:#0d7657}
 .field-test-fail{background:#a63c32}
 #fieldTestNotes{width:100%;resize:vertical;min-height:84px}
+.field-test-requirements{margin-top:10px;padding:10px;border:1px solid #d7e8e1;border-radius:10px;background:#f7fbf9;font-size:12px;line-height:1.6}
+.field-test-requirements strong{display:block;margin-bottom:5px;color:var(--g)}
+.field-test-requirements ul{margin:0;padding-inline-start:20px}
+.field-test-requirements li+li{margin-top:3px}
 .field-test-list{margin-top:12px;display:grid;gap:7px}
 .field-test-row{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;border:1px solid #dde9e5;border-radius:10px;padding:8px;background:#fff}
 .field-test-row-id{font-weight:900;color:var(--g)}
