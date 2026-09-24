@@ -6,7 +6,8 @@ import {
   fieldTestScenarioRequirements,
   createFieldTestEvidence,
   updateFieldTestDraft,
-  buildFieldTestExport
+  buildFieldTestExport,
+  summarizeFieldTestSession
 } from '../lib/field-test-client.js';
 
 const official={
@@ -180,4 +181,34 @@ test('scenario requirement text mirrors the critical Evidence v2 gates',()=>{
   assert.ok(fieldTestScenarioRequirements(8,'en-SA').some(item=>item.includes('axleVerified > 0')));
   assert.ok(fieldTestScenarioRequirements(9,'en-SA').some(item=>item.includes('identifiedParts = 0')));
   assert.ok(fieldTestScenarioRequirements(10,'en-SA').some(item=>item.includes('calculatedTotal')));
+});
+
+
+test('guided session prioritizes failed scenarios before pending scenarios',()=>{
+  const draft={
+    scenarios:[
+      {id:1,status:'PASS'},
+      {id:2,status:'PENDING'},
+      {id:3,status:'FAIL'}
+    ]
+  };
+  const summary=summarizeFieldTestSession({official,automation,draft});
+  assert.equal(summary.nextScenarioId,3);
+  assert.deepEqual(summary.passed,[1]);
+  assert.deepEqual(summary.failed,[3]);
+  assert.deepEqual(summary.pending,[2,4,5,6,7,8,9,10]);
+  assert.equal(summary.completed,2);
+  assert.equal(summary.unresolved,9);
+  assert.equal(summary.allPassed,false);
+});
+
+test('guided session reports completion only when all ten draft scenarios pass',()=>{
+  const draft={
+    scenarios:Array.from({length:10},(_,index)=>({id:index+1,status:'PASS'}))
+  };
+  const summary=summarizeFieldTestSession({official,automation,draft});
+  assert.equal(summary.nextScenarioId,null);
+  assert.equal(summary.completed,10);
+  assert.equal(summary.unresolved,0);
+  assert.equal(summary.allPassed,true);
 });

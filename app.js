@@ -1320,6 +1320,116 @@ async function generateFieldTestFixture(){
    }
  }
 }
+function buildCurrentFieldTestExport(){
+ if(typeof window.wafferBuildFieldTestExport!=='function')return null;
+ return window.wafferBuildFieldTestExport({
+   official:fieldTestOfficial,
+   automation:fieldTestAutomation,
+   draft:fieldTestDraft,
+   preflight:fieldTestPreflight
+ });
+}
+function currentFieldTestDraftValidation(){
+ const data=buildCurrentFieldTestExport();
+ if(!data||typeof window.wafferValidateFieldTestDraft!=='function')return null;
+ return {data,validation:window.wafferValidateFieldTestDraft(data)};
+}
+function currentFieldTestSessionSummary(){
+ if(typeof window.wafferSummarizeFieldTestSession!=='function')return null;
+ return window.wafferSummarizeFieldTestSession({
+   official:fieldTestOfficial,
+   automation:fieldTestAutomation,
+   draft:fieldTestDraft
+ });
+}
+function selectNextFieldTestScenario(){
+ const session=currentFieldTestSessionSummary();
+ if(!session?.nextScenarioId)return;
+ fieldTestSelectedId=session.nextScenarioId;
+ renderFieldTestDashboard();
+}
+function renderFieldTestSessionGuide(){
+ if(!debugMode)return;
+ const en=window.wafferLocale?.startsWith('en');
+ const guide=document.getElementById('fieldTestSessionGuide');
+ const nextButton=document.getElementById('fieldTestNextBtn');
+ const readiness=document.getElementById('fieldTestExportReadiness');
+ const session=currentFieldTestSessionSummary();
+ const draftCheck=currentFieldTestDraftValidation();
+
+ if(guide){
+   guide.classList.remove('is-ready','is-blocked');
+   if(!session){
+     guide.textContent=en?'Guided session summary is unavailable.':'ملخص الجلسة الموجّهة غير متاح.';
+     guide.classList.add('is-blocked');
+   }else if(session.allPassed){
+     guide.textContent=en
+       ? '✓ Local draft has 10/10 PASS. Review export readiness below.'
+       : '✓ المسودة المحلية تحتوي 10/10 PASS. راجع جاهزية التصدير أدناه.';
+     guide.classList.add('is-ready');
+   }else{
+     const next=session.nextScenarioId
+       ? (en?' • next #':' • التالي #')+session.nextScenarioId
+       : '';
+     guide.textContent=(en
+       ? 'Executed '+session.completed+'/10 • unresolved '+session.unresolved
+       : 'تم تنفيذ '+session.completed+'/10 • غير محسوم '+session.unresolved)+next;
+     guide.classList.add('is-blocked');
+   }
+ }
+
+ if(nextButton){
+   nextButton.disabled=!session?.nextScenarioId;
+   nextButton.textContent=session?.nextScenarioId
+     ? (en?'Go to next unresolved scenario #':'الانتقال للسيناريو التالي #')+session.nextScenarioId
+     : (en?'All scenarios resolved':'جميع السيناريوهات محسومة');
+ }
+
+ if(readiness){
+   readiness.replaceChildren();
+   readiness.classList.remove('is-ready','is-blocked');
+   const heading=document.createElement('strong');
+   if(!draftCheck){
+     heading.textContent=en?'Export readiness check unavailable.':'فحص جاهزية التصدير غير متاح.';
+     readiness.classList.add('is-blocked');
+     readiness.appendChild(heading);
+     return;
+   }
+
+   const {validation}=draftCheck;
+   if(validation.promotionCandidate){
+     heading.textContent=en
+       ? '✓ Draft is a 10/10 promotion candidate. Export and review it before updating official results.'
+       : '✓ المسودة مرشحة 10/10 للترقية. صدّرها وراجعها قبل تحديث النتائج الرسمية.';
+     readiness.classList.add('is-ready');
+     readiness.appendChild(heading);
+     return;
+   }
+
+   heading.textContent=en
+     ? 'Draft is not a promotion candidate yet.'
+     : 'المسودة ليست مرشحة للترقية بعد.';
+   readiness.classList.add('is-blocked');
+   readiness.appendChild(heading);
+
+   const details=[];
+   if(session?.failed?.length)details.push((en?'FAIL scenarios: ':'سيناريوهات FAIL: ')+session.failed.join(', '));
+   if(session?.pending?.length)details.push((en?'PENDING scenarios: ':'سيناريوهات PENDING: ')+session.pending.join(', '));
+   for(const error of (validation.errors||[]).slice(0,5))details.push(error);
+   for(const warning of (validation.warnings||[]).slice(0,3))details.push((en?'Warning: ':'تنبيه: ')+warning);
+
+   if(details.length){
+     const list=document.createElement('ul');
+     for(const detail of details){
+       const item=document.createElement('li');
+       item.textContent=detail;
+       list.appendChild(item);
+     }
+     readiness.appendChild(list);
+   }
+ }
+}
+
 function renderFieldTestDashboard(){
  if(!debugMode)return;
  const dashboard=currentFieldTestDashboard();
@@ -1334,6 +1444,7 @@ function renderFieldTestDashboard(){
  document.getElementById('fieldTestCaptureBtn').textContent=en?'Save status with current evidence':'حفظ الحالة مع دليل التحليل الحالي';
  document.getElementById('fieldTestExportBtn').textContent=en?'Export evidence draft':'تصدير مسودة الأدلة';
  document.getElementById('fieldTestClearBtn').textContent=en?'Clear local draft':'مسح المسودة المحلية';
+ document.getElementById('fieldTestNextBtn').textContent=en?'Go to next unresolved scenario':'الانتقال للسيناريو التالي';
  const notes=document.getElementById('fieldTestNotes');
  notes.placeholder=en?'Briefly describe the result or error':'اكتب ملاحظة مختصرة عن النتيجة أو الخطأ';
 
@@ -1392,6 +1503,7 @@ function renderFieldTestDashboard(){
    list.appendChild(row);
  }
  renderFieldTestPreflight();
+ renderFieldTestSessionGuide();
 }
 function currentFieldTestCaptureInput(){
  const notes=document.getElementById('fieldTestNotes')?.value||'';
@@ -1488,15 +1600,34 @@ function captureFieldTestResult(){
  }
  fieldTestDraft=window.wafferUpdateFieldTestDraft(fieldTestDraft,input);
  saveFieldTestDraft();
+ if(input.status==='PASS'){
+   const session=currentFieldTestSessionSummary();
+   if(session?.nextScenarioId)fieldTestSelectedId=session.nextScenarioId;
+ }
  renderFieldTestDashboard();
 }
 function exportFieldTestDraft(){
- if(!debugMode||typeof window.wafferBuildFieldTestExport!=='function')return;
- const data=window.wafferBuildFieldTestExport({
-   official:fieldTestOfficial,
-   automation:fieldTestAutomation,
-   draft:fieldTestDraft
- });
+ if(!debugMode)return;
+ const draftCheck=currentFieldTestDraftValidation();
+ const data=draftCheck?.data||buildCurrentFieldTestExport();
+ if(!data)return;
+ const validation=draftCheck?.validation||null;
+ if(validation&&!validation.promotionCandidate){
+   const en=window.wafferLocale?.startsWith('en');
+   const session=currentFieldTestSessionSummary();
+   const summary=[
+     session?.failed?.length?(en?'FAIL: ':'FAIL: ')+session.failed.join(', '):'',
+     session?.pending?.length?(en?'PENDING: ':'PENDING: ')+session.pending.join(', '):'',
+     ...(validation.errors||[]).slice(0,3)
+   ].filter(Boolean).join('\n• ');
+   const approved=confirm(
+     (en
+       ? 'This draft is not ready for promotion yet. Export it anyway for review?'
+       : 'هذه المسودة غير جاهزة للترقية بعد. هل تريد تصديرها للمراجعة رغم ذلك؟')+
+     (summary?'\n• '+summary:'')
+   );
+   if(!approved)return;
+ }
  downloadJsonFile('waffer-field-test-draft-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json',data);
 }
 function clearFieldTestDraft(){
@@ -1976,6 +2107,7 @@ function bindUiActions(){
     fieldTestCaptureBtn: () => captureFieldTestResult(),
     fieldTestExportBtn: () => exportFieldTestDraft(),
     fieldTestClearBtn: () => clearFieldTestDraft(),
+    fieldTestNextBtn: () => selectNextFieldTestScenario(),
     detailsBtn: () => advanced(),
     workshopBtn: () => messageWorkshop(),
     shareSummaryBtn: () => shareSummary(),
