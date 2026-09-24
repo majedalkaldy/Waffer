@@ -77,6 +77,9 @@ const required = [
   'lib/field-test-client.js',
   'tests/field-test-client.test.mjs',
   'tests/field-test-dashboard-ui.test.mjs',
+  'lib/field-test-evidence-validator.js',
+  'tests/field-test-evidence-validator.test.mjs',
+  'scripts/validate-field-test-draft.mjs',
   'docs/PRICE_PROVIDER_CONTRACT.md',
   'docs/VERCEL_FIREWALL_PLAN.md'
 ];
@@ -397,6 +400,9 @@ if (!failures.length) {
   if (packageJson?.scripts?.gate !== 'node scripts/check-launch-gate.mjs') {
     failures.push('package.json gate script is missing or unexpected');
   }
+  if (packageJson?.scripts?.['validate:field-test-draft'] !== 'node scripts/validate-field-test-draft.mjs') {
+    failures.push('package.json field-test draft validator script is missing or unexpected');
+  }
   if (packageJson?.scripts?.ci !== 'npm run check && npm test && npm run gate') {
     failures.push('package.json ci script must run static checks, tests, and launch gate');
   }
@@ -416,6 +422,24 @@ if (!failures.length) {
     if (!pipelineTest.includes(requiredSignal)) {
       failures.push('Pipeline contract test is missing critical assertion: ' + requiredSignal);
     }
+  }
+
+  const evidenceValidator = read('lib/field-test-evidence-validator.js');
+  const evidenceValidatorCli = read('scripts/validate-field-test-draft.mjs');
+  for (const requiredSignal of [
+    'validateFieldTestDraft',
+    'buildOfficialFieldTestResultsFromDraft',
+    'Scenario 5: PASS requires a live numeric Vehicle ID',
+    'Scenario 9: PASS requires acceptance.identifiedParts = 0',
+    'Scenario 10: PASS requires evidence of a real printed/calculated total mismatch'
+  ]) {
+    if (!evidenceValidator.includes(requiredSignal)) {
+      failures.push('Field-test evidence validator is missing signal: ' + requiredSignal);
+    }
+  }
+  if (!evidenceValidatorCli.includes('validateFieldTestDraft') ||
+      !evidenceValidatorCli.includes('process.exit(result.valid ? 0 : 1)')) {
+    failures.push('Field-test draft CLI validator is incomplete');
   }
 
   const automationCoverage = JSON.parse(read('docs/FIELD_TEST_AUTOMATION.json'));
