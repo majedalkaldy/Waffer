@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   normalizeFieldTestDashboard,
+  fieldTestScenarioRequirements,
   createFieldTestEvidence,
   updateFieldTestDraft,
   buildFieldTestExport
@@ -149,4 +150,26 @@ test('export is explicitly draft-only and includes official and automation conte
   assert.equal(exported.summary.draftPassed,2);
   assert.equal(exported.scenarios.length,10);
   assert.equal(exported.scenarios[1].automation.coverage,'PARTIAL');
+});
+
+
+test('every field-test scenario exposes bilingual PASS evidence requirements',()=>{
+  for(let id=1;id<=10;id+=1){
+    const ar=fieldTestScenarioRequirements(id,'ar-SA');
+    const en=fieldTestScenarioRequirements(id,'en-SA');
+    assert.ok(ar.length>=3,'ar scenario '+id);
+    assert.ok(en.length>=3,'en scenario '+id);
+    assert.equal(ar.some(item=>/[\u0600-\u06FF]/.test(item)),true,'ar scenario '+id);
+    assert.equal(en.some(item=>/[\u0600-\u06FF]/.test(item)),false,'en scenario '+id);
+  }
+  assert.deepEqual(fieldTestScenarioRequirements(99,'ar-SA'),[]);
+});
+
+test('scenario requirement text mirrors the critical Evidence v2 gates',()=>{
+  assert.ok(fieldTestScenarioRequirements(2,'en-SA').some(item=>item.includes('optimized=true')));
+  assert.ok(fieldTestScenarioRequirements(5,'en-SA').some(item=>item.includes('Vehicle ID')));
+  assert.ok(fieldTestScenarioRequirements(7,'en-SA').some(item=>item.includes('skippedItems')));
+  assert.ok(fieldTestScenarioRequirements(8,'en-SA').some(item=>item.includes('axleVerified > 0')));
+  assert.ok(fieldTestScenarioRequirements(9,'en-SA').some(item=>item.includes('identifiedParts = 0')));
+  assert.ok(fieldTestScenarioRequirements(10,'en-SA').some(item=>item.includes('calculatedTotal')));
 });
