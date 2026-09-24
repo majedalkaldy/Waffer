@@ -26,15 +26,27 @@ function analysisEvidence(overrides={}) {
     completedAt:'2026-09-24T09:59:00.000Z',
     engineVersion:'mvp-2026-09',
     commit:'abcdef12',
-    acceptance:{schemaValid:true,identifiedParts:1},
-    upload:{mimeType:'image/jpeg',bytes:1234},
+    acceptance:{schemaValid:true,hasItems:true,hasVin:true,identifiedParts:1},
+    itemSummary:{total:3,part:1,labor:1,service:1,fee:0,nonPart:2},
+    upload:{
+      mimeType:'image/jpeg',
+      optimized:false,
+      originalBytes:1024*1024,
+      uploadBytes:1024*1024
+    },
     vehicle:{
       vehicleId:9445,
       vin:'1HGCM82633A004352',
       manufacturerName:'FORD',
       modelName:'Expedition'
     },
-    catalogState:{status:'COMPLETED',matched:1},
+    catalogState:{
+      status:'COMPLETED',
+      matched:1,
+      skippedItems:2,
+      axleRequested:1,
+      axleVerified:1
+    },
     pricingSummary:null,
     total:'500 SAR',
     calculatedTotal:'500 SAR',
@@ -107,6 +119,98 @@ test('FAIL requires a valid timestamp and descriptive notes',()=>{
   assert.ok(result.errors.some(x=>x.includes('FAIL requires notes')));
 });
 
+
+test('scenario 1 PASS requires JPEG extraction without VIN-derived identity',()=>{
+  const bad=draftWith({
+    1:{
+      status:'PASS',
+      testedAt:'2026-09-24T10:00:00.000Z',
+      evidence:analysisEvidence()
+    }
+  });
+  assert.equal(validateFieldTestDraft(bad).valid,false);
+
+  const good=draftWith({
+    1:{
+      status:'PASS',
+      testedAt:'2026-09-24T10:00:00.000Z',
+      evidence:analysisEvidence({
+        acceptance:{schemaValid:true,hasItems:true,hasVin:false,identifiedParts:1},
+        vehicle:{vehicleId:null,vin:null,manufacturerName:null,modelName:null}
+      })
+    }
+  });
+  assert.equal(validateFieldTestDraft(good).valid,true);
+});
+
+test('scenario 2 PASS requires a real oversized image optimization result',()=>{
+  const bad=draftWith({
+    2:{
+      status:'PASS',
+      testedAt:'2026-09-24T10:00:00.000Z',
+      evidence:analysisEvidence({
+        upload:{mimeType:'image/jpeg',optimized:false,originalBytes:4*1024*1024,uploadBytes:4*1024*1024}
+      })
+    }
+  });
+  assert.equal(validateFieldTestDraft(bad).valid,false);
+
+  const good=draftWith({
+    2:{
+      status:'PASS',
+      testedAt:'2026-09-24T10:00:00.000Z',
+      evidence:analysisEvidence({
+        upload:{mimeType:'image/jpeg',optimized:true,originalBytes:4*1024*1024,uploadBytes:2*1024*1024}
+      })
+    }
+  });
+  assert.equal(validateFieldTestDraft(good).valid,true);
+});
+
+test('scenario 3 PASS requires a PDF within the configured upload limit',()=>{
+  const good=draftWith({
+    3:{
+      status:'PASS',
+      testedAt:'2026-09-24T10:00:00.000Z',
+      evidence:analysisEvidence({
+        upload:{mimeType:'application/pdf',optimized:false,originalBytes:1024*1024,uploadBytes:1024*1024}
+      })
+    }
+  });
+  assert.equal(validateFieldTestDraft(good).valid,true);
+
+  const wrongType=draftWith({
+    3:{
+      status:'PASS',
+      testedAt:'2026-09-24T10:00:00.000Z',
+      evidence:analysisEvidence()
+    }
+  });
+  assert.equal(validateFieldTestDraft(wrongType).valid,false);
+});
+
+test('scenario 7 PASS proves mixed item types and catalog skipping of non-parts',()=>{
+  const good=draftWith({
+    7:{
+      status:'PASS',
+      testedAt:'2026-09-24T10:00:00.000Z',
+      evidence:analysisEvidence()
+    }
+  });
+  assert.equal(validateFieldTestDraft(good).valid,true);
+
+  const notSkipped=draftWith({
+    7:{
+      status:'PASS',
+      testedAt:'2026-09-24T10:00:00.000Z',
+      evidence:analysisEvidence({
+        catalogState:{status:'COMPLETED',matched:1,skippedItems:0,axleRequested:0,axleVerified:0}
+      })
+    }
+  });
+  assert.equal(validateFieldTestDraft(notSkipped).valid,false);
+});
+
 test('scenario 5 PASS requires live Vehicle ID, valid VIN and completed catalog state',()=>{
   const draft=draftWith({
     5:{
@@ -137,6 +241,17 @@ test('scenario 8 PASS requires completed catalog evidence and warns when Front/R
   const result=validateFieldTestDraft(draft);
   assert.equal(result.valid,true);
   assert.ok(result.warnings.some(x=>x.includes('Front/Rear')));
+
+  const missingAxle=draftWith({
+    8:{
+      status:'PASS',
+      testedAt:'2026-09-24T10:00:00.000Z',
+      evidence:analysisEvidence({
+        catalogState:{status:'COMPLETED',matched:1,skippedItems:2,axleRequested:1,axleVerified:0}
+      })
+    }
+  });
+  assert.equal(validateFieldTestDraft(missingAxle).valid,false);
 });
 
 test('scenario 9 PASS requires zero identified parts',()=>{
