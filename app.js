@@ -1201,7 +1201,7 @@ async function buildFieldTestImageFixture(definition){
    const padding=Math.max(0,target-baseBlob.size);
    if(padding)parts.push(new Uint8Array(padding));
  }
- const file=new File(parts,[].concat(definition?.fileName||'waffer-field-test.jpg').join(''),{
+ const file=new File(parts,definition?.fileName||'waffer-field-test.jpg',{
    type:'image/jpeg',
    lastModified:Date.now()
  });
