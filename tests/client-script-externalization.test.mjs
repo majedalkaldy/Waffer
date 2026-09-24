@@ -5,6 +5,7 @@ import fs from 'node:fs';
 const index=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const app=fs.readFileSync(new URL('../app.js',import.meta.url),'utf8');
 const appModule=fs.readFileSync(new URL('../app-module.js',import.meta.url),'utf8');
+const pricingClient=fs.readFileSync(new URL('../lib/pricing-client.js',import.meta.url),'utf8');
 const sw=fs.readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
 test('HTML contains no inline JavaScript or inline event handlers',()=>{
@@ -41,7 +42,8 @@ test('latest trusted-pricing UI logic survives externalization',()=>{
   assert.ok(app.includes('async function refreshVerifiedPricing'));
   assert.ok(app.includes('window.wafferVerifiedMarketPricing'));
   assert.ok(app.includes("fetch('/api/price-compare'"));
-  assert.ok(app.includes("saving.status==='CALCULATED_FROM_VERIFIED_OFFER'"));
+  assert.ok(app.includes('window.wafferSummarizeVerifiedPricing'));
+  assert.ok(pricingClient.includes("data?.saving?.status === 'CALCULATED_FROM_VERIFIED_OFFER'"));
 });
 
 test('module bootstrap remains same-origin and PWA caches both client scripts',()=>{
