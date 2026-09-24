@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   validateFieldTestDraft,
+  validateFieldTestScenarioEvidence,
   validateOfficialFieldTestResults,
   buildOfficialFieldTestResultsFromDraft
 } from '../lib/field-test-evidence-validator.js';
@@ -368,4 +369,33 @@ test('official all-pending results are valid but never promotion-ready',()=>{
   assert.equal(result.valid,true);
   assert.equal(result.promotionCandidate,false);
   assert.deepEqual(result.counts,{passed:0,failed:0,pending:10,expected:10});
+});
+
+
+test('single-scenario validator powers live evidence readiness without a 10-scenario document',()=>{
+  const pending=validateFieldTestScenarioEvidence(baseScenario(2,'PENDING'));
+  assert.equal(pending.valid,true);
+
+  const invalid=validateFieldTestScenarioEvidence({
+    id:2,
+    status:'PASS',
+    testedAt:'2026-09-24T10:00:00.000Z',
+    notes:'',
+    evidence:analysisEvidence({
+      upload:{mimeType:'image/jpeg',optimized:false,originalBytes:4*1024*1024,uploadBytes:4*1024*1024}
+    })
+  });
+  assert.equal(invalid.valid,false);
+  assert.ok(invalid.errors.some(x=>x.includes('optimized = true')));
+
+  const valid=validateFieldTestScenarioEvidence({
+    id:2,
+    status:'PASS',
+    testedAt:'2026-09-24T10:00:00.000Z',
+    notes:'',
+    evidence:analysisEvidence({
+      upload:{mimeType:'image/jpeg',optimized:true,originalBytes:4*1024*1024,uploadBytes:2*1024*1024}
+    })
+  });
+  assert.equal(valid.valid,true);
 });

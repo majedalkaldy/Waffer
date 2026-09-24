@@ -17,6 +17,7 @@ test('field-test dashboard is diagnostic-only and exposes all operator controls'
     'fieldTestPendingBtn',
     'fieldTestNotes',
     'fieldTestRequirements',
+    'fieldTestEvidencePreview',
     'fieldTestCaptureBtn',
     'fieldTestExportBtn',
     'fieldTestClearBtn',
@@ -39,6 +40,7 @@ test('module bootstrap exposes field-test helpers and signals readiness',()=>{
   assert.ok(appModule.includes("from '/lib/field-test-client.js'"));
   assert.ok(appModule.includes('window.wafferNormalizeFieldTestDashboard=normalizeFieldTestDashboard'));
   assert.ok(appModule.includes('window.wafferFieldTestScenarioRequirements=fieldTestScenarioRequirements'));
+  assert.ok(appModule.includes('window.wafferValidateFieldTestScenarioEvidence=validateFieldTestScenarioEvidence'));
   assert.ok(appModule.includes("new CustomEvent('wafferClientModulesReady')"));
   assert.ok(app.includes("window.addEventListener('wafferClientModulesReady'"));
 });
@@ -56,4 +58,19 @@ test('dashboard renders scenario-specific evidence requirements safely',()=>{
   assert.ok(app.includes('window.wafferFieldTestScenarioRequirements'));
   assert.ok(app.includes('item.textContent=requirement'));
   assert.equal(app.includes('fieldTestRequirements.innerHTML'),false);
+});
+
+
+test('dashboard previews current evidence and blocks invalid non-pending captures',()=>{
+  assert.ok(app.includes('function currentFieldTestEvidenceValidation'));
+  assert.ok(app.includes('function renderFieldTestEvidencePreview'));
+  assert.ok(app.includes("document.getElementById('fieldTestEvidencePreview')"));
+  assert.ok(app.includes("input.status!=='PENDING' && preview && !preview.validation.valid"));
+  assert.ok(app.includes('Cannot save this status until the evidence is complete.'));
+  assert.ok(app.includes("fieldTestNotes')?.addEventListener('input'"));
+  assert.ok(app.includes('item.textContent=message.text'));
+});
+
+test('PWA caches the live field evidence validator module',()=>{
+  assert.ok(sw.includes("'/lib/field-test-evidence-validator.js'"));
 });

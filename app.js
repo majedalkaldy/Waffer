@@ -867,6 +867,7 @@ function setFieldTestSelectedStatus(status){
    button.classList.toggle('is-selected',selected);
    button.setAttribute('aria-pressed',selected?'true':'false');
  }
+ if(debugMode)renderFieldTestEvidencePreview();
 }
 function currentFieldTestDashboard(){
  if(typeof window.wafferNormalizeFieldTestDashboard!=='function')return null;
@@ -974,19 +975,13 @@ function renderFieldTestDashboard(){
    list.appendChild(row);
  }
 }
-function selectFieldTestScenario(){
- const select=document.getElementById('fieldTestScenarioSelect');
- fieldTestSelectedId=Number(select?.value)||1;
- renderFieldTestDashboard();
-}
-function captureFieldTestResult(){
- if(!debugMode||typeof window.wafferUpdateFieldTestDraft!=='function')return;
+function currentFieldTestCaptureInput(){
  const notes=document.getElementById('fieldTestNotes')?.value||'';
  const vehicle=window.wafferVehicle||{
    vehicleId:window.wafferVehicleId||null,
    vin:document.getElementById('vin')?.value||null
  };
- fieldTestDraft=window.wafferUpdateFieldTestDraft(fieldTestDraft,{
+ return {
    scenarioId:fieldTestSelectedId,
    status:fieldTestSelectedStatus,
    notes,
@@ -997,7 +992,83 @@ function captureFieldTestResult(){
    upload:window.wafferUploadMeta||null,
    commit:analysis?.deployment?.commit||null,
    engineVersion:analysis?.engineVersion||null
- });
+ };
+}
+function currentFieldTestEvidenceValidation(){
+ if(typeof window.wafferCreateFieldTestEvidence!=='function'||
+    typeof window.wafferValidateFieldTestScenarioEvidence!=='function'){
+   return null;
+ }
+ const entry=window.wafferCreateFieldTestEvidence(currentFieldTestCaptureInput());
+ const validation=window.wafferValidateFieldTestScenarioEvidence(entry);
+ return {entry,validation};
+}
+function renderFieldTestEvidencePreview(){
+ if(!debugMode)return;
+ const box=document.getElementById('fieldTestEvidencePreview');
+ if(!box)return;
+ box.replaceChildren();
+ box.classList.remove('is-valid','is-invalid','is-pending');
+ const en=window.wafferLocale?.startsWith('en');
+ const result=currentFieldTestEvidenceValidation();
+ const heading=document.createElement('strong');
+ if(!result){
+   heading.textContent=en?'Current evidence check unavailable':'فحص الدليل الحالي غير متاح';
+   box.classList.add('is-pending');
+   box.appendChild(heading);
+   return;
+ }
+ const {validation}=result;
+ const pending=fieldTestSelectedStatus==='PENDING';
+ box.classList.add(pending?'is-pending':validation.valid?'is-valid':'is-invalid');
+ heading.textContent=pending
+   ? (en?'Current capture: PENDING does not require evidence':'الدليل الحالي: حالة PENDING لا تتطلب دليلاً')
+   : validation.valid
+     ? (en?'Current capture: evidence is valid for '+fieldTestSelectedStatus:'الدليل الحالي: صالح لحالة '+fieldTestSelectedStatus)
+     : (en?'Current capture: missing required evidence':'الدليل الحالي: توجد متطلبات ناقصة');
+ box.appendChild(heading);
+ const messages=[
+   ...(validation.errors||[]).map(message=>({type:'error',text:message})),
+   ...(validation.warnings||[]).map(message=>({type:'warning',text:message}))
+ ];
+ if(!messages.length&&!pending){
+   const ok=document.createElement('div');
+   ok.className='field-test-preview-ok';
+   ok.textContent=en?'✓ Ready to save in the local draft.':'✓ جاهز للحفظ في المسودة المحلية.';
+   box.appendChild(ok);
+   return;
+ }
+ if(messages.length){
+   const list=document.createElement('ul');
+   for(const message of messages){
+     const item=document.createElement('li');
+     item.className=message.type==='error'?'field-test-preview-error':'field-test-preview-warning';
+     item.textContent=message.text;
+     list.appendChild(item);
+   }
+   box.appendChild(list);
+ }
+}
+function selectFieldTestScenario(){
+ const select=document.getElementById('fieldTestScenarioSelect');
+ fieldTestSelectedId=Number(select?.value)||1;
+ renderFieldTestDashboard();
+}
+function captureFieldTestResult(){
+ if(!debugMode||typeof window.wafferUpdateFieldTestDraft!=='function')return;
+ const input=currentFieldTestCaptureInput();
+ const preview=currentFieldTestEvidenceValidation();
+ if(input.status!=='PENDING' && preview && !preview.validation.valid){
+   renderFieldTestEvidencePreview();
+   const en=window.wafferLocale?.startsWith('en');
+   const details=(preview.validation.errors||[]).slice(0,3).join('\n• ');
+   alert(
+     (en?'Cannot save this status until the evidence is complete.':'لا يمكن حفظ هذه الحالة حتى يكتمل الدليل.')+
+     (details?'\n• '+details:'')
+   );
+   return;
+ }
+ fieldTestDraft=window.wafferUpdateFieldTestDraft(fieldTestDraft,input);
  saveFieldTestDraft();
  renderFieldTestDashboard();
 }
@@ -1493,5 +1564,6 @@ function bindUiActions(){
     document.getElementById(id)?.addEventListener('click', handler);
   }
   document.getElementById('fieldTestScenarioSelect')?.addEventListener('change',selectFieldTestScenario);
+  document.getElementById('fieldTestNotes')?.addEventListener('input',()=>renderFieldTestEvidencePreview());
 }
 bindUiActions();
