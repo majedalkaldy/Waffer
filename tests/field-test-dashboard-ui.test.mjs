@@ -11,6 +11,9 @@ test('field-test dashboard is diagnostic-only and exposes all operator controls'
   assert.match(index,/id="fieldTestDashboard"[^>]*class="[^"]*diagnostic[^"]*field-test-dashboard/);
   for(const id of [
     'fieldTestProgress',
+    'fieldTestSessionGuide',
+    'fieldTestNextBtn',
+    'fieldTestExportReadiness',
     'fieldTestScenarioSelect',
     'fieldTestPassBtn',
     'fieldTestFailBtn',
@@ -44,7 +47,9 @@ test('module bootstrap exposes field-test helpers and signals readiness',()=>{
   assert.ok(appModule.includes("from '/lib/field-test-client.js'"));
   assert.ok(appModule.includes('window.wafferNormalizeFieldTestDashboard=normalizeFieldTestDashboard'));
   assert.ok(appModule.includes('window.wafferFieldTestScenarioRequirements=fieldTestScenarioRequirements'));
+  assert.ok(appModule.includes('window.wafferSummarizeFieldTestSession=summarizeFieldTestSession'));
   assert.ok(appModule.includes('window.wafferValidateFieldTestScenarioEvidence=validateFieldTestScenarioEvidence'));
+  assert.ok(appModule.includes('window.wafferValidateFieldTestDraft=validateFieldTestDraft'));
   assert.ok(appModule.includes("new CustomEvent('wafferClientModulesReady')"));
   assert.ok(app.includes("window.addEventListener('wafferClientModulesReady'"));
 });
@@ -126,4 +131,28 @@ test('module bootstrap exposes and PWA caches fixture helpers',()=>{
   assert.ok(appModule.includes('window.wafferFieldTestFixtureDefinition=fieldTestFixtureDefinition'));
   assert.ok(appModule.includes('window.wafferBuildFieldTestPdfBytes=buildFieldTestPdfBytes'));
   assert.ok(sw.includes("'/lib/field-test-fixtures.js'"));
+});
+
+
+test('guided field-test session shows next scenario and validates full draft before export',()=>{
+  assert.ok(app.includes('function renderFieldTestSessionGuide()'));
+  assert.ok(app.includes('function selectNextFieldTestScenario()'));
+  assert.ok(app.includes('window.wafferSummarizeFieldTestSession'));
+  assert.ok(app.includes('window.wafferValidateFieldTestDraft'));
+  assert.ok(app.includes("fieldTestNextBtn: () => selectNextFieldTestScenario()"));
+  assert.ok(app.includes('preflight:fieldTestPreflight'));
+  assert.ok(app.includes('validation.promotionCandidate'));
+  assert.ok(app.includes('This draft is not ready for promotion yet.'));
+  assert.ok(app.includes("if(input.status==='PASS')"));
+});
+
+test('guided session export remains draft-only and never writes official results',()=>{
+  const start=app.indexOf('function exportFieldTestDraft()');
+  const end=app.indexOf('function clearFieldTestDraft()',start);
+  assert.ok(start>=0 && end>start);
+  const source=app.slice(start,end);
+  assert.ok(source.includes('downloadJsonFile'));
+  assert.equal(source.includes("fetch('/docs/FIELD_TEST_RESULTS.json'"),false);
+  assert.equal(source.includes("method:'POST'"),false);
+  assert.equal(source.includes("method:'PUT'"),false);
 });
