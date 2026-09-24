@@ -509,6 +509,17 @@ if (!failures.length) {
     failures.push('Live smoke evidence must truthfully record unprotected main branch');
   }
 
+  const launchReadinessSource = read('lib/launch-readiness.js');
+  const fieldEvidenceValidatorSource = read('lib/field-test-evidence-validator.js');
+  if (!launchReadinessSource.includes("from './field-test-evidence-validator.js'") ||
+      !launchReadinessSource.includes('validateOfficialFieldTestResults({ scenarios: normalized })') ||
+      !launchReadinessSource.includes('fieldTest.integrityValid')) {
+    failures.push('Launch gate is not enforcing official field-test evidence integrity');
+  }
+  if (!fieldEvidenceValidatorSource.includes('export function validateOfficialFieldTestResults')) {
+    failures.push('Official field-test evidence validator export is missing');
+  }
+
   const launchResults = JSON.parse(read('docs/FIELD_TEST_RESULTS.json'));
   if (!Array.isArray(launchResults?.scenarios) || launchResults.scenarios.length !== 10) {
     failures.push('Field-test results tracker must contain exactly ten scenarios');

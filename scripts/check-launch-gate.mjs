@@ -17,6 +17,9 @@ console.log(
     phase: gate.phase,
     allowed: gate.allowed,
     promotionReady: gate.promotionReady,
+    schemaValid: gate.fieldTest.schemaValid,
+    evidenceValid: gate.fieldTest.evidenceValid,
+    integrityValid: gate.fieldTest.integrityValid,
     passed: gate.fieldTest.passed,
     failed: gate.fieldTest.failed,
     pending: gate.fieldTest.pending,
@@ -31,5 +34,5 @@ if (!gate.allowed) {
 }
 
 if (!gate.promotionReady) {
-  console.log('Promotion remains blocked until all field-test scenarios pass.');
+  console.log('Promotion remains blocked until all field-test scenarios pass with valid evidence.');
 }
