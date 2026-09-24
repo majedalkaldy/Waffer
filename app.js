@@ -1353,6 +1353,7 @@ function renderFieldTestSessionGuide(){
  const en=window.wafferLocale?.startsWith('en');
  const guide=document.getElementById('fieldTestSessionGuide');
  const nextButton=document.getElementById('fieldTestNextBtn');
+ const candidateButton=document.getElementById('fieldTestCandidateBtn');
  const readiness=document.getElementById('fieldTestExportReadiness');
  const session=currentFieldTestSessionSummary();
  const draftCheck=currentFieldTestDraftValidation();
@@ -1383,6 +1384,13 @@ function renderFieldTestSessionGuide(){
    nextButton.textContent=session?.nextScenarioId
      ? (en?'Go to next unresolved scenario #':'الانتقال للسيناريو التالي #')+session.nextScenarioId
      : (en?'All scenarios resolved':'جميع السيناريوهات محسومة');
+ }
+
+ if(candidateButton){
+   candidateButton.disabled=!draftCheck?.validation?.promotionCandidate;
+   candidateButton.textContent=draftCheck?.validation?.promotionCandidate
+     ? (en?'Export review candidate':'تصدير Candidate للمراجعة')
+     : (en?'Candidate requires valid 10/10 PASS':'Candidate يتطلب 10/10 PASS صالح');
  }
 
  if(readiness){
@@ -1443,6 +1451,7 @@ function renderFieldTestDashboard(){
  document.getElementById('fieldTestFixtureBtn').textContent=en?'Prepare fixture for selected scenario':'تجهيز Fixture للسيناريو الحالي';
  document.getElementById('fieldTestCaptureBtn').textContent=en?'Save status with current evidence':'حفظ الحالة مع دليل التحليل الحالي';
  document.getElementById('fieldTestExportBtn').textContent=en?'Export evidence draft':'تصدير مسودة الأدلة';
+ document.getElementById('fieldTestCandidateBtn').textContent=en?'Export review candidate':'تصدير Candidate للمراجعة';
  document.getElementById('fieldTestClearBtn').textContent=en?'Clear local draft':'مسح المسودة المحلية';
  document.getElementById('fieldTestNextBtn').textContent=en?'Go to next unresolved scenario':'الانتقال للسيناريو التالي';
  const notes=document.getElementById('fieldTestNotes');
@@ -1630,6 +1639,28 @@ function exportFieldTestDraft(){
  }
  downloadJsonFile('waffer-field-test-draft-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json',data);
 }
+function exportFieldTestCandidate(){
+ if(!debugMode||
+    typeof window.wafferBuildOfficialFieldTestResultsFromDraft!=='function')return;
+ const draftCheck=currentFieldTestDraftValidation();
+ const en=window.wafferLocale?.startsWith('en');
+ if(!draftCheck?.validation?.promotionCandidate){
+   renderFieldTestSessionGuide();
+   alert(en
+     ? 'Candidate export requires a valid 10/10 PASS draft with complete evidence.'
+     : 'تصدير Candidate يتطلب مسودة 10/10 PASS صالحة مع اكتمال الأدلة.');
+   return;
+ }
+ const candidate=window.wafferBuildOfficialFieldTestResultsFromDraft(
+   draftCheck.data,
+   fieldTestOfficial
+ );
+ downloadJsonFile(
+   'waffer-field-test-candidate-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json',
+   candidate
+ );
+}
+
 function clearFieldTestDraft(){
  if(!debugMode)return;
  const approved=confirm(ui('مسح مسودة الاختبار المحلية من هذا الجهاز؟','Clear the local field-test draft from this device?'));
@@ -2106,6 +2137,7 @@ function bindUiActions(){
     fieldTestFixtureBtn: () => {void generateFieldTestFixture();},
     fieldTestCaptureBtn: () => captureFieldTestResult(),
     fieldTestExportBtn: () => exportFieldTestDraft(),
+    fieldTestCandidateBtn: () => exportFieldTestCandidate(),
     fieldTestClearBtn: () => clearFieldTestDraft(),
     fieldTestNextBtn: () => selectNextFieldTestScenario(),
     detailsBtn: () => advanced(),
