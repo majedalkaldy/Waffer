@@ -521,7 +521,7 @@ if (!failures.length) {
     failures.push('Official field-test evidence validator export is missing');
   }
   if (!fieldTestClientSource.includes('itemSummary') ||
-      !fieldTestClientSource.includes('summary.nonPart = summary.labor + summary.service + summary.fee')) {
+      !fieldTestClientSource.includes('itemSummary.nonPart = itemSummary.labor + itemSummary.service + itemSummary.fee')) {
     failures.push('Field-test evidence capture is missing item-type summary');
   }
   for (const requiredEvidenceRule of [
