@@ -137,8 +137,35 @@ if (!failures.length) {
   }
   if (!fieldTestClient.includes('normalizeFieldTestDashboard') ||
       !fieldTestClient.includes('buildFieldTestExport') ||
+      !fieldTestClient.includes('preflight: preflight') ||
       !fieldTestClient.includes('Draft evidence only')) {
     failures.push('Field-test client contract is incomplete');
+  }
+  if (!index.includes('id="fieldTestPreflightBtn"') ||
+      !index.includes('id="fieldTestPreflightResult"') ||
+      !appSource.includes('async function runFieldTestPreflight()') ||
+      !appSource.includes("fetch('/api/readiness',{cache:'no-store'})") ||
+      !appSource.includes("fetch('/index.html',{cache:'no-store'})") ||
+      !appSource.includes('Preflight only. This does not mark any field-test scenario PASS.')) {
+    failures.push('Cost-free browser field-test preflight wiring is incomplete');
+  }
+  const preflightStart = appSource.indexOf('async function runFieldTestPreflight()');
+  const preflightEnd = appSource.indexOf('function renderFieldTestPreflight()', preflightStart);
+  const preflightSource = preflightStart >= 0 && preflightEnd > preflightStart
+    ? appSource.slice(preflightStart, preflightEnd)
+    : '';
+  for (const paidPath of [
+    '/api/analyze',
+    '/api/vin',
+    '/api/vehicles',
+    '/api/products',
+    '/api/articles',
+    '/api/article-criteria',
+    '/api/price-compare'
+  ]) {
+    if (preflightSource.includes(paidPath)) {
+      failures.push('Browser preflight must not call paid/upstream endpoint: ' + paidPath);
+    }
   }
   const app = read('app.js');
   const appModule = read('app-module.js');
