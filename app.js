@@ -876,6 +876,34 @@ function currentFieldTestDashboard(){
    draft:fieldTestDraft
  });
 }
+function renderFieldTestRequirements(scenarioId,en){
+ const box=document.getElementById('fieldTestRequirements');
+ if(!box)return;
+ box.replaceChildren();
+ const heading=document.createElement('strong');
+ heading.textContent=en?'PASS evidence required':'متطلبات دليل PASS';
+ box.appendChild(heading);
+ const requirements=typeof window.wafferFieldTestScenarioRequirements==='function'
+   ? window.wafferFieldTestScenarioRequirements(
+       scenarioId,
+       window.wafferLocale||'ar-SA'
+     )
+   : [];
+ if(!requirements.length){
+   const note=document.createElement('div');
+   note.className='note';
+   note.textContent=en?'No scenario-specific requirements are available.':'لا توجد متطلبات خاصة متاحة لهذا السيناريو.';
+   box.appendChild(note);
+   return;
+ }
+ const list=document.createElement('ul');
+ for(const requirement of requirements){
+   const item=document.createElement('li');
+   item.textContent=requirement;
+   list.appendChild(item);
+ }
+ box.appendChild(list);
+}
 function renderFieldTestDashboard(){
  if(!debugMode)return;
  const dashboard=currentFieldTestDashboard();
@@ -918,6 +946,7 @@ function renderFieldTestDashboard(){
      ' • '+(en?'Automation: ':'التغطية الآلية: ')+selected.coverage+
      ' • '+evidenceText+
      (selected.testedAt?' • '+selected.testedAt:'');
+   renderFieldTestRequirements(selected.id,en);
  }
  setFieldTestSelectedStatus(fieldTestSelectedStatus);
 

@@ -16,6 +16,7 @@ test('field-test dashboard is diagnostic-only and exposes all operator controls'
     'fieldTestFailBtn',
     'fieldTestPendingBtn',
     'fieldTestNotes',
+    'fieldTestRequirements',
     'fieldTestCaptureBtn',
     'fieldTestExportBtn',
     'fieldTestClearBtn',
@@ -37,6 +38,7 @@ test('dashboard initializes only in debug mode and reads official metadata witho
 test('module bootstrap exposes field-test helpers and signals readiness',()=>{
   assert.ok(appModule.includes("from '/lib/field-test-client.js'"));
   assert.ok(appModule.includes('window.wafferNormalizeFieldTestDashboard=normalizeFieldTestDashboard'));
+  assert.ok(appModule.includes('window.wafferFieldTestScenarioRequirements=fieldTestScenarioRequirements'));
   assert.ok(appModule.includes("new CustomEvent('wafferClientModulesReady')"));
   assert.ok(app.includes("window.addEventListener('wafferClientModulesReady'"));
 });
@@ -45,4 +47,13 @@ test('PWA caches field-test helper but not mutable result evidence files',()=>{
   assert.ok(sw.includes("'/lib/field-test-client.js'"));
   assert.equal(sw.includes("'/docs/FIELD_TEST_RESULTS.json'"),false);
   assert.equal(sw.includes("'/docs/FIELD_TEST_AUTOMATION.json'"),false);
+});
+
+
+test('dashboard renders scenario-specific evidence requirements safely',()=>{
+  assert.ok(app.includes('function renderFieldTestRequirements'));
+  assert.ok(app.includes("document.getElementById('fieldTestRequirements')"));
+  assert.ok(app.includes('window.wafferFieldTestScenarioRequirements'));
+  assert.ok(app.includes('item.textContent=requirement'));
+  assert.equal(app.includes('fieldTestRequirements.innerHTML'),false);
 });

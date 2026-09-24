@@ -16,7 +16,8 @@ import {
   normalizeFieldTestDashboard,
   createFieldTestEvidence,
   updateFieldTestDraft,
-  buildFieldTestExport
+  buildFieldTestExport,
+  fieldTestScenarioRequirements
 } from '/lib/field-test-client.js';
 window.WAFFER_RUNTIME=RUNTIME_CONFIG;
 window.wafferCompareDisplayedTotals=compareDisplayedTotals;
@@ -28,6 +29,7 @@ window.wafferNormalizeFieldTestDashboard=normalizeFieldTestDashboard;
 window.wafferCreateFieldTestEvidence=createFieldTestEvidence;
 window.wafferUpdateFieldTestDraft=updateFieldTestDraft;
 window.wafferBuildFieldTestExport=buildFieldTestExport;
+window.wafferFieldTestScenarioRequirements=fieldTestScenarioRequirements;
 window.wafferFitImageWithinMaxDimension=fitWithinMaxDimension;
 window.wafferShouldOptimizeImage=shouldOptimizeImage;
 window.WAFFER_IMAGE_QUALITY_LADDER=[...JPEG_QUALITY_LADDER];
