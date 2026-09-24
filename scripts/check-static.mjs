@@ -19,6 +19,7 @@ const required = [
   'api/vin.js',
   'api/price-compare.js',
   'api/health.js',
+  'api/readiness.js',
   'api/self-test.js',
   'lib/market-config.js',
   'lib/runtime-config.js',
@@ -63,6 +64,7 @@ const required = [
   'tests/catalog-guard-integration.test.mjs',
   'tests/catalog-failure-propagation.test.mjs',
   'tests/security-headers.test.mjs',
+  'tests/readiness-endpoint.test.mjs',
   'tests/client-script-externalization.test.mjs',
   'tests/style-externalization.test.mjs',
   'tests/runtime-resilience.test.mjs',
@@ -385,6 +387,7 @@ if (!failures.length) {
     'api/article-criteria.js': 'GET',
     'api/vin.js': 'GET',
     'api/health.js': 'GET',
+    'api/readiness.js': 'GET',
     'api/self-test.js': 'GET'
   };
   for (const [path, method] of Object.entries(apiContracts)) {
@@ -474,6 +477,17 @@ if (!failures.length) {
     if (!priceProviderDoc.includes(requiredPricingBoundary)) {
       failures.push('Price provider contract document is missing boundary: ' + requiredPricingBoundary);
     }
+  }
+
+  const readinessApi = read('api/readiness.js');
+  if (!readinessApi.includes("service: 'waffer-readiness'") ||
+      !readinessApi.includes('evidenceValid: fieldTest.evidenceValid') ||
+      !readinessApi.includes('integrityValid: fieldTest.integrityValid') ||
+      !readinessApi.includes("mainBranchProtection: 'NOT_EVALUATED_BY_RUNTIME'")) {
+    failures.push('Readiness endpoint v2 contract is incomplete');
+  }
+  if (readinessApi.includes('fetch(')) {
+    failures.push('Readiness endpoint must remain cost-free and perform no upstream fetch');
   }
 
   const readinessDoc = read('docs/LAUNCH_READINESS.md');
