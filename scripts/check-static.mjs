@@ -77,8 +77,10 @@ const required = [
   'lib/pricing-client.js',
   'tests/pricing-client.test.mjs',
   'lib/field-test-client.js',
+  'lib/field-test-fixtures.js',
   'tests/field-test-client.test.mjs',
   'tests/field-test-dashboard-ui.test.mjs',
+  'tests/field-test-fixtures.test.mjs',
   'lib/field-test-evidence-validator.js',
   'tests/field-test-evidence-validator.test.mjs',
   'scripts/validate-field-test-draft.mjs',
@@ -149,6 +151,14 @@ if (!failures.length) {
       !appSource.includes('Preflight only. This does not mark any field-test scenario PASS.')) {
     failures.push('Cost-free browser field-test preflight wiring is incomplete');
   }
+  if (!index.includes('id="fieldTestFixtureBtn"') ||
+      !index.includes('id="fieldTestFixtureResult"') ||
+      !appSource.includes('async function generateFieldTestFixture()') ||
+      !appModuleSource.includes("from '/lib/field-test-fixtures.js'") ||
+      !appModuleSource.includes('window.wafferFieldTestFixtureDefinition=fieldTestFixtureDefinition') ||
+      !read('sw.js').includes("'/lib/field-test-fixtures.js'")) {
+    failures.push('Debug field-test fixture generator wiring is incomplete');
+  }
   const preflightStart = appSource.indexOf('async function runFieldTestPreflight()');
   const preflightEnd = appSource.indexOf('function renderFieldTestPreflight()', preflightStart);
   const preflightSource = preflightStart >= 0 && preflightEnd > preflightStart
@@ -165,6 +175,24 @@ if (!failures.length) {
   ]) {
     if (preflightSource.includes(paidPath)) {
       failures.push('Browser preflight must not call paid/upstream endpoint: ' + paidPath);
+    }
+  }
+  const fixtureStart = appSource.indexOf('async function generateFieldTestFixture()');
+  const fixtureEnd = appSource.indexOf('function renderFieldTestDashboard()', fixtureStart);
+  const fixtureSource = fixtureStart >= 0 && fixtureEnd > fixtureStart
+    ? appSource.slice(fixtureStart, fixtureEnd)
+    : '';
+  for (const paidPath of [
+    '/api/analyze',
+    '/api/vin',
+    '/api/vehicles',
+    '/api/products',
+    '/api/articles',
+    '/api/article-criteria',
+    '/api/price-compare'
+  ]) {
+    if (fixtureSource.includes(paidPath)) {
+      failures.push('Field-test fixture generator must not call paid/upstream endpoint: ' + paidPath);
     }
   }
   const app = read('app.js');
