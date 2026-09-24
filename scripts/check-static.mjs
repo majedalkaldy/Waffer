@@ -74,6 +74,9 @@ const required = [
   'tests/price-provider-contract.test.mjs',
   'lib/pricing-client.js',
   'tests/pricing-client.test.mjs',
+  'lib/field-test-client.js',
+  'tests/field-test-client.test.mjs',
+  'tests/field-test-dashboard-ui.test.mjs',
   'docs/PRICE_PROVIDER_CONTRACT.md',
   'docs/VERCEL_FIREWALL_PLAN.md'
 ];
@@ -98,6 +101,7 @@ if (!failures.length) {
   const index = read('index.html');
   const appSource = read('app.js');
   const appModuleSource = read('app-module.js');
+  const fieldTestClient = read('lib/field-test-client.js');
   const styles = read('styles.css');
   if (!index.includes('<link rel="stylesheet" href="/styles.css">')) {
     failures.push('HTML does not load the external stylesheet');
@@ -115,6 +119,19 @@ if (!failures.length) {
   }
   if (!styles.includes('.system-status-ok') || !styles.includes('.catalog-match-card')) {
     failures.push('External stylesheet is missing migrated dynamic presentation rules');
+  }
+  if (!index.includes('id="fieldTestDashboard"') ||
+      !index.includes('field-test-dashboard') ||
+      !appSource.includes("if(!debugMode||fieldTestDashboardInitialized)return;") ||
+      !appSource.includes("fetch('/docs/FIELD_TEST_RESULTS.json',{cache:'no-store'})") ||
+      !appSource.includes('FIELD_TEST_DRAFT_KEY') ||
+      !appModuleSource.includes("from '/lib/field-test-client.js'")) {
+    failures.push('Debug field-test dashboard wiring is incomplete');
+  }
+  if (!fieldTestClient.includes('normalizeFieldTestDashboard') ||
+      !fieldTestClient.includes('buildFieldTestExport') ||
+      !fieldTestClient.includes('Draft evidence only')) {
+    failures.push('Field-test client contract is incomplete');
   }
   const app = read('app.js');
   const appModule = read('app-module.js');
@@ -1073,8 +1090,9 @@ if (!failures.length) {
       !sw.includes('/lib/total-check.js') ||
       !sw.includes('/lib/image-optimization.js') ||
       !sw.includes('/lib/identity.js') ||
-      !sw.includes('/lib/pricing-client.js')) {
-    failures.push('PWA shell missing localization/runtime/total-check/image-optimization/identity/pricing modules');
+      !sw.includes('/lib/pricing-client.js') ||
+      !sw.includes('/lib/field-test-client.js')) {
+    failures.push('PWA shell missing localization/runtime/total-check/image-optimization/identity/pricing/field-test modules');
   }
 
   try {

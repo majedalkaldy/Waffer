@@ -12,12 +12,22 @@ import {
   buildPriceComparePayload,
   summarizeVerifiedPricing
 } from '/lib/pricing-client.js';
+import {
+  normalizeFieldTestDashboard,
+  createFieldTestEvidence,
+  updateFieldTestDraft,
+  buildFieldTestExport
+} from '/lib/field-test-client.js';
 window.WAFFER_RUNTIME=RUNTIME_CONFIG;
 window.wafferCompareDisplayedTotals=compareDisplayedTotals;
 window.wafferHasUsablePartNumber=hasUsablePartNumber;
 window.wafferSelectPriceableItems=selectPriceableItems;
 window.wafferBuildPriceComparePayload=buildPriceComparePayload;
 window.wafferSummarizeVerifiedPricing=summarizeVerifiedPricing;
+window.wafferNormalizeFieldTestDashboard=normalizeFieldTestDashboard;
+window.wafferCreateFieldTestEvidence=createFieldTestEvidence;
+window.wafferUpdateFieldTestDraft=updateFieldTestDraft;
+window.wafferBuildFieldTestExport=buildFieldTestExport;
 window.wafferFitImageWithinMaxDimension=fitWithinMaxDimension;
 window.wafferShouldOptimizeImage=shouldOptimizeImage;
 window.WAFFER_IMAGE_QUALITY_LADDER=[...JPEG_QUALITY_LADDER];
@@ -102,6 +112,7 @@ function applyLocale(locale){
  if(!window.wafferPartMatches)document.getElementById('priceReadiness').textContent=t(locale,'priceWaiting');
  document.getElementById('workshopFollowupBtn').textContent=t(locale,'workshopFollowup');
  if(typeof window.wafferRenderPricingSummary==='function')window.wafferRenderPricingSummary();
+ if(typeof window.wafferRenderFieldTestDashboard==='function')window.wafferRenderFieldTestDashboard();
  const debugExport=document.getElementById('debugExportBtn');
  if(debugExport)debugExport.textContent=locale.startsWith('en')?'Export test report':'تصدير تقرير الاختبار';
  window.wafferLocale=locale;
@@ -112,5 +123,6 @@ if(savedLocale && Array.from(localeSelect.options).some(o=>o.value===savedLocale
 localeSelect.addEventListener('change',()=>{
  localStorage.setItem('waffer-locale',localeSelect.value);
  applyLocale(localeSelect.value);
+window.dispatchEvent(new CustomEvent('wafferClientModulesReady'));
 });
 applyLocale(localeSelect.value);

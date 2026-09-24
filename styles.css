@@ -50,3 +50,27 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 .catalog-alt-image{width:70px;height:70px;object-fit:contain;border-radius:10px;margin-top:8px;background:#fff}
 .catalog-match-card{margin:16px 0;padding:14px;border:1px solid #e1e7e4;border-radius:14px}
 .catalog-match-title{margin-top:8px}
+
+/* Debug-only field test dashboard */
+.field-test-dashboard{border:1px solid #cfe4dc;background:#fbfefd}
+.field-test-dashboard h3{margin-top:0}
+.field-test-status-actions,.field-test-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.field-test-status-actions button,.field-test-actions button{margin:0;min-height:42px;padding:10px;font-size:13px}
+.field-test-pass{background:#0d7657}
+.field-test-fail{background:#a63c32}
+#fieldTestNotes{width:100%;resize:vertical;min-height:84px}
+.field-test-list{margin-top:12px;display:grid;gap:7px}
+.field-test-row{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;border:1px solid #dde9e5;border-radius:10px;padding:8px;background:#fff}
+.field-test-row-id{font-weight:900;color:var(--g)}
+.field-test-row-title{font-size:12px;line-height:1.45}
+.field-test-badge{font-size:11px;font-weight:800;border-radius:999px;padding:4px 7px;background:#edf2f0;color:#53615d}
+.field-test-badge.pass{background:#e5f5ef;color:#075b43}
+.field-test-badge.fail{background:#fdebe8;color:#8b2d25}
+.field-test-badge.pending{background:#f2f4f3;color:#67736f}
+.field-test-badge.covered{background:#e9f5f1;color:#075b43}
+.field-test-badge.partial{background:#fff4df;color:#8a5a00}
+@media(max-width:640px){
+  .field-test-status-actions,.field-test-actions{grid-template-columns:1fr}
+  .field-test-row{grid-template-columns:auto 1fr}
+  .field-test-row .field-test-badge{grid-column:2}
+}

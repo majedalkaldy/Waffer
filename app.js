@@ -46,6 +46,13 @@ function invalidateAnalysisRun(){
 }
 function isCurrentAnalysisRun(runId){return runId===analysisRunId;}
 const debugMode=new URLSearchParams(location.search).get('debug')==='1';
+const FIELD_TEST_DRAFT_KEY='waffer-field-test-draft-v1';
+let fieldTestOfficial={scenarios:[]};
+let fieldTestAutomation={scenarios:[]};
+let fieldTestDraft={version:1,scenarios:[]};
+let fieldTestSelectedId=1;
+let fieldTestSelectedStatus='PENDING';
+let fieldTestDashboardInitialized=false;
 function ui(ar,en){return window.wafferLocale?.startsWith('en')?en:ar;}
 document.body.classList.toggle('debug-mode',debugMode);
 function show(id){
@@ -820,6 +827,195 @@ function resetAnalysis(){
  show('home');
 }
 async function copyMsg(){try{await navigator.clipboard.writeText(document.getElementById('message').innerText);alert(ui('تم نسخ الرسالة','Message copied'))}catch(e){alert(ui('حدد النص وانسخه يدويًا','Select the text and copy it manually'))}}
+function fieldTestDraftFromStorage(){
+ try{
+   const raw=localStorage.getItem(FIELD_TEST_DRAFT_KEY);
+   if(!raw)return {version:1,scenarios:[]};
+   const parsed=JSON.parse(raw);
+   return parsed&&Array.isArray(parsed.scenarios)?parsed:{version:1,scenarios:[]};
+ }catch{
+   return {version:1,scenarios:[]};
+ }
+}
+function saveFieldTestDraft(){
+ try{localStorage.setItem(FIELD_TEST_DRAFT_KEY,JSON.stringify(fieldTestDraft));}catch(e){
+   console.error('Field test draft save failed:',e);
+ }
+}
+function downloadJsonFile(filename,data){
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');
+ a.href=url;
+ a.download=filename;
+ document.body.appendChild(a);
+ a.click();
+ a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),0);
+}
+function setFieldTestSelectedStatus(status){
+ const allowed=['PENDING','PASS','FAIL'];
+ fieldTestSelectedStatus=allowed.includes(status)?status:'PENDING';
+ for(const [id,value] of [
+   ['fieldTestPassBtn','PASS'],
+   ['fieldTestFailBtn','FAIL'],
+   ['fieldTestPendingBtn','PENDING']
+ ]){
+   const button=document.getElementById(id);
+   if(!button)continue;
+   const selected=value===fieldTestSelectedStatus;
+   button.classList.toggle('is-selected',selected);
+   button.setAttribute('aria-pressed',selected?'true':'false');
+ }
+}
+function currentFieldTestDashboard(){
+ if(typeof window.wafferNormalizeFieldTestDashboard!=='function')return null;
+ return window.wafferNormalizeFieldTestDashboard({
+   official:fieldTestOfficial,
+   automation:fieldTestAutomation,
+   draft:fieldTestDraft
+ });
+}
+function renderFieldTestDashboard(){
+ if(!debugMode)return;
+ const dashboard=currentFieldTestDashboard();
+ const panel=document.getElementById('fieldTestDashboard');
+ if(!panel||!dashboard)return;
+ const en=window.wafferLocale?.startsWith('en');
+ document.getElementById('fieldTestDashboardTitle').textContent=en?'🧪 Field test dashboard':'🧪 لوحة الاختبار الميداني';
+ document.getElementById('fieldTestScenarioLabel').textContent=en?'Scenario':'السيناريو';
+ document.getElementById('fieldTestNotesLabel').textContent=en?'Test notes':'ملاحظات الاختبار';
+ document.getElementById('fieldTestCaptureBtn').textContent=en?'Save status with current evidence':'حفظ الحالة مع دليل التحليل الحالي';
+ document.getElementById('fieldTestExportBtn').textContent=en?'Export evidence draft':'تصدير مسودة الأدلة';
+ document.getElementById('fieldTestClearBtn').textContent=en?'Clear local draft':'مسح المسودة المحلية';
+ const notes=document.getElementById('fieldTestNotes');
+ notes.placeholder=en?'Briefly describe the result or error':'اكتب ملاحظة مختصرة عن النتيجة أو الخطأ';
+
+ const progress=document.getElementById('fieldTestProgress');
+ progress.textContent=en
+   ? 'Official gate: '+dashboard.officialPassed+'/10 PASS • Local draft: '+dashboard.draftPassed+' PASS, '+dashboard.draftFailed+' FAIL, '+dashboard.draftPending+' PENDING'
+   : 'البوابة الرسمية: '+dashboard.officialPassed+'/10 PASS • المسودة المحلية: '+dashboard.draftPassed+' ناجح، '+dashboard.draftFailed+' فشل، '+dashboard.draftPending+' معلّق';
+
+ const select=document.getElementById('fieldTestScenarioSelect');
+ const previous=Number(select.value)||fieldTestSelectedId||1;
+ select.replaceChildren();
+ for(const scenario of dashboard.scenarios){
+   const option=new Option('#'+scenario.id+' — '+scenario.title,String(scenario.id));
+   select.add(option);
+ }
+ fieldTestSelectedId=dashboard.scenarios.some(item=>item.id===previous)?previous:1;
+ select.value=String(fieldTestSelectedId);
+
+ const selected=dashboard.scenarios.find(item=>item.id===fieldTestSelectedId)||dashboard.scenarios[0];
+ if(selected){
+   fieldTestSelectedStatus=selected.draftStatus;
+   notes.value=selected.notes||'';
+   const evidenceText=selected.evidence
+     ? (en?'evidence attached':'دليل مرفق')
+     : (en?'no captured runtime evidence':'لا يوجد دليل runtime مرفق');
+   document.getElementById('fieldTestScenarioMeta').textContent=
+     (en?'Official: ':'الرسمي: ')+selected.officialStatus+
+     ' • '+(en?'Automation: ':'التغطية الآلية: ')+selected.coverage+
+     ' • '+evidenceText+
+     (selected.testedAt?' • '+selected.testedAt:'');
+ }
+ setFieldTestSelectedStatus(fieldTestSelectedStatus);
+
+ const list=document.getElementById('fieldTestScenarioList');
+ list.replaceChildren();
+ for(const scenario of dashboard.scenarios){
+   const row=document.createElement('div');
+   row.className='field-test-row';
+   const id=document.createElement('span');
+   id.className='field-test-row-id';
+   id.textContent='#'+scenario.id;
+   const title=document.createElement('span');
+   title.className='field-test-row-title';
+   title.textContent=scenario.title;
+   const badges=document.createElement('div');
+   badges.className='field-test-row-badges';
+   const status=document.createElement('span');
+   status.className='field-test-badge '+scenario.draftStatus.toLowerCase();
+   status.textContent=scenario.draftStatus;
+   const coverage=document.createElement('span');
+   coverage.className='field-test-badge '+(scenario.coverage==='COVERED'?'covered':scenario.coverage==='PARTIAL'?'partial':'pending');
+   coverage.textContent=scenario.coverage;
+   badges.append(status,coverage);
+   row.append(id,title,badges);
+   list.appendChild(row);
+ }
+}
+function selectFieldTestScenario(){
+ const select=document.getElementById('fieldTestScenarioSelect');
+ fieldTestSelectedId=Number(select?.value)||1;
+ renderFieldTestDashboard();
+}
+function captureFieldTestResult(){
+ if(!debugMode||typeof window.wafferUpdateFieldTestDraft!=='function')return;
+ const notes=document.getElementById('fieldTestNotes')?.value||'';
+ const vehicle=window.wafferVehicle||{
+   vehicleId:window.wafferVehicleId||null,
+   vin:document.getElementById('vin')?.value||null
+ };
+ fieldTestDraft=window.wafferUpdateFieldTestDraft(fieldTestDraft,{
+   scenarioId:fieldTestSelectedId,
+   status:fieldTestSelectedStatus,
+   notes,
+   analysis,
+   vehicle,
+   catalogState:window.wafferCatalogState||null,
+   pricingSummary:window.wafferPricingSummary||null,
+   upload:window.wafferUploadMeta||null,
+   commit:analysis?.deployment?.commit||null,
+   engineVersion:analysis?.engineVersion||null
+ });
+ saveFieldTestDraft();
+ renderFieldTestDashboard();
+}
+function exportFieldTestDraft(){
+ if(!debugMode||typeof window.wafferBuildFieldTestExport!=='function')return;
+ const data=window.wafferBuildFieldTestExport({
+   official:fieldTestOfficial,
+   automation:fieldTestAutomation,
+   draft:fieldTestDraft
+ });
+ downloadJsonFile('waffer-field-test-draft-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json',data);
+}
+function clearFieldTestDraft(){
+ if(!debugMode)return;
+ const approved=confirm(ui('مسح مسودة الاختبار المحلية من هذا الجهاز؟','Clear the local field-test draft from this device?'));
+ if(!approved)return;
+ fieldTestDraft={version:1,scenarios:[]};
+ try{localStorage.removeItem(FIELD_TEST_DRAFT_KEY);}catch{}
+ fieldTestSelectedId=1;
+ fieldTestSelectedStatus='PENDING';
+ renderFieldTestDashboard();
+}
+async function initFieldTestDashboard(){
+ if(!debugMode||fieldTestDashboardInitialized)return;
+ if(typeof window.wafferNormalizeFieldTestDashboard!=='function')return;
+ fieldTestDashboardInitialized=true;
+ const progress=document.getElementById('fieldTestProgress');
+ if(progress)progress.textContent=ui('جارٍ تحميل حالة الاختبار الميداني...','Loading field-test status...');
+ try{
+   const [officialResponse,automationResponse]=await Promise.all([
+     fetch('/docs/FIELD_TEST_RESULTS.json',{cache:'no-store'}),
+     fetch('/docs/FIELD_TEST_AUTOMATION.json',{cache:'no-store'})
+   ]);
+   if(!officialResponse.ok||!automationResponse.ok)throw new Error('Field test metadata unavailable');
+   fieldTestOfficial=await officialResponse.json();
+   fieldTestAutomation=await automationResponse.json();
+   fieldTestDraft=fieldTestDraftFromStorage();
+   renderFieldTestDashboard();
+ }catch(e){
+   fieldTestDashboardInitialized=false;
+   console.error('Field test dashboard load failed:',e);
+   if(progress)progress.textContent=ui('تعذر تحميل بيانات الاختبار الميداني.','Could not load field-test metadata.');
+ }
+}
+window.wafferRenderFieldTestDashboard=renderFieldTestDashboard;
+window.addEventListener('wafferClientModulesReady',()=>{void initFieldTestDashboard();});
+
 function exportDebugReport(){
  if(!analysis)return;
  const vehicle=window.wafferVehicle||{};
@@ -1249,6 +1445,12 @@ function bindUiActions(){
   const actions = {
     analyzeBtn: () => start(),
     debugExportBtn: () => exportDebugReport(),
+    fieldTestPassBtn: () => setFieldTestSelectedStatus('PASS'),
+    fieldTestFailBtn: () => setFieldTestSelectedStatus('FAIL'),
+    fieldTestPendingBtn: () => setFieldTestSelectedStatus('PENDING'),
+    fieldTestCaptureBtn: () => captureFieldTestResult(),
+    fieldTestExportBtn: () => exportFieldTestDraft(),
+    fieldTestClearBtn: () => clearFieldTestDraft(),
     detailsBtn: () => advanced(),
     workshopBtn: () => messageWorkshop(),
     shareSummaryBtn: () => shareSummary(),
@@ -1261,5 +1463,6 @@ function bindUiActions(){
   for (const [id, handler] of Object.entries(actions)) {
     document.getElementById(id)?.addEventListener('click', handler);
   }
+  document.getElementById('fieldTestScenarioSelect')?.addEventListener('change',selectFieldTestScenario);
 }
 bindUiActions();
