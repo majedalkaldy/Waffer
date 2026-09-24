@@ -88,6 +88,7 @@ const required = [
   'scripts/build-field-test-candidate.mjs',
   'tests/field-test-candidate-cli.test.mjs',
   'docs/PRICE_PROVIDER_CONTRACT.md',
+  'docs/PRICE_PROVIDER_CANDIDATES.md',
   'docs/VERCEL_FIREWALL_PLAN.md'
 ];
 
@@ -525,6 +526,19 @@ if (!failures.length) {
       if (!allowedCoverage.has(String(scenario?.coverage || ''))) {
         failures.push('Invalid automated field-test coverage for scenario ' + scenario?.id);
       }
+    }
+  }
+
+  const priceProviderCandidates = read('docs/PRICE_PROVIDER_CANDIDATES.md');
+  for (const boundary of [
+    'Qitea / قطعة',
+    'Automotive Spares Co.',
+    'eBay Browse API',
+    'AutoPartsAPI / TecDoc data',
+    'لا scraping'
+  ]) {
+    if (!priceProviderCandidates.includes(boundary)) {
+      failures.push('Price provider candidate research is missing boundary: ' + boundary);
     }
   }
 
