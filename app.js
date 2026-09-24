@@ -965,6 +965,11 @@ updateNetworkStatus();
 
 let healthCheckRun=0;
 let healthCheckController=null;
+function setSystemStatusTone(element,tone){
+  if(!element)return;
+  element.classList.remove('system-status-ok','system-status-warn');
+  element.classList.add(tone==='ok'?'system-status-ok':'system-status-warn');
+}
 async function checkSystemHealth(){
  const el=document.getElementById('systemStatus');
  const run=++healthCheckRun;
@@ -999,17 +1004,17 @@ async function checkSystemHealth(){
      const version=d?.version?' • '+d.version:'';
      const commit=d?.deployment?.commit?' • '+d.deployment.commit:'';
      el.textContent=(en?'● Core services ready':'● الخدمات الأساسية جاهزة')+analysisBasis+latencyText+version+commit;
-     el.style.color='#075b43';
+     setSystemStatusTone(el,'ok');
    }else if(d.status==='degraded'){
      el.textContent=en
        ? '⚠ Analysis is configured, but catalog service is currently limited'
        : '⚠ التحليل مهيأ، لكن خدمة الكتالوج محدودة حاليًا';
-     el.style.color='#a85b00';
+     setSystemStatusTone(el,'warn');
    }else{
      el.textContent=en
        ? '⚠ Some required services are not ready'
        : '⚠ بعض الخدمات المطلوبة غير جاهزة';
-     el.style.color='#a85b00';
+     setSystemStatusTone(el,'warn');
    }
  }catch(e){
    if(run!==healthCheckRun)return;
@@ -1019,7 +1024,7 @@ async function checkSystemHealth(){
    el.textContent=en
      ? '⚠ Could not verify service status'
      : '⚠ تعذر التحقق من حالة الخدمة';
-   el.style.color='#a85b00';
+   setSystemStatusTone(el,'warn');
  }finally{
    clearTimeout(timer);
    if(healthCheckController===controller)healthCheckController=null;
@@ -1218,18 +1223,18 @@ window.addEventListener('wafferPartsMatched', function(event){
        const displayQuality=rawQuality==='بديل كتالوج — يحتاج تحقق'
          ? ui('بديل كتالوج — يحتاج تحقق','Catalog alternative — verify before approval')
          : (rawQuality||ui('غير مصنف','unclassified'));
-       return '<div style="margin-top:10px;padding:10px;background:#eef8f4;border-radius:10px">'+
+       return '<div class="catalog-alt-card">'+
          '<div>'+esc(ui('رقم القطعة: ','Part number: '))+'<strong>'+esc(a.articleNo||ui('غير متوفر','not available'))+'</strong></div>'+
          '<div>'+esc(ui('المصنع: ','Supplier: '))+'<strong>'+esc(a.supplierName||ui('غير متوفر','not available'))+'</strong></div>'+
          '<div>'+esc(ui('الوصف: ','Description: '))+esc(a.articleProductName||'')+'</div>'+
          '<div>'+esc(ui('التصنيف: ','Classification: '))+esc(displayQuality)+'</div>'+
-         (image?'<img src="'+esc(image)+'" alt="" loading="lazy" style="width:70px;height:70px;object-fit:contain;border-radius:10px;margin-top:8px;background:#fff">':'')+
+         (image?'<img src="'+esc(image)+'" alt="" loading="lazy" class="catalog-alt-image">':'')+
          '</div>';
      }).join(''):'<div class="note">'+esc(ui('تم تحديد نوع القطعة، لكن لم تُحمّل أرقام بديلة.','The part type was identified, but no alternative part numbers were loaded.'))+'</div>';
 
-     return '<div style="margin:16px 0;padding:14px;border:1px solid #e1e7e4;border-radius:14px">'+
+     return '<div class="catalog-match-card">'+
        '<b>'+esc(m.workshopItem||ui('قطعة','Part'))+'</b>'+
-       '<div style="margin-top:8px">'+esc(ui('مطابقة الكتالوج: ','Catalog match: '))+'<strong>'+esc(m.productName||'-')+'</strong></div>'+
+       '<div class="catalog-match-title">'+esc(ui('مطابقة الكتالوج: ','Catalog match: '))+'<strong>'+esc(m.productName||'-')+'</strong></div>'+
        '<div>Product ID: '+esc(m.productId)+'</div>'+
        '<div>'+esc(ui('درجة المطابقة: ','Match score: '))+esc(m.matchScore??0)+'%</div>'+
        (m.requestedAxle?'<div>'+esc(ui('الموضع المطلوب: ','Requested position: '))+'<strong>'+esc(m.requestedAxle==='front'?ui('أمامي','front'):ui('خلفي','rear'))+'</strong></div>':'')+

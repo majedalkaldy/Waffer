@@ -41,7 +41,7 @@ test('CSP preserves current image compression and catalog image requirements',()
   assert.ok(csp.includes("manifest-src 'self'"));
 });
 
-test('scripts require same-origin files while styles retain temporary inline compatibility',()=>{
+test('scripts and styles require same-origin files without inline exceptions',()=>{
   const csp=headers.get('Content-Security-Policy')||'';
   const scriptDirective=csp
     .split(';')
@@ -50,7 +50,12 @@ test('scripts require same-origin files while styles retain temporary inline com
   assert.equal(scriptDirective,"script-src 'self'");
   assert.equal(scriptDirective.includes("'unsafe-inline'"),false);
   assert.equal(csp.includes("'unsafe-eval'"),false);
-  assert.ok(csp.includes("style-src 'self' 'unsafe-inline'"));
+  const styleDirective=csp
+    .split(';')
+    .map(part=>part.trim())
+    .find(part=>part.startsWith('style-src'))||'';
+  assert.equal(styleDirective,"style-src 'self'");
+  assert.equal(styleDirective.includes("'unsafe-inline'"),false);
 });
 
 test('browser metadata headers use restrictive values',()=>{

@@ -6,6 +6,7 @@ import { execFileSync } from 'node:child_process';
 
 const required = [
   'index.html',
+  'styles.css',
   'app.js',
   'app-module.js',
   'parts-match.js',
@@ -63,6 +64,7 @@ const required = [
   'tests/catalog-failure-propagation.test.mjs',
   'tests/security-headers.test.mjs',
   'tests/client-script-externalization.test.mjs',
+  'tests/style-externalization.test.mjs',
   'tests/runtime-resilience.test.mjs',
   'lib/catalog-health-probe.js',
   'tests/catalog-health-probe.test.mjs',
@@ -94,6 +96,26 @@ if (!failures.length) {
   }
 
   const index = read('index.html');
+  const appSource = read('app.js');
+  const appModuleSource = read('app-module.js');
+  const styles = read('styles.css');
+  if (!index.includes('<link rel="stylesheet" href="/styles.css">')) {
+    failures.push('HTML does not load the external stylesheet');
+  }
+  if (/<style\b/i.test(index) || /\sstyle\s*=\s*["']/i.test(index)) {
+    failures.push('Inline HTML styles remain while strict style CSP is expected');
+  }
+  for (const [name, source] of [['app.js',appSource],['app-module.js',appModuleSource],['vin-ui.js',read('vin-ui.js')],['parts-match.js',read('parts-match.js')]]) {
+    if (/\bstyle\s*=\s*["'`]/i.test(source) ||
+        /\.style\.[A-Za-z_$][\w$]*\s*=/i.test(source) ||
+        /setAttribute\(\s*['"]style['"]/i.test(source) ||
+        /style\.cssText\s*=/i.test(source)) {
+      failures.push(name + ' still emits inline styles');
+    }
+  }
+  if (!styles.includes('.system-status-ok') || !styles.includes('.catalog-match-card')) {
+    failures.push('External stylesheet is missing migrated dynamic presentation rules');
+  }
   const app = read('app.js');
   const appModule = read('app-module.js');
   const clientSource = [app, appModule].join('\n');
@@ -1044,6 +1066,7 @@ if (!failures.length) {
     failures.push('Service worker must not swallow shell precache failures');
   }
   if (!sw.includes('/app.js') ||
+      !sw.includes('/styles.css') ||
       !sw.includes('/app-module.js') ||
       !sw.includes('/lib/i18n.js') ||
       !sw.includes('/lib/runtime-config.js') ||
@@ -1069,15 +1092,21 @@ if (!failures.length) {
       .split(';')
       .map(part => part.trim())
       .find(part => part.startsWith('script-src')) || '';
+    const styleDirective = csp
+      .split(';')
+      .map(part => part.trim())
+      .find(part => part.startsWith('style-src')) || '';
     if (!headerRule ||
         !csp.includes("frame-ancestors 'none'") ||
         !csp.includes("object-src 'none'") ||
         !csp.includes("connect-src 'self'") ||
         scriptDirective !== "script-src 'self'" ||
         scriptDirective.includes("'unsafe-inline'") ||
+        styleDirective !== "style-src 'self'" ||
+        styleDirective.includes("'unsafe-inline'") ||
         headerMap.get('X-Frame-Options') !== 'DENY' ||
         headerMap.get('X-Content-Type-Options') !== 'nosniff') {
-      failures.push('Vercel browser security headers are incomplete or allow inline JavaScript');
+      failures.push('Vercel browser security headers are incomplete or allow inline scripts/styles');
     }
   } catch {
     failures.push('vercel.json is invalid JSON or security headers cannot be read');
