@@ -511,6 +511,7 @@ if (!failures.length) {
 
   const launchReadinessSource = read('lib/launch-readiness.js');
   const fieldEvidenceValidatorSource = read('lib/field-test-evidence-validator.js');
+  const fieldTestClientSource = read('lib/field-test-client.js');
   if (!launchReadinessSource.includes("from './field-test-evidence-validator.js'") ||
       !launchReadinessSource.includes('validateOfficialFieldTestResults({ scenarios: normalized })') ||
       !launchReadinessSource.includes('fieldTest.integrityValid')) {
@@ -518,6 +519,21 @@ if (!failures.length) {
   }
   if (!fieldEvidenceValidatorSource.includes('export function validateOfficialFieldTestResults')) {
     failures.push('Official field-test evidence validator export is missing');
+  }
+  if (!fieldTestClientSource.includes('itemSummary') ||
+      !fieldTestClientSource.includes('itemSummary.nonPart = itemSummary.labor + itemSummary.service + itemSummary.fee')) {
+    failures.push('Field-test evidence capture is missing item-type summary');
+  }
+  for (const requiredEvidenceRule of [
+    'Scenario 1: PASS requires JPEG upload evidence',
+    'Scenario 2: PASS requires optimized = true',
+    'Scenario 3: PASS requires PDF upload evidence',
+    'Scenario 7: PASS requires catalog evidence that non-part items were skipped',
+    'Scenario 8: PASS requires at least one axle-verified result'
+  ]) {
+    if (!fieldEvidenceValidatorSource.includes(requiredEvidenceRule)) {
+      failures.push('Field-test evidence validator is missing rule: ' + requiredEvidenceRule);
+    }
   }
 
   const launchResults = JSON.parse(read('docs/FIELD_TEST_RESULTS.json'));
