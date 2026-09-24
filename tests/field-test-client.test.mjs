@@ -58,6 +58,11 @@ test('evidence snapshot captures traceability from current runtime',()=>{
       completedAt:'2026-09-24T02:59:00.000Z',
       engineVersion:'mvp-2026-09',
       acceptance:{schemaValid:true},
+      items:[
+        {name:'Brake pad',itemType:'part'},
+        {name:'Labor',itemType:'labor'},
+        {name:'Alignment',itemType:'service'}
+      ],
       total:'500 SAR',
       calculatedTotal:'500 SAR'
     },
@@ -80,6 +85,14 @@ test('evidence snapshot captures traceability from current runtime',()=>{
   assert.equal(entry.evidence.commit,'abcdef12');
   assert.equal(entry.evidence.vehicle.vehicleId,9445);
   assert.equal(entry.evidence.catalogState.status,'COMPLETED');
+  assert.deepEqual(entry.evidence.itemSummary,{
+    total:3,
+    part:1,
+    labor:1,
+    service:1,
+    fee:0,
+    nonPart:2
+  });
 });
 
 test('pending entry intentionally has no testedAt and may exist without analysis evidence',()=>{
