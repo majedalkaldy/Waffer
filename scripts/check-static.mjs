@@ -106,7 +106,7 @@ if (!failures.length) {
     failures.push('Inline HTML styles remain while strict style CSP is expected');
   }
   for (const [name, source] of [['app.js',appSource],['app-module.js',appModuleSource],['vin-ui.js',read('vin-ui.js')],['parts-match.js',read('parts-match.js')]]) {
-    if (/style\s*=\s*["'`]/i.test(source) ||
+    if (/\bstyle\s*=\s*["'`]/i.test(source) ||
         /\.style\.[A-Za-z_$][\w$]*\s*=/i.test(source) ||
         /setAttribute\(\s*['"]style['"]/i.test(source) ||
         /style\.cssText\s*=/i.test(source)) {
