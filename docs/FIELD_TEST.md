@@ -102,3 +102,21 @@ npm run validate:field-test-draft -- path/to/waffer-field-test-draft.json
 - أن حالات `FAIL` تحتوي ملاحظات تشرح المشكلة.
 
 نجاح الـValidator لا يغيّر `docs/FIELD_TEST_RESULTS.json` تلقائيًا؛ التحويل إلى نتيجة رسمية يبقى خطوة مراجعة مقصودة.
+
+## إنشاء Candidate للمراجعة
+
+بعد نجاح الـValidator:
+
+```bash
+npm run build:field-test-candidate -- path/to/waffer-field-test-draft.json path/to/field-test-candidate.json
+```
+
+إذا لم تحدد اسم الإخراج، ينشئ السكربت ملفًا مجاورًا ينتهي بـ `.candidate.json`.
+
+حواجز الأمان:
+- يرفض الكتابة مباشرة فوق `docs/FIELD_TEST_RESULTS.json`.
+- يرفض الكتابة فوق ملف المسودة نفسه.
+- يرفض استبدال Candidate موجود.
+- يرفض إنشاء Candidate إذا فشل التحقق من الأدلة.
+
+المسار المقصود هو: **تصدير المسودة → Validator → Candidate → مراجعة → PR لتحديث النتائج الرسمية**.
