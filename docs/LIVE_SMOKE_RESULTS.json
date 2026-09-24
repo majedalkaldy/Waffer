@@ -55,5 +55,35 @@
   "fieldTestImpact": {
     "passesGranted": 0,
     "note": "Operational smoke evidence does not satisfy any of the ten manual field-test scenarios by itself."
+  },
+  "followUpObservations": {
+    "recordedAt": "2026-09-24T16:43:33.000Z",
+    "latestProduction": {
+      "commit": "bbcb899d4eff0e4039d850647f2ea18514e60ad7",
+      "deploymentId": "dpl_43i8765ZVwXd7JUS5u1P3jHzywu1",
+      "deploymentState": "READY",
+      "githubCiRun": 188,
+      "githubCiConclusion": "success"
+    },
+    "runtimeWindow": {
+      "window": "6h",
+      "groupedRequestPaths": 0,
+      "groupedStatusCodes": 0,
+      "note": "No runtime request rows were returned in the six-hour grouped queries; traffic is too low to justify WAF enforcement changes."
+    },
+    "urlParseDeprecation": {
+      "code": "DEP0169",
+      "currentProductionOccurrences": 0,
+      "currentProductionQuery": "No logs found for DEP0169 on dpl_43i8765ZVwXd7JUS5u1P3jHzywu1.",
+      "historicalClusterDeploymentId": "dpl_81G9yAzeHM9afGeuiLCnDAst3Z6M",
+      "historicalDeploymentTarget": "preview",
+      "historicalCommit": "64c4ccd305e08572c0fb0f60b8b4c47ff18a3908",
+      "classification": "OLD_PREVIEW_RUNTIME_WARNING_NOT_CURRENT_PRODUCTION"
+    },
+    "deploymentProtection": {
+      "directReadinessProbeHttpStatus": 302,
+      "redirectedToVercelSso": true,
+      "classification": "FIELD_TEST_ACCESS_PROTECTION_REVIEW_BEFORE_PUBLIC_BETA"
+    }
   }
 }
