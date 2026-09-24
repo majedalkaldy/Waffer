@@ -42,3 +42,11 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 .wf-inline-18{text-align:start;margin-bottom:8px}
 .wf-inline-19{line-height:2}
 
+
+/* Dynamic UI presentation classes */
+.system-status-ok{color:#075b43}
+.system-status-warn{color:#a85b00}
+.catalog-alt-card{margin-top:10px;padding:10px;background:#eef8f4;border-radius:10px}
+.catalog-alt-image{width:70px;height:70px;object-fit:contain;border-radius:10px;margin-top:8px;background:#fff}
+.catalog-match-card{margin:16px 0;padding:14px;border:1px solid #e1e7e4;border-radius:14px}
+.catalog-match-title{margin-top:8px}
