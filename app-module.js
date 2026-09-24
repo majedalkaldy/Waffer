@@ -12,12 +12,22 @@ import {
   buildPriceComparePayload,
   summarizeVerifiedPricing
 } from '/lib/pricing-client.js';
+import {
+  normalizeFieldTestDashboard,
+  createFieldTestEvidence,
+  updateFieldTestDraft,
+  buildFieldTestExport
+} from '/lib/field-test-client.js';
 window.WAFFER_RUNTIME=RUNTIME_CONFIG;
 window.wafferCompareDisplayedTotals=compareDisplayedTotals;
 window.wafferHasUsablePartNumber=hasUsablePartNumber;
 window.wafferSelectPriceableItems=selectPriceableItems;
 window.wafferBuildPriceComparePayload=buildPriceComparePayload;
 window.wafferSummarizeVerifiedPricing=summarizeVerifiedPricing;
+window.wafferNormalizeFieldTestDashboard=normalizeFieldTestDashboard;
+window.wafferCreateFieldTestEvidence=createFieldTestEvidence;
+window.wafferUpdateFieldTestDraft=updateFieldTestDraft;
+window.wafferBuildFieldTestExport=buildFieldTestExport;
 window.wafferFitImageWithinMaxDimension=fitWithinMaxDimension;
 window.wafferShouldOptimizeImage=shouldOptimizeImage;
 window.WAFFER_IMAGE_QUALITY_LADDER=[...JPEG_QUALITY_LADDER];
