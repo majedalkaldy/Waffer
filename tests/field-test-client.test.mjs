@@ -137,10 +137,17 @@ test('export is explicitly draft-only and includes official and automation conte
   const draft={
     scenarios:[{id:2,status:'PASS',testedAt:'2026-09-24T01:00:00.000Z',notes:'ok'}]
   };
+  const preflight={
+    format:'waffer-browser-preflight-v1',
+    ranAt:'2026-09-24T06:59:00.000Z',
+    status:'PASS',
+    checks:[{id:'canvas-jpeg',ok:true,severity:'critical',details:'ok'}]
+  };
   const exported=buildFieldTestExport({
     official,
     automation,
     draft,
+    preflight,
     exportedAt:'2026-09-24T07:00:00.000Z'
   });
 
@@ -150,6 +157,7 @@ test('export is explicitly draft-only and includes official and automation conte
   assert.equal(exported.summary.draftPassed,2);
   assert.equal(exported.scenarios.length,10);
   assert.equal(exported.scenarios[1].automation.coverage,'PARTIAL');
+  assert.deepEqual(exported.preflight,preflight);
 });
 
 
