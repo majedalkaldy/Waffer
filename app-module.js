@@ -17,14 +17,18 @@ import {
   createFieldTestEvidence,
   updateFieldTestDraft,
   buildFieldTestExport,
-  fieldTestScenarioRequirements
+  fieldTestScenarioRequirements,
+  summarizeFieldTestSession
 } from '/lib/field-test-client.js';
 import {
   fieldTestFixtureDefinition,
   buildFieldTestPdfBytes,
   padFieldTestBytes
 } from '/lib/field-test-fixtures.js';
-import { validateFieldTestScenarioEvidence } from '/lib/field-test-evidence-validator.js';
+import {
+  validateFieldTestScenarioEvidence,
+  validateFieldTestDraft
+} from '/lib/field-test-evidence-validator.js';
 window.WAFFER_RUNTIME=RUNTIME_CONFIG;
 window.wafferCompareDisplayedTotals=compareDisplayedTotals;
 window.wafferHasUsablePartNumber=hasUsablePartNumber;
@@ -36,10 +40,12 @@ window.wafferCreateFieldTestEvidence=createFieldTestEvidence;
 window.wafferUpdateFieldTestDraft=updateFieldTestDraft;
 window.wafferBuildFieldTestExport=buildFieldTestExport;
 window.wafferFieldTestScenarioRequirements=fieldTestScenarioRequirements;
+window.wafferSummarizeFieldTestSession=summarizeFieldTestSession;
 window.wafferFieldTestFixtureDefinition=fieldTestFixtureDefinition;
 window.wafferBuildFieldTestPdfBytes=buildFieldTestPdfBytes;
 window.wafferPadFieldTestBytes=padFieldTestBytes;
 window.wafferValidateFieldTestScenarioEvidence=validateFieldTestScenarioEvidence;
+window.wafferValidateFieldTestDraft=validateFieldTestDraft;
 window.wafferFitImageWithinMaxDimension=fitWithinMaxDimension;
 window.wafferShouldOptimizeImage=shouldOptimizeImage;
 window.WAFFER_IMAGE_QUALITY_LADDER=[...JPEG_QUALITY_LADDER];
