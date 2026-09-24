@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import {
   validateFieldTestDraft,
@@ -16,7 +17,7 @@ if (!inputArg) {
 
 const inputPath = path.resolve(inputArg);
 const officialPath = path.resolve(
-  new URL('../docs/FIELD_TEST_RESULTS.json', import.meta.url).pathname
+  fileURLToPath(new URL('../docs/FIELD_TEST_RESULTS.json', import.meta.url))
 );
 const outputPath = outputArg
   ? path.resolve(outputArg)
