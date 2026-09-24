@@ -541,6 +541,13 @@ if (!failures.length) {
       !appModuleSource.includes('window.wafferFieldTestScenarioRequirements=fieldTestScenarioRequirements')) {
     failures.push('Field-test dashboard is missing scenario-specific evidence requirements');
   }
+  if (!fieldEvidenceValidatorSource.includes('export function validateFieldTestScenarioEvidence') ||
+      !index.includes('id="fieldTestEvidencePreview"') ||
+      !appModuleSource.includes('window.wafferValidateFieldTestScenarioEvidence=validateFieldTestScenarioEvidence') ||
+      !appSource.includes('function currentFieldTestEvidenceValidation') ||
+      !appSource.includes("input.status!=='PENDING' && preview && !preview.validation.valid")) {
+    failures.push('Field-test dashboard is missing live evidence validation or invalid-save blocking');
+  }
   for (const requiredEvidenceRule of [
     'Scenario 1: PASS requires JPEG upload evidence',
     'Scenario 2: PASS requires optimized = true',
@@ -1159,7 +1166,8 @@ if (!failures.length) {
       !sw.includes('/lib/image-optimization.js') ||
       !sw.includes('/lib/identity.js') ||
       !sw.includes('/lib/pricing-client.js') ||
-      !sw.includes('/lib/field-test-client.js')) {
+      !sw.includes('/lib/field-test-client.js') ||
+      !sw.includes('/lib/field-test-evidence-validator.js')) {
     failures.push('PWA shell missing localization/runtime/total-check/image-optimization/identity/pricing/field-test modules');
   }
 
