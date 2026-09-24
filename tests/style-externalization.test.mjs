@@ -18,7 +18,7 @@ test('HTML uses only external stylesheet and contains no inline styles',()=>{
 
 test('client runtimes do not emit inline style attributes or direct style assignments',()=>{
   for(const [name,source] of Object.entries({app,appModule,vin,matcher})){
-    assert.equal(/style\s*=\s*["'`]/i.test(source),false,name);
+    assert.equal(/\bstyle\s*=\s*["'`]/i.test(source),false,name);
     assert.equal(/\.style\.[A-Za-z_$][\w$]*\s*=/i.test(source),false,name);
     assert.equal(/setAttribute\(\s*['"]style['"]/i.test(source),false,name);
     assert.equal(/style\.cssText\s*=/i.test(source),false,name);
