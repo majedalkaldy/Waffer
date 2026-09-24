@@ -535,6 +535,12 @@ if (!failures.length) {
       !fieldTestClientSource.includes('itemSummary.nonPart = itemSummary.labor + itemSummary.service + itemSummary.fee')) {
     failures.push('Field-test evidence capture is missing item-type summary');
   }
+  if (!fieldTestClientSource.includes('export function fieldTestScenarioRequirements') ||
+      !index.includes('id="fieldTestRequirements"') ||
+      !appSource.includes('renderFieldTestRequirements(selected.id,en)') ||
+      !appModuleSource.includes('window.wafferFieldTestScenarioRequirements=fieldTestScenarioRequirements')) {
+    failures.push('Field-test dashboard is missing scenario-specific evidence requirements');
+  }
   for (const requiredEvidenceRule of [
     'Scenario 1: PASS requires JPEG upload evidence',
     'Scenario 2: PASS requires optimized = true',
