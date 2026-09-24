@@ -30,6 +30,7 @@
 | مصدر أسعار موثوق | **CONTRACT READY / PROVIDER MISSING** | عقد `lib/price-provider.js` يفرض تحقق العملة وهوية القطعة والسيارة والمخزون والدليل؛ الإنتاج ما زال يعيد marketPrice=null وsaving=NOT_CALCULATED | اختيار وربط مزود موثوق واختباره حيًا قبل عرض نطاق السوق أو التوفير |
 | حماية تكلفة `/api/analyze` | **IMPLEMENTED IN CODE / WAF MONITORING ACTIVE** | الحارس الداخلي يحد الطلبات المدفوعة إلى 4/دقيقة و20/ساعة لكل IP داخل كل runtime، يخزن hash فقط، يحظر browser cross-site، ويعيد 429 + Retry-After قبل OpenAI | تم نشر قاعدة المراقبة على Production؛ المتبقي مراقبة الحركة قبل تحويلها إلى حظر فعلي |
 | وصول Vercel الحي | **ACTIVE** | Team `waffer` والمشروع والـdeployments والسجلات مرئية، وWAF monitor تم نشره يدويًا على Production | الاستمرار في مراقبة السجلات وWAF قبل تحويله من Log إلى enforcement |
+| الوصول العام قبل Public Beta | **PROTECTED / REVIEW REQUIRED** | آخر Production = READY، لكن طلبًا مباشرًا محميًا لـ `/api/readiness` أعاد 302 إلى Vercel SSO أثناء فحص 2026-09-24 | إبقاء الحماية خلال field-test، ثم مراجعة Deployment Protection واختبار جلسة عامة غير مسجلة قبل Public Beta |
 | حماية `main` | **ACTION REQUIRED** | القراءة المباشرة للفرع تؤكد `protected=false` وrequired status checks = off | تطبيق `docs/MAIN_BRANCH_PROTECTION.md` من إعدادات GitHub لفرض PR + regression-suite قبل الدمج |
 
 ## ما لا يُعد دليل إطلاق
@@ -43,4 +44,5 @@
 3. مراقبة قاعدة WAF المنشورة في وضع Log ومراجعة أي تجاوزات قبل تفعيل الحظر الفعلي.
 4. حسم مزود الأسعار الموثوق قبل تفعيل أي حساب للسعر السوقي أو التوفير.
 5. التحقق من حماية `main` وفرض CI كشرط دمج.
-6. لا يتم الانتقال إلى `public-beta` إلا بعد 10/10 PASS واجتياز بوابة CI.
+6. مراجعة `docs/PUBLIC_BETA_CHECKLIST.md` بما في ذلك Deployment Protection والوصول العام.
+7. لا يتم الانتقال إلى `public-beta` إلا بعد 10/10 PASS واجتياز بوابة CI.
