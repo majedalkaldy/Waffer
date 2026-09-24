@@ -80,6 +80,8 @@ const required = [
   'lib/field-test-evidence-validator.js',
   'tests/field-test-evidence-validator.test.mjs',
   'scripts/validate-field-test-draft.mjs',
+  'scripts/build-field-test-candidate.mjs',
+  'tests/field-test-candidate-cli.test.mjs',
   'docs/PRICE_PROVIDER_CONTRACT.md',
   'docs/VERCEL_FIREWALL_PLAN.md'
 ];
@@ -402,6 +404,15 @@ if (!failures.length) {
   }
   if (packageJson?.scripts?.['validate:field-test-draft'] !== 'node scripts/validate-field-test-draft.mjs') {
     failures.push('package.json field-test draft validator script is missing or unexpected');
+  }
+  if (packageJson?.scripts?.['build:field-test-candidate'] !== 'node scripts/build-field-test-candidate.mjs') {
+    failures.push('package.json field-test candidate builder script is missing or unexpected');
+  }
+  const candidateCli = read('scripts/build-field-test-candidate.mjs');
+  if (!candidateCli.includes('Refusing to overwrite docs/FIELD_TEST_RESULTS.json') ||
+      !candidateCli.includes("flag: 'wx'") ||
+      !candidateCli.includes('buildOfficialFieldTestResultsFromDraft')) {
+    failures.push('Field-test candidate CLI is missing overwrite protections or validated conversion');
   }
   if (packageJson?.scripts?.ci !== 'npm run check && npm test && npm run gate') {
     failures.push('package.json ci script must run static checks, tests, and launch gate');
