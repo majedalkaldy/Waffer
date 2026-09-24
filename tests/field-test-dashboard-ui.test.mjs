@@ -20,6 +20,8 @@ test('field-test dashboard is diagnostic-only and exposes all operator controls'
     'fieldTestEvidencePreview',
     'fieldTestPreflightBtn',
     'fieldTestPreflightResult',
+    'fieldTestFixtureBtn',
+    'fieldTestFixtureResult',
     'fieldTestCaptureBtn',
     'fieldTestExportBtn',
     'fieldTestClearBtn',
@@ -101,4 +103,27 @@ test('browser preflight is cost-free, diagnostic-only, and exported separately',
     assert.equal(source.includes(paidPath),false,paidPath);
   }
   assert.ok(app.includes('Preflight only. This does not mark any field-test scenario PASS.'));
+});
+
+test('debug fixture generator uses local browser helpers and never calls upstream APIs',()=>{
+  assert.ok(app.includes('async function generateFieldTestFixture()'));
+  assert.ok(app.includes('window.wafferFieldTestFixtureDefinition'));
+  assert.ok(app.includes('window.wafferBuildFieldTestPdfBytes'));
+  assert.ok(app.includes("document.createElement('canvas')"));
+  assert.ok(app.includes('new DataTransfer()'));
+
+  const start=app.indexOf('async function generateFieldTestFixture()');
+  const end=app.indexOf('function renderFieldTestDashboard()',start);
+  assert.ok(start>=0 && end>start);
+  const source=app.slice(start,end);
+  for(const path of ['/api/analyze','/api/vin','/api/vehicles','/api/products','/api/articles','/api/article-criteria','/api/price-compare']){
+    assert.equal(source.includes(path),false,path);
+  }
+});
+
+test('module bootstrap exposes and PWA caches fixture helpers',()=>{
+  assert.ok(appModule.includes("from '/lib/field-test-fixtures.js'"));
+  assert.ok(appModule.includes('window.wafferFieldTestFixtureDefinition=fieldTestFixtureDefinition'));
+  assert.ok(appModule.includes('window.wafferBuildFieldTestPdfBytes=buildFieldTestPdfBytes'));
+  assert.ok(sw.includes("'/lib/field-test-fixtures.js'"));
 });

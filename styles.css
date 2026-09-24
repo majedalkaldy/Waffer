@@ -97,3 +97,9 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 .field-test-preflight-result.is-warn{color:#8a5a00}
 .field-test-preflight-result.is-fail{color:#8b2d25}
 .field-test-preflight-result .preflight-muted{color:#66736f}
+
+.field-test-fixture-btn{margin-top:10px!important}
+.field-test-fixture-result{margin-top:8px;font-size:12px;line-height:1.55;color:#53615d}
+.field-test-fixture-result.is-ready{color:#075b43}
+.field-test-fixture-result.is-warn{color:#8a5a00}
+.field-test-fixture-result.is-error{color:#8b2d25}

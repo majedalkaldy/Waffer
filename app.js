@@ -1140,6 +1140,186 @@ function renderFieldTestPreflight(){
    : 'فحص تشخيصي فقط؛ لا يُحتسب أبدًا كـ PASS للاختبار الميداني.';
  box.appendChild(note);
 }
+function renderFieldTestFixtureResult(message,tone='ready'){
+ const box=document.getElementById('fieldTestFixtureResult');
+ if(!box)return;
+ box.classList.remove('is-ready','is-warn','is-error');
+ box.classList.add(tone==='error'?'is-error':tone==='warn'?'is-warn':'is-ready');
+ box.textContent=String(message||'');
+}
+function canvasToJpegBlob(canvas,quality=0.92){
+ return new Promise((resolve,reject)=>{
+   canvas.toBlob(blob=>{
+     if(blob)resolve(blob);
+     else reject(new Error('Canvas JPEG encoding returned no data'));
+   },'image/jpeg',quality);
+ });
+}
+async function verifyFixtureImageDecodes(file){
+ const url=URL.createObjectURL(file);
+ try{
+   await new Promise((resolve,reject)=>{
+     const image=new Image();
+     image.onload=()=>resolve();
+     image.onerror=()=>reject(new Error('Generated JPEG could not be decoded'));
+     image.src=url;
+   });
+ }finally{
+   URL.revokeObjectURL(url);
+ }
+}
+async function buildFieldTestImageFixture(definition){
+ const canvas=document.createElement('canvas');
+ canvas.width=1600;
+ canvas.height=1100;
+ const ctx=canvas.getContext('2d',{alpha:false});
+ if(!ctx)throw new Error('Canvas 2D context unavailable');
+ ctx.fillStyle='#ffffff';
+ ctx.fillRect(0,0,canvas.width,canvas.height);
+ ctx.fillStyle='#0d7657';
+ ctx.fillRect(0,0,canvas.width,150);
+ ctx.fillStyle='#ffffff';
+ ctx.font='bold 52px sans-serif';
+ ctx.fillText('WAFFER FIELD TEST',70,95);
+ ctx.fillStyle='#13231e';
+ ctx.font='bold 34px sans-serif';
+ ctx.fillText('Synthetic estimate fixture — not a customer document',70,220);
+ ctx.font='30px sans-serif';
+ let y=300;
+ for(const line of Array.isArray(definition?.lines)?definition.lines:[]){
+   ctx.fillText(String(line).slice(0,78),70,y);
+   y+=78;
+ }
+ ctx.strokeStyle='#d8e5df';
+ ctx.lineWidth=3;
+ ctx.strokeRect(55,175,1490,820);
+ const baseBlob=await canvasToJpegBlob(canvas,0.92);
+ const limit=Number(window.WAFFER_RUNTIME?.maxUploadBytes)||3*1024*1024;
+ const parts=[baseBlob];
+ if(definition?.oversized){
+   const target=limit+(256*1024);
+   const padding=Math.max(0,target-baseBlob.size);
+   if(padding)parts.push(new Uint8Array(padding));
+ }
+ const file=new File(parts,definition?.fileName||'waffer-field-test.jpg',{
+   type:'image/jpeg',
+   lastModified:Date.now()
+ });
+ await verifyFixtureImageDecodes(file);
+ return file;
+}
+function buildFieldTestPdfFixture(definition){
+ if(typeof window.wafferBuildFieldTestPdfBytes!=='function'){
+   throw new Error('PDF fixture helper unavailable');
+ }
+ let bytes=window.wafferBuildFieldTestPdfBytes(definition?.lines||[]);
+ const limit=Number(window.WAFFER_RUNTIME?.maxUploadBytes)||3*1024*1024;
+ if(definition?.oversized){
+   if(typeof window.wafferPadFieldTestBytes!=='function'){
+     throw new Error('PDF padding helper unavailable');
+   }
+   bytes=window.wafferPadFieldTestBytes(bytes,limit+(128*1024));
+ }
+ return new File([bytes],definition?.fileName||'waffer-field-test.pdf',{
+   type:'application/pdf',
+   lastModified:Date.now()
+ });
+}
+function downloadFieldTestFixture(file){
+ const url=URL.createObjectURL(file);
+ const link=document.createElement('a');
+ link.href=url;
+ link.download=file.name;
+ document.body.appendChild(link);
+ link.click();
+ link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),0);
+}
+function attachFieldTestFixture(file){
+ const input=document.getElementById('file');
+ if(!input)return false;
+ try{
+   if(typeof DataTransfer!=='function')return false;
+   const transfer=new DataTransfer();
+   transfer.items.add(file);
+   input.files=transfer.files;
+   input.dispatchEvent(new Event('change',{bubbles:true}));
+   return input.files?.length>0;
+ }catch{
+   return false;
+ }
+}
+async function generateFieldTestFixture(){
+ if(!debugMode)return;
+ const button=document.getElementById('fieldTestFixtureBtn');
+ const en=window.wafferLocale?.startsWith('en');
+ if(button){
+   button.disabled=true;
+   button.textContent=en?'Preparing fixture...':'جارٍ تجهيز Fixture...';
+ }
+ renderFieldTestFixtureResult(en?'Preparing a synthetic test file...':'جارٍ تجهيز ملف اختبار اصطناعي...','warn');
+ try{
+   if(typeof window.wafferFieldTestFixtureDefinition!=='function'){
+     throw new Error('Fixture definitions are unavailable');
+   }
+   const definition=window.wafferFieldTestFixtureDefinition(fieldTestSelectedId);
+   if(!definition)throw new Error('No fixture for selected scenario');
+
+   const vinInput=document.getElementById('vin');
+   if(definition.vinMode==='clear'&&vinInput){
+     vinInput.value='';
+     vinInput.dispatchEvent(new Event('input',{bubbles:true}));
+   }else if(definition.vinMode==='invalid'&&vinInput){
+     vinInput.value='INVALIDVIN123';
+     vinInput.dispatchEvent(new Event('input',{bubbles:true}));
+   }
+
+   const file=definition.kind==='pdf'
+     ? buildFieldTestPdfFixture(definition)
+     : await buildFieldTestImageFixture(definition);
+
+   const attached=attachFieldTestFixture(file);
+   const validVin=/^[A-HJ-NPR-Z0-9]{17}$/.test(String(vinInput?.value||'').trim().toUpperCase());
+
+   if(definition.id===4){
+     const rejected=!document.getElementById('file')?.files?.length;
+     renderFieldTestFixtureResult(
+       rejected
+         ? (en?'Oversized PDF fixture generated and rejected client-side as expected. Record the rejection in notes before PASS.':'تم توليد PDF كبير ورفضه في الواجهة كما هو متوقع. سجّل رسالة الرفض في الملاحظات قبل PASS.')
+         : (en?'Oversized PDF fixture is still selected; verify the rejection path before PASS.':'ما زال PDF الكبير محددًا؛ تحقق من مسار الرفض قبل PASS.'),
+       rejected?'ready':'warn'
+     );
+   }else if(attached){
+     const size=(file.size/1024/1024).toFixed(2);
+     const liveVinNote=definition.needsLiveVin&&!validVin
+       ? (en?' Enter a real supported VIN before running this scenario.':' أدخل VIN حقيقيًا مدعومًا قبل تشغيل هذا السيناريو.')
+       : '';
+     renderFieldTestFixtureResult(
+       (en?'Fixture attached: ':'تم إرفاق Fixture: ')+file.name+' — '+size+' MB.'+liveVinNote,
+       definition.needsLiveVin&&!validVin?'warn':'ready'
+     );
+   }else{
+     downloadFieldTestFixture(file);
+     renderFieldTestFixtureResult(
+       en
+         ? 'Your browser blocked automatic file attachment. The fixture was downloaded; select it from the upload control.'
+         : 'المتصفح منع إرفاق الملف تلقائيًا. تم تنزيل Fixture؛ اختره من مربع رفع الملف.',
+       'warn'
+     );
+   }
+ }catch(error){
+   console.error('Field-test fixture generation failed:',error);
+   renderFieldTestFixtureResult(
+     (en?'Fixture generation failed: ':'تعذر تجهيز Fixture: ')+(error?.message||error),
+     'error'
+   );
+ }finally{
+   if(button){
+     button.disabled=false;
+     button.textContent=en?'Prepare fixture for selected scenario':'تجهيز Fixture للسيناريو الحالي';
+   }
+ }
+}
 function renderFieldTestDashboard(){
  if(!debugMode)return;
  const dashboard=currentFieldTestDashboard();
@@ -1150,6 +1330,7 @@ function renderFieldTestDashboard(){
  document.getElementById('fieldTestScenarioLabel').textContent=en?'Scenario':'السيناريو';
  document.getElementById('fieldTestNotesLabel').textContent=en?'Test notes':'ملاحظات الاختبار';
  document.getElementById('fieldTestPreflightBtn').textContent=en?'Run browser preflight':'تشغيل فحص ما قبل الاختبار';
+ document.getElementById('fieldTestFixtureBtn').textContent=en?'Prepare fixture for selected scenario':'تجهيز Fixture للسيناريو الحالي';
  document.getElementById('fieldTestCaptureBtn').textContent=en?'Save status with current evidence':'حفظ الحالة مع دليل التحليل الحالي';
  document.getElementById('fieldTestExportBtn').textContent=en?'Export evidence draft':'تصدير مسودة الأدلة';
  document.getElementById('fieldTestClearBtn').textContent=en?'Clear local draft':'مسح المسودة المحلية';
@@ -1791,6 +1972,7 @@ function bindUiActions(){
     fieldTestFailBtn: () => setFieldTestSelectedStatus('FAIL'),
     fieldTestPendingBtn: () => setFieldTestSelectedStatus('PENDING'),
     fieldTestPreflightBtn: () => {void runFieldTestPreflight();},
+    fieldTestFixtureBtn: () => {void generateFieldTestFixture();},
     fieldTestCaptureBtn: () => captureFieldTestResult(),
     fieldTestExportBtn: () => exportFieldTestDraft(),
     fieldTestClearBtn: () => clearFieldTestDraft(),

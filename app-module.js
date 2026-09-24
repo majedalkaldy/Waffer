@@ -19,6 +19,11 @@ import {
   buildFieldTestExport,
   fieldTestScenarioRequirements
 } from '/lib/field-test-client.js';
+import {
+  fieldTestFixtureDefinition,
+  buildFieldTestPdfBytes,
+  padFieldTestBytes
+} from '/lib/field-test-fixtures.js';
 import { validateFieldTestScenarioEvidence } from '/lib/field-test-evidence-validator.js';
 window.WAFFER_RUNTIME=RUNTIME_CONFIG;
 window.wafferCompareDisplayedTotals=compareDisplayedTotals;
@@ -31,6 +36,9 @@ window.wafferCreateFieldTestEvidence=createFieldTestEvidence;
 window.wafferUpdateFieldTestDraft=updateFieldTestDraft;
 window.wafferBuildFieldTestExport=buildFieldTestExport;
 window.wafferFieldTestScenarioRequirements=fieldTestScenarioRequirements;
+window.wafferFieldTestFixtureDefinition=fieldTestFixtureDefinition;
+window.wafferBuildFieldTestPdfBytes=buildFieldTestPdfBytes;
+window.wafferPadFieldTestBytes=padFieldTestBytes;
 window.wafferValidateFieldTestScenarioEvidence=validateFieldTestScenarioEvidence;
 window.wafferFitImageWithinMaxDimension=fitWithinMaxDimension;
 window.wafferShouldOptimizeImage=shouldOptimizeImage;
