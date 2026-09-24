@@ -20,6 +20,7 @@ const required = [
   'api/price-compare.js',
   'api/health.js',
   'api/self-test.js',
+  'api/readiness.js',
   'lib/market-config.js',
   'lib/runtime-config.js',
   'lib/analysis-normalizer.js',
@@ -80,6 +81,7 @@ const required = [
   'lib/field-test-evidence-validator.js',
   'tests/field-test-evidence-validator.test.mjs',
   'scripts/validate-field-test-draft.mjs',
+  'tests/readiness-endpoint.test.mjs',
   'docs/PRICE_PROVIDER_CONTRACT.md',
   'docs/VERCEL_FIREWALL_PLAN.md'
 ];
@@ -199,6 +201,7 @@ if (!failures.length) {
   const criteriaApi = read('api/article-criteria.js');
   const vinApi = read('api/vin.js');
   const health = read('api/health.js');
+  const readinessApi = read('api/readiness.js');
   const identity = read('lib/identity.js');
   const priceProvider = read('lib/price-provider.js');
   const pricingClient = read('lib/pricing-client.js');
@@ -676,6 +679,17 @@ if (!failures.length) {
   }
   if (!health.includes('quoteAnalysisVerified: false')) {
     failures.push('Health capabilities overstate analysis verification');
+  }
+  if (!readinessApi.includes("service: 'waffer-readiness'") ||
+      !readinessApi.includes('evaluateFieldTestResults(FIELD_TEST_RESULTS)') ||
+      !readinessApi.includes("launchPhase: 'public-beta'") ||
+      !readinessApi.includes("mainBranchProtection: 'NOT_EVALUATED_BY_RUNTIME'")) {
+    failures.push('Machine-readable readiness endpoint contract is incomplete');
+  }
+  if (readinessApi.includes('fetch(') ||
+      readinessApi.includes('scenarios: fieldTest.scenarios') ||
+      readinessApi.includes('evidence:')) {
+    failures.push('Readiness endpoint must remain cost-free and must not expose field-test evidence');
   }
   if (!health.includes("from '../lib/price-provider.js'") ||
       !health.includes('priceProviderInterface: true') ||
