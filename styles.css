@@ -87,3 +87,13 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
   .field-test-row{grid-template-columns:auto 1fr}
   .field-test-row .field-test-badge{grid-column:2}
 }
+
+.field-test-preflight-block{margin-top:10px;padding:10px;border:1px solid #d7e8e1;border-radius:10px;background:#f8fbfa}
+.field-test-preflight-block button{margin:0;min-height:42px}
+.field-test-preflight-result{margin-top:8px;font-size:12px;line-height:1.55}
+.field-test-preflight-result strong{display:block;margin-bottom:5px}
+.field-test-preflight-result ul{margin:0;padding-inline-start:20px}
+.field-test-preflight-result.is-pass{color:#075b43}
+.field-test-preflight-result.is-warn{color:#8a5a00}
+.field-test-preflight-result.is-fail{color:#8b2d25}
+.field-test-preflight-result .preflight-muted{color:#66736f}
