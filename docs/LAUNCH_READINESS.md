@@ -15,6 +15,7 @@
 - وضع `?debug=1` يحتوي لوحة للاختبار الميداني تجمع مسودة PASS/FAIL/PENDING وأدلة Analysis ID/commit/catalog محليًا دون تغيير البوابة الرسمية.
 - مسودات الأدلة يمكن فحصها آليًا عبر `npm run validate:field-test-draft -- <draft.json>` قبل اعتماد أي PASS رسمي.
 - `launch-gate` يتحقق أيضًا من أدلة `docs/FIELD_TEST_RESULTS.json` الرسمية؛ 10/10 PASS بلا دليل صالح لا تُعد جاهزية للترقية.
+- مسار اعتماد الأدلة أصبح: draft → Validator → Candidate آمن غير قابل للكتابة فوق الملف الرسمي → مراجعة/PR.
 
 ## الموانع الحالية
 
