@@ -77,6 +77,9 @@ const required = [
   'tests/price-provider-contract.test.mjs',
   'lib/pricing-client.js',
   'tests/pricing-client.test.mjs',
+  'lib/pricing-abuse-guard.js',
+  'tests/pricing-abuse-guard.test.mjs',
+  'tests/price-guard-integration.test.mjs',
   'lib/field-test-client.js',
   'lib/field-test-fixtures.js',
   'tests/field-test-client.test.mjs',
@@ -263,6 +266,7 @@ if (!failures.length) {
   const identity = read('lib/identity.js');
   const priceProvider = read('lib/price-provider.js');
   const pricingClient = read('lib/pricing-client.js');
+  const pricingAbuseGuard = read('lib/pricing-abuse-guard.js');
   const priceCompare = read('api/price-compare.js');
 
   if (!identity.includes('hasUsablePartNumber') || !identity.includes('hasUsableVehicleIdentity')) {
@@ -317,6 +321,23 @@ if (!failures.length) {
       !pricingClient.includes('buildPriceComparePayload') ||
       !pricingClient.includes('summarizeVerifiedPricing')) {
     failures.push('Trusted pricing client helpers are incomplete');
+  }
+  if (!priceCompare.includes("from '../lib/pricing-abuse-guard.js'") ||
+      !priceCompare.includes('checkPricingRequestProvenance(req)') ||
+      !priceCompare.includes('checkPricingRequestLimit(req, RUNTIME_CONFIG)') ||
+      !priceCompare.includes("code: 'PRICE_CLIENT_RATE_LIMITED'")) {
+    failures.push('Pricing abuse guard is not fully wired before trusted upstream work');
+  }
+  if (!pricingAbuseGuard.includes("headerValue(req?.headers, 'x-forwarded-for')") ||
+      !pricingAbuseGuard.includes("createHash('sha256')") ||
+      !pricingAbuseGuard.includes("fetchSite === 'cross-site'")) {
+    failures.push('Pricing abuse guard must hash Vercel client IP and enforce cross-site protection');
+  }
+  const pricingLimitIndex = priceCompare.indexOf('checkPricingRequestLimit(req, RUNTIME_CONFIG)');
+  const pricingMarketValidationIndex = priceCompare.indexOf('if (!marketConfig.supported)');
+  const pricingLookupIndex = priceCompare.indexOf('lookupVerifiedPricing({');
+  if (!(pricingLimitIndex > pricingMarketValidationIndex && pricingLookupIndex > pricingLimitIndex)) {
+    failures.push('Pricing rate guard must run after validation and before trusted price lookup');
   }
   if (!clientSource.includes("window.wafferVerifiedMarketPricing=d?.capabilities?.verifiedMarketPricing===true")) {
     failures.push('UI does not bind pricing capability to live health');
@@ -740,6 +761,12 @@ if (!failures.length) {
   if (!runtime.includes('clientVinTimeoutMs')) failures.push('Client VIN timeout is missing');
   if (!runtime.includes('healthCatalogCacheMs')) failures.push('Catalog health cache duration is missing');
   if (!runtime.includes('priceProviderTimeoutMs')) failures.push('Price provider timeout is missing');
+  if (!runtime.includes('priceRateLimitBurstWindowMs') ||
+      !runtime.includes('priceRateLimitBurstMax') ||
+      !runtime.includes('priceRateLimitHourlyWindowMs') ||
+      !runtime.includes('priceRateLimitHourlyMax')) {
+    failures.push('Pricing rate-limit configuration is missing');
+  }
   if (!runtime.includes('catalogDataCdnCacheSeconds') ||
       !runtime.includes('catalogDataCdnStaleSeconds') ||
       !runtime.includes('catalogCriteriaCdnCacheSeconds') ||
@@ -1046,6 +1073,12 @@ if (!failures.length) {
     if (!(RUNTIME_CONFIG.priceProviderTimeoutMs > 0 &&
           RUNTIME_CONFIG.priceProviderTimeoutMs <= 15000)) {
       failures.push('Price provider timeout must be positive and bounded');
+    }
+    if (!(RUNTIME_CONFIG.priceRateLimitBurstWindowMs > 0 &&
+          RUNTIME_CONFIG.priceRateLimitBurstMax > 0 &&
+          RUNTIME_CONFIG.priceRateLimitHourlyWindowMs > RUNTIME_CONFIG.priceRateLimitBurstWindowMs &&
+          RUNTIME_CONFIG.priceRateLimitHourlyMax >= RUNTIME_CONFIG.priceRateLimitBurstMax)) {
+      failures.push('Pricing rate-limit configuration is invalid');
     }
     if (!(RUNTIME_CONFIG.catalogDataCdnCacheSeconds > 0 &&
           RUNTIME_CONFIG.catalogDataCdnStaleSeconds >= RUNTIME_CONFIG.catalogDataCdnCacheSeconds &&
