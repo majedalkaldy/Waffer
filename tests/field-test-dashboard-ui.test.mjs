@@ -82,6 +82,11 @@ test('dashboard previews current evidence and blocks invalid non-pending capture
   assert.ok(app.includes('item.textContent=message.text'));
 });
 
+test('field-test evidence captures the server deployment commit from analysis results',()=>{
+  assert.ok(app.includes("commit:analysis?.deployment?.commit||null"));
+  assert.ok(app.includes("engineVersion:analysis?.engineVersion||null"));
+});
+
 test('PWA caches the live field evidence validator module',()=>{
   assert.ok(sw.includes("'/lib/field-test-evidence-validator.js'"));
 });
