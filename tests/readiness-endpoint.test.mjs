@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 
 import readinessHandler from '../api/readiness.js';
+const officialResults = JSON.parse(fs.readFileSync(new URL('../docs/FIELD_TEST_RESULTS.json', import.meta.url), 'utf8'));
 
 function responseRecorder() {
   return {
@@ -14,7 +16,7 @@ function responseRecorder() {
   };
 }
 
-test('readiness v2 summarizes official evidence state without upstream calls or evidence leakage', async () => {
+test('readiness v2 reports approved field evidence but keeps public beta blocked without leaking evidence', async () => {
   const originalFetch = globalThis.fetch;
   const originalOpenAI = process.env.OPENAI_API_KEY;
   const originalCatalog = process.env.AUTOPARTS_API_KEY;
@@ -43,31 +45,31 @@ test('readiness v2 summarizes official evidence state without upstream calls or 
 
     assert.deepEqual(res.body.fieldTest, {
       expected: 10,
-      passed: 0,
+      passed: 10,
       failed: 0,
-      pending: 10,
+      pending: 0,
       schemaValid: true,
       evidenceValid: true,
       integrityValid: true,
-      allPassed: false,
-      updatedAt: null
+      allPassed: true,
+      updatedAt: officialResults.updatedAt
     });
 
     assert.equal(res.body.promotion.currentPhaseAllowed, true);
-    assert.equal(res.body.promotion.publicBetaGatePassed, false);
-    assert.equal(res.body.promotion.fieldTestPromotionReady, false);
+    assert.equal(res.body.promotion.publicBetaGatePassed, true);
+    assert.equal(res.body.promotion.fieldTestPromotionReady, true);
     assert.equal(res.body.promotion.verifiedPricingReady, false);
     assert.equal(res.body.promotion.runtimePromotionReady, false);
     assert.equal(res.body.promotion.manualReviewRequired, true);
     assert.equal(res.body.promotion.publicBetaReady, false);
     assert.equal(res.body.promotion.manualBlockerCount, 3);
-    assert.equal(res.body.promotion.machineBlockerCount, 2);
+    assert.equal(res.body.promotion.machineBlockerCount, 1);
 
     assert.equal(res.body.configured.analysis, true);
     assert.equal(res.body.configured.catalog, true);
     assert.equal(res.body.configured.pricing, false);
 
-    assert.ok(res.body.knownBlockers.includes('FIELD_TEST_INCOMPLETE'));
+    assert.equal(res.body.knownBlockers.includes('FIELD_TEST_INCOMPLETE'), false);
     assert.ok(res.body.knownBlockers.includes('VERIFIED_PRICE_PROVIDER_MISSING'));
     assert.ok(res.body.knownBlockers.includes('MAIN_BRANCH_PROTECTION_REVIEW_REQUIRED'));
     assert.ok(res.body.knownBlockers.includes('WAF_ENFORCEMENT_REVIEW_REQUIRED'));
@@ -114,7 +116,7 @@ test('readiness v2 reports missing service configuration without network calls',
     assert.ok(res.body.knownBlockers.includes('CATALOG_NOT_CONFIGURED'));
     assert.equal(res.body.promotion.publicBetaReady, false);
     assert.equal(res.body.promotion.manualReviewRequired, true);
-    assert.equal(res.body.promotion.machineBlockerCount, 4);
+    assert.equal(res.body.promotion.machineBlockerCount, 3);
     assert.equal(res.body.promotion.manualBlockerCount, 3);
     assert.equal(fetchCalls, 0);
   } finally {

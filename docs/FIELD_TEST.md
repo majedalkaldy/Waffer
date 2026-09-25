@@ -134,3 +134,13 @@ npm run build:field-test-candidate -- path/to/waffer-field-test-draft.json path/
 - يرفض إنشاء Candidate إذا فشل التحقق من الأدلة.
 
 المسار المقصود هو: **تصدير المسودة → Validator → Candidate → مراجعة → PR لتحديث النتائج الرسمية**.
+
+## حفظ الدليل العام دون رقم الهيكل الكامل
+
+بعد مراجعة المسودة الأصلية ونجاح Validator، أنشئ Candidate ثم استخدم:
+
+```bash
+node scripts/redact-field-test-candidate.mjs private-candidate.json public-candidate.json
+```
+
+يبقى الأصل الكامل خاصًا للمراجعة. يسجل الملف العام `vinSha256` و`vinRedacted=true` مع Vehicle ID وAnalysis ID وcommit. يقبل Validator الرسمي هذا التمثيل فقط مع بصمة صحيحة البنية و`acceptance.hasVin=true`؛ مسودة المتصفح تظل تتطلب VIN الكامل في السيناريو 5. البصمة تربط السجل بالأصل ولا تثبت وحدها صحة نتيجة المزود. السكربت يرفض الكتابة فوق الأصل أو النتائج الرسمية، ولا يغيّر launchPhase.

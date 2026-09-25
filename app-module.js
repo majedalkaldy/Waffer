@@ -54,6 +54,7 @@ window.WAFFER_IMAGE_QUALITY_LADDER=[...JPEG_QUALITY_LADDER];
 
 const localeSelect=document.getElementById('localeSelect');
 function applyLocale(locale){
+ window.wafferLocale=locale;
  const isAr=locale.startsWith('ar');
  document.documentElement.lang=isAr?'ar':'en';
  document.documentElement.dir=isAr?'rtl':'ltr';
@@ -135,7 +136,6 @@ function applyLocale(locale){
  if(typeof window.wafferRenderFieldTestDashboard==='function')window.wafferRenderFieldTestDashboard();
  const debugExport=document.getElementById('debugExportBtn');
  if(debugExport)debugExport.textContent=locale.startsWith('en')?'Export test report':'تصدير تقرير الاختبار';
- window.wafferLocale=locale;
  updateFormHint();
 }
 const savedLocale=localStorage.getItem('waffer-locale');
@@ -143,6 +143,6 @@ if(savedLocale && Array.from(localeSelect.options).some(o=>o.value===savedLocale
 localeSelect.addEventListener('change',()=>{
  localStorage.setItem('waffer-locale',localeSelect.value);
  applyLocale(localeSelect.value);
-window.dispatchEvent(new CustomEvent('wafferClientModulesReady'));
 });
 applyLocale(localeSelect.value);
+window.dispatchEvent(new CustomEvent('wafferClientModulesReady'));
