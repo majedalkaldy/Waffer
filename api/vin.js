@@ -1,5 +1,6 @@
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { enforceCatalogRequestGuard } from '../lib/catalog-abuse-guard.js';
+import { getRequestQuery } from '../lib/request-query.js';
 export default async function handler(req, res) {
   res.setHeader('Allow', 'GET');
   res.setHeader('Cache-Control', 'no-store');
@@ -9,7 +10,8 @@ export default async function handler(req, res) {
     const apiKey = process.env.AUTOPARTS_API_KEY;
     if (!apiKey) return res.status(500).json({ error: 'AUTOPARTS_API_KEY is not configured' });
 
-    const vin = String(req.query.vin || '').trim().toUpperCase();
+    const query = getRequestQuery(req);
+    const vin = String(query.vin || '').trim().toUpperCase();
     if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) {
       return res.status(400).json({ error: 'A valid 17-character VIN is required' });
     }
