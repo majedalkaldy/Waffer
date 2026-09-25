@@ -117,7 +117,11 @@ export default async function handler(req, res) {
       catalogCriteriaCdnStaleSeconds: RUNTIME_CONFIG.catalogCriteriaCdnStaleSeconds,
       healthCatalogTimeoutMs: RUNTIME_CONFIG.healthCatalogTimeoutMs,
       healthCatalogCacheMs: RUNTIME_CONFIG.healthCatalogCacheMs,
-      priceProviderTimeoutMs: RUNTIME_CONFIG.priceProviderTimeoutMs
+      priceProviderTimeoutMs: RUNTIME_CONFIG.priceProviderTimeoutMs,
+      priceRateLimitBurstWindowMs: RUNTIME_CONFIG.priceRateLimitBurstWindowMs,
+      priceRateLimitBurstMax: RUNTIME_CONFIG.priceRateLimitBurstMax,
+      priceRateLimitHourlyWindowMs: RUNTIME_CONFIG.priceRateLimitHourlyWindowMs,
+      priceRateLimitHourlyMax: RUNTIME_CONFIG.priceRateLimitHourlyMax
     },
     timestamp: new Date().toISOString()
   });
