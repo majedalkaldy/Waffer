@@ -85,14 +85,34 @@
     },
     "urlParseDeprecation": {
       "code": "DEP0169",
-      "latestDeploymentOccurrencesObserved": 2,
-      "routes": [
-        "/api/health",
-        "/api/readiness"
-      ],
+      "previousProduction": {
+        "deploymentId": "dpl_JDgckaPHqnTDGhjZ95s9GXUywF4W",
+        "commit": "3d9d9c00935adbd565fa5001321c4f8a50cc0c2b",
+        "routes": [
+          "/api/health",
+          "/api/readiness",
+          "/api/vehicles"
+        ],
+        "lastObservedAt": "2026-09-25T10:00:56.000Z"
+      },
+      "resolvedProduction": {
+        "deploymentId": "dpl_8SRzLqo8gkqpQY2rm4guS5EB8rFZ",
+        "commit": "6cc9a5db4c08b926c5e865583ebce20fcec88453",
+        "checkedAt": "2026-09-25T10:06:29.385Z",
+        "routesProbed": [
+          "/api/readiness",
+          "/api/health",
+          "/api/vehicles",
+          "/api/products",
+          "/api/articles",
+          "/api/article-criteria",
+          "/api/vin"
+        ],
+        "runtimeLogOccurrences": 0
+      },
       "repositorySearchFoundUsage": false,
-      "classification": "CURRENT_PRODUCTION_RUNTIME_WARNING_SOURCE_NOT_FOUND_IN_APPLICATION_REPOSITORY",
-      "note": "The warning is present on the latest production deployment, but no url.parse() call is present in Waffer application source. A regression test now prevents application code from introducing that deprecated call while the runtime/platform source remains under observation."
+      "classification": "RESOLVED_ON_CURRENT_PRODUCTION",
+      "note": "Production routes now parse request query parameters with the WHATWG URL API and do not touch the legacy req.query path when req.url is available. The new production deployment emitted no DEP0169 logs across the probed routes; the last observed warning remains attached to the previous deployment."
     },
     "branchProtection": {
       "branch": "main",
