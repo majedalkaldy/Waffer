@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
-import { getMarketConfig } from '../lib/market-config.js';
+import { getMarketConfigFromRequest } from '../lib/market-config.js';
 import {
   evaluateFieldTestResults,
   evaluateLaunchGate
@@ -44,7 +44,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const marketConfig = getMarketConfig(req.query || {});
+  const marketConfig = getMarketConfigFromRequest(req);
   if (!marketConfig.supported) {
     return res.status(400).json({
       ok: false,
