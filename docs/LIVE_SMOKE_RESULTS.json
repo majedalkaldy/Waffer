@@ -57,32 +57,53 @@
     "note": "Operational smoke evidence does not satisfy any of the ten manual field-test scenarios by itself."
   },
   "followUpObservations": {
-    "recordedAt": "2026-09-24T16:43:33.000Z",
+    "recordedAt": "2026-09-25T07:47:33.204Z",
     "latestProduction": {
-      "commit": "bbcb899d4eff0e4039d850647f2ea18514e60ad7",
-      "deploymentId": "dpl_43i8765ZVwXd7JUS5u1P3jHzywu1",
+      "commit": "45159675a2dfdd26f399c07e380c4b9f5534e612",
+      "deploymentId": "dpl_CmsjmzuHaqyVfHVivvFht975W4GH",
       "deploymentState": "READY",
-      "githubCiRun": 188,
+      "githubCiRun": 198,
       "githubCiConclusion": "success"
     },
-    "runtimeWindow": {
-      "window": "6h",
-      "groupedRequestPaths": 0,
-      "groupedStatusCodes": 0,
-      "note": "No runtime request rows were returned in the six-hour grouped queries; traffic is too low to justify WAF enforcement changes."
+    "liveEndpointChecks": {
+      "health": {
+        "httpStatus": 200,
+        "status": "ready",
+        "catalogUpstream": "reachable",
+        "deploymentCommitShort": "45159675"
+      },
+      "readiness": {
+        "httpStatus": 200,
+        "status": "not_promotion_ready",
+        "blockerCount": 5
+      },
+      "selfTest": {
+        "httpStatus": 200,
+        "ok": true,
+        "failed": []
+      }
     },
     "urlParseDeprecation": {
       "code": "DEP0169",
-      "currentProductionOccurrences": 0,
-      "currentProductionQuery": "No logs found for DEP0169 on dpl_43i8765ZVwXd7JUS5u1P3jHzywu1.",
-      "historicalClusterDeploymentId": "dpl_81G9yAzeHM9afGeuiLCnDAst3Z6M",
-      "historicalDeploymentTarget": "preview",
-      "historicalCommit": "64c4ccd305e08572c0fb0f60b8b4c47ff18a3908",
-      "classification": "OLD_PREVIEW_RUNTIME_WARNING_NOT_CURRENT_PRODUCTION"
+      "latestDeploymentOccurrencesObserved": 2,
+      "routes": [
+        "/api/health",
+        "/api/readiness"
+      ],
+      "repositorySearchFoundUsage": false,
+      "classification": "CURRENT_PRODUCTION_RUNTIME_WARNING_SOURCE_NOT_FOUND_IN_APPLICATION_REPOSITORY",
+      "note": "The warning is present on the latest production deployment, but no url.parse() call is present in Waffer application source. A regression test now prevents application code from introducing that deprecated call while the runtime/platform source remains under observation."
+    },
+    "branchProtection": {
+      "branch": "main",
+      "protected": false,
+      "requiredStatusChecks": false,
+      "classification": "ACTION_REQUIRED_MANUAL_RELEASE_GATE"
     },
     "deploymentProtection": {
-      "directReadinessProbeHttpStatus": 302,
+      "lastDirectReadinessProbeHttpStatus": 302,
       "redirectedToVercelSso": true,
+      "observedAt": "2026-09-24T16:43:33.000Z",
       "classification": "FIELD_TEST_ACCESS_PROTECTION_REVIEW_BEFORE_PUBLIC_BETA"
     }
   }
