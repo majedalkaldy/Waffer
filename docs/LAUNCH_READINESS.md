@@ -10,7 +10,7 @@
 - الاختبار التكاملي يغطي: تحليل مستند mocked، تطبيع النتيجة، مطابقة الكتالوج، Front/Rear، تخطي labor/service، وحدود عقد التسعير.
 - بوابة الإطلاق تمنع `public-beta` و`production` حتى تكون السيناريوهات العشرة الميدانية `PASS`.
 - واجهات AutoParts المكلفة محمية داخل التطبيق بحارس مشترك واسع يمنع الاستنزاف المباشر ويعمل بعد validation وقبل الاتصال بالمزود.
-- فحص Production حي موثق في `docs/LIVE_SMOKE_RESULTS.json`: self-test وhealth = 200/ready، الكتالوج reachable، ولا توجد runtime errors في نافذة الفحص.
+- فحص Production حي موثق في `docs/LIVE_SMOKE_RESULTS.json`: self-test وhealth وreadiness تعمل بنجاح، والكتالوج reachable. رُصد تحذير Node `DEP0169` على أحدث Production في `/api/health` و`/api/readiness`؛ لا يوجد استدعاء `url.parse()` داخل كود وفّر، وأضيف فحص رجعي يمنع إدخاله إلى كود التطبيق بينما يبقى مصدر التحذير في طبقة التشغيل تحت المراقبة.
 - CSP في الإنتاج صار يفرض `script-src 'self'` و`style-src 'self'` بدون inline JavaScript/CSS.
 - وضع `?debug=1` يحتوي لوحة للاختبار الميداني تجمع مسودة PASS/FAIL/PENDING وأدلة Analysis ID/commit/catalog محليًا دون تغيير البوابة الرسمية.
 - مسودات الأدلة يمكن فحصها آليًا عبر `npm run validate:field-test-draft -- <draft.json>` قبل اعتماد أي PASS رسمي.
