@@ -231,7 +231,13 @@ export default async function handler(req, res) {
       currency,
       engineVersion: RUNTIME_CONFIG.engineVersion,
       requestId,
-      completedAt
+      completedAt,
+      deployment: {
+        environment: process.env.VERCEL_ENV || null,
+        commit: process.env.VERCEL_GIT_COMMIT_SHA
+          ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 8)
+          : null
+      }
     });
 
     return res.status(200).json(normalized);
