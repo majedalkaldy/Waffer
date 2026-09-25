@@ -48,6 +48,12 @@ export default async function handler(req, res) {
       Number(RUNTIME_CONFIG.healthCatalogTimeoutMs),
     priceProviderTimeout: Number(RUNTIME_CONFIG.priceProviderTimeoutMs) > 0 &&
       Number(RUNTIME_CONFIG.priceProviderTimeoutMs) <= 15000,
+    priceRateLimit: Number(RUNTIME_CONFIG.priceRateLimitBurstWindowMs) > 0 &&
+      Number(RUNTIME_CONFIG.priceRateLimitBurstMax) > 0 &&
+      Number(RUNTIME_CONFIG.priceRateLimitHourlyWindowMs) >
+        Number(RUNTIME_CONFIG.priceRateLimitBurstWindowMs) &&
+      Number(RUNTIME_CONFIG.priceRateLimitHourlyMax) >=
+        Number(RUNTIME_CONFIG.priceRateLimitBurstMax),
     manufacturersTimeout: Number(RUNTIME_CONFIG.manufacturersTimeoutMs) > 0 &&
       Number(RUNTIME_CONFIG.clientManufacturersTimeoutMs) > Number(RUNTIME_CONFIG.manufacturersTimeoutMs),
     manufacturersCdnCache: Number(RUNTIME_CONFIG.manufacturersCdnCacheSeconds) > 0 &&
