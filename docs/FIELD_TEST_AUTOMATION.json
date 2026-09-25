@@ -1,6 +1,6 @@
 {
   "purpose": "Automated regression coverage only. This file is not field-test evidence and does not change launch-gate PASS/PENDING/FAIL results.",
-  "updatedAt": "2026-09-23",
+  "updatedAt": "2026-09-25",
   "scenarios": [
     {
       "id": 1,
@@ -83,5 +83,12 @@
       ],
       "notes": "Printed vs calculated total mismatch is detected deterministically."
     }
-  ]
+  ],
+  "promotionContract": {
+    "coverage": "COVERED",
+    "evidence": [
+      "tests/field-test-promotion-contract.test.mjs"
+    ],
+    "notes": "Synthetic contract test proves the client evidence schema, draft export, validator, candidate builder, and official-results validator can complete a valid 10/10 promotion path. This is regression coverage only and does not grant field-test PASS."
+  }
 }
