@@ -1,16 +1,473 @@
 {
   "protocol": "docs/FIELD_TEST.md",
-  "updatedAt": null,
+  "updatedAt": "2026-09-25T13:52:41.359Z",
   "scenarios": [
-    {"id":1,"title":"صورة JPG واضحة بدون VIN","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
-    {"id":2,"title":"صورة هاتف أكبر من 3MB","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
-    {"id":3,"title":"PDF أقل من 3MB","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
-    {"id":4,"title":"PDF أكبر من 3MB","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
-    {"id":5,"title":"VIN صحيح مع عرض قطع","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
-    {"id":6,"title":"VIN غير صحيح","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
-    {"id":7,"title":"عرض قطع مع أجور وخدمات","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
-    {"id":8,"title":"فحمات أو أقراص أمامية وخلفية","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
-    {"id":9,"title":"عرض بلا أرقام قطع","status":"PENDING","testedAt":null,"evidence":null,"notes":""},
-    {"id":10,"title":"إجمالي مطبوع لا يطابق مجموع البنود","status":"PENDING","testedAt":null,"evidence":null,"notes":""}
-  ]
+    {
+      "id": 1,
+      "title": "صورة JPG واضحة بدون VIN",
+      "status": "PASS",
+      "testedAt": "2026-09-25T13:34:57.870Z",
+      "evidence": {
+        "requestId": "84e14159-de39-48cb-b028-26c10789a73e",
+        "completedAt": "2026-09-25T13:34:34.066Z",
+        "engineVersion": "mvp-2026-09",
+        "commit": "edee7e3b",
+        "acceptance": {
+          "schemaValid": true,
+          "missingShapeFields": [],
+          "invalidItemIndexes": [],
+          "hasItems": true,
+          "hasPrintedTotal": true,
+          "hasConfidence": true,
+          "hasVin": false,
+          "identifiedParts": 1,
+          "itemCount": 2
+        },
+        "itemSummary": {
+          "total": 2,
+          "part": 1,
+          "labor": 1,
+          "service": 0,
+          "fee": 0,
+          "nonPart": 1
+        },
+        "upload": {
+          "optimized": false,
+          "originalBytes": 75254,
+          "uploadBytes": 75254,
+          "mimeType": "image/jpeg"
+        },
+        "vehicle": {
+          "vehicleId": null,
+          "vin": null,
+          "manufacturerName": null,
+          "modelName": null,
+          "vehicleDescription": null
+        },
+        "catalogState": {
+          "status": "NOT_STARTED",
+          "runId": 1
+        },
+        "pricingSummary": null,
+        "total": "TOTAL SAR 260",
+        "calculatedTotal": "260 ريال سعودي"
+      },
+      "notes": "Live browser run on production edee7e3b. Built-in synthetic JPEG (not a customer document): Engine Air Filter AF-123 SAR 180 + Labor SAR 80. Reviewed extracted rows and total SAR 260; VIN empty; no catalog match applied."
+    },
+    {
+      "id": 2,
+      "title": "صورة هاتف أكبر من 3MB",
+      "status": "PASS",
+      "testedAt": "2026-09-25T13:35:47.766Z",
+      "evidence": {
+        "requestId": "05d8dbcb-d93b-4b1b-a5aa-5d0bc91590cb",
+        "completedAt": "2026-09-25T13:35:23.447Z",
+        "engineVersion": "mvp-2026-09",
+        "commit": "edee7e3b",
+        "acceptance": {
+          "schemaValid": true,
+          "missingShapeFields": [],
+          "invalidItemIndexes": [],
+          "hasItems": true,
+          "hasPrintedTotal": true,
+          "hasConfidence": true,
+          "hasVin": false,
+          "identifiedParts": 1,
+          "itemCount": 2
+        },
+        "itemSummary": {
+          "total": 2,
+          "part": 1,
+          "labor": 1,
+          "service": 0,
+          "fee": 0,
+          "nonPart": 1
+        },
+        "upload": {
+          "optimized": true,
+          "originalBytes": 3407872,
+          "uploadBytes": 71790,
+          "mimeType": "image/jpeg"
+        },
+        "vehicle": {
+          "vehicleId": null,
+          "vin": null,
+          "manufacturerName": null,
+          "modelName": null,
+          "vehicleDescription": null
+        },
+        "catalogState": {
+          "status": "NOT_STARTED",
+          "runId": 3
+        },
+        "pricingSummary": null,
+        "total": "TOTAL SAR 370",
+        "calculatedTotal": "SAR 370"
+      },
+      "notes": "Live production browser test with built-in 3.25 MB padded JPEG fixture. Browser optimized the image below the 3 MB limit. Reviewed Brake Pads BRK-123 SAR 250 and Labor SAR 120; total SAR 370. Synthetic fixture exercises compression; physical phone capture not assessed."
+    },
+    {
+      "id": 3,
+      "title": "PDF أقل من 3MB",
+      "status": "PASS",
+      "testedAt": "2026-09-25T13:36:27.476Z",
+      "evidence": {
+        "requestId": "cfc84c89-5517-47bb-8a93-3aafd2030398",
+        "completedAt": "2026-09-25T13:36:13.584Z",
+        "engineVersion": "mvp-2026-09",
+        "commit": "edee7e3b",
+        "acceptance": {
+          "schemaValid": true,
+          "missingShapeFields": [],
+          "invalidItemIndexes": [],
+          "hasItems": true,
+          "hasPrintedTotal": true,
+          "hasConfidence": true,
+          "hasVin": false,
+          "identifiedParts": 1,
+          "itemCount": 2
+        },
+        "itemSummary": {
+          "total": 2,
+          "part": 1,
+          "labor": 1,
+          "service": 0,
+          "fee": 0,
+          "nonPart": 1
+        },
+        "upload": {
+          "optimized": false,
+          "originalBytes": 799,
+          "uploadBytes": 799,
+          "mimeType": "application/pdf"
+        },
+        "vehicle": {
+          "vehicleId": null,
+          "vin": null,
+          "manufacturerName": null,
+          "modelName": null,
+          "vehicleDescription": null
+        },
+        "catalogState": {
+          "status": "NOT_STARTED",
+          "runId": 5
+        },
+        "pricingSummary": null,
+        "total": "TOTAL SAR 350",
+        "calculatedTotal": "SAR 350 (250 + 100)"
+      },
+      "notes": "Live production small-PDF fixture test. Reviewed extracted Brake Pads BRK-123 SAR 250 + Labor SAR 100; printed and calculated totals SAR 350. PDF analyzed directly without image optimization."
+    },
+    {
+      "id": 4,
+      "title": "PDF أكبر من 3MB",
+      "status": "PASS",
+      "testedAt": "2026-09-25T13:37:04.152Z",
+      "evidence": null,
+      "notes": "Live production UI: generated the built-in oversized PDF fixture (>3 MB). File selection immediately raised an alert; after dismissal the UI confirmed rejection, reset the upload label, and displayed Select an estimate file to begin. Analyze was not clicked and no paid analysis was started."
+    },
+    {
+      "id": 5,
+      "title": "VIN صحيح مع عرض قطع",
+      "status": "PASS",
+      "testedAt": "2026-09-25T13:40:11.280Z",
+      "evidence": {
+        "requestId": "a8aab5d5-dc5a-44a5-8aaa-97d78489f02a",
+        "completedAt": "2026-09-25T13:39:36.929Z",
+        "engineVersion": "mvp-2026-09",
+        "commit": "edee7e3b",
+        "acceptance": {
+          "schemaValid": true,
+          "missingShapeFields": [],
+          "invalidItemIndexes": [],
+          "hasItems": true,
+          "hasPrintedTotal": true,
+          "hasConfidence": true,
+          "hasVin": true,
+          "identifiedParts": 0,
+          "itemCount": 3
+        },
+        "itemSummary": {
+          "total": 3,
+          "part": 2,
+          "labor": 1,
+          "service": 0,
+          "fee": 0,
+          "nonPart": 1
+        },
+        "upload": {
+          "optimized": false,
+          "originalBytes": 78647,
+          "uploadBytes": 78647,
+          "mimeType": "image/jpeg"
+        },
+        "vehicle": {
+          "vehicleId": "9445",
+          "vin": null,
+          "manufacturerName": "TOYOTA",
+          "modelName": "CAMRY Saloon (_V5_)",
+          "vehicleDescription": "2.5 (ASV50_, ASV50R)",
+          "vinSha256": "e50c13cd41b4e6dc7dce9f65d1027af7ec42232aa764bf24b3ba36382f59e674",
+          "vinRedacted": true
+        },
+        "catalogState": {
+          "status": "COMPLETED",
+          "matched": 1,
+          "totalItems": 3,
+          "partItems": 2,
+          "skippedItems": 1,
+          "axleRequested": 0,
+          "axleVerified": 0,
+          "elapsedMs": 4144,
+          "runId": 12
+        },
+        "pricingSummary": null,
+        "total": "TOTAL SAR 405",
+        "calculatedTotal": "405 ريال سعودي"
+      },
+      "notes": "Live production test reused the project test VIN. Provider resolved TOYOTA CAMRY Saloon (_V5_), 2.5 (ASV50_, ASV50R). Reviewed Oil Filter SAR 95 + Engine Oil SAR 220 + Labor SAR 90 (total SAR 405). Catalog completed with one matched part; labor excluded."
+    },
+    {
+      "id": 6,
+      "title": "VIN غير صحيح",
+      "status": "PASS",
+      "testedAt": "2026-09-25T13:37:36.677Z",
+      "evidence": null,
+      "notes": "Live production UI with built-in invalid VIN fixture INVALIDVIN123. Analyze raised a validation alert, returned to the form, re-enabled Analyze, and displayed that VIN must contain 17 characters. Client validation rejected the value before the provider lookup."
+    },
+    {
+      "id": 7,
+      "title": "عرض قطع مع أجور وخدمات",
+      "status": "PASS",
+      "testedAt": "2026-09-25T13:50:17.426Z",
+      "evidence": {
+        "requestId": "793dbdb1-23f9-4860-a20e-c1775439e5e5",
+        "completedAt": "2026-09-25T13:49:29.379Z",
+        "engineVersion": "mvp-2026-09",
+        "commit": "b2c7f9f1",
+        "acceptance": {
+          "schemaValid": true,
+          "missingShapeFields": [],
+          "invalidItemIndexes": [],
+          "hasItems": true,
+          "hasPrintedTotal": true,
+          "hasConfidence": true,
+          "hasVin": true,
+          "identifiedParts": 0,
+          "itemCount": 3
+        },
+        "itemSummary": {
+          "total": 3,
+          "part": 1,
+          "labor": 1,
+          "service": 1,
+          "fee": 0,
+          "nonPart": 2
+        },
+        "upload": {
+          "optimized": false,
+          "originalBytes": 86296,
+          "uploadBytes": 86296,
+          "mimeType": "image/jpeg"
+        },
+        "vehicle": {
+          "vehicleId": "9445",
+          "vin": null,
+          "manufacturerName": "TOYOTA",
+          "modelName": "CAMRY Saloon (_V5_)",
+          "vehicleDescription": "2.5 (ASV50_, ASV50R)",
+          "vinSha256": "e50c13cd41b4e6dc7dce9f65d1027af7ec42232aa764bf24b3ba36382f59e674",
+          "vinRedacted": true
+        },
+        "catalogState": {
+          "status": "COMPLETED",
+          "matched": 1,
+          "totalItems": 3,
+          "partItems": 1,
+          "skippedItems": 2,
+          "axleRequested": 0,
+          "axleVerified": 0,
+          "elapsedMs": 4235,
+          "runId": 1
+        },
+        "pricingSummary": null,
+        "total": "TOTAL SAR 520",
+        "calculatedTotal": "520 ريال سعودي"
+      },
+      "notes": "Retested on production b2c7f9f1 after adding Arabic brake-pad synonyms. Reviewed Brake Pads SAR 250, labor SAR 120, alignment service SAR 150. Catalog matched Brake Pad Set product 402 (524 catalog articles, 3 alternatives shown), while skipping the two non-part lines. This run translated the pad as فحمات فرامل; the added بطانات variants are also covered by regression testing."
+    },
+    {
+      "id": 8,
+      "title": "فحمات أو أقراص أمامية وخلفية",
+      "status": "PASS",
+      "testedAt": "2026-09-25T13:52:41.077Z",
+      "evidence": {
+        "requestId": "7c04e25a-e832-4b2c-8de3-058a023e4458",
+        "completedAt": "2026-09-25T13:51:38.478Z",
+        "engineVersion": "mvp-2026-09",
+        "commit": "b2c7f9f1",
+        "acceptance": {
+          "schemaValid": true,
+          "missingShapeFields": [],
+          "invalidItemIndexes": [],
+          "hasItems": true,
+          "hasPrintedTotal": true,
+          "hasConfidence": true,
+          "hasVin": true,
+          "identifiedParts": 0,
+          "itemCount": 3
+        },
+        "itemSummary": {
+          "total": 3,
+          "part": 2,
+          "labor": 1,
+          "service": 0,
+          "fee": 0,
+          "nonPart": 1
+        },
+        "upload": {
+          "optimized": false,
+          "originalBytes": 81718,
+          "uploadBytes": 81718,
+          "mimeType": "image/jpeg"
+        },
+        "vehicle": {
+          "vehicleId": "9445",
+          "vin": null,
+          "manufacturerName": "TOYOTA",
+          "modelName": "CAMRY Saloon (_V5_)",
+          "vehicleDescription": "2.5 (ASV50_, ASV50R)",
+          "vinSha256": "e50c13cd41b4e6dc7dce9f65d1027af7ec42232aa764bf24b3ba36382f59e674",
+          "vinRedacted": true
+        },
+        "catalogState": {
+          "status": "COMPLETED",
+          "matched": 2,
+          "totalItems": 3,
+          "partItems": 2,
+          "skippedItems": 1,
+          "axleRequested": 2,
+          "axleVerified": 2,
+          "elapsedMs": 2083,
+          "runId": 1
+        },
+        "pricingSummary": null,
+        "total": "TOTAL SAR 1180",
+        "calculatedTotal": "1180 SAR"
+      },
+      "notes": "Retested on production b2c7f9f1 after the updated service-worker cache became active. Reviewed both قرص فرامل أمامي and بطانات فرامل أمامية: Brake Disc product 82 had 4 front-position-verified results; Brake Pad Set product 402 had 5. Pads included P1447, 4UP03948, EST-50-02-277. Labor excluded; printed/calculated total SAR 1180."
+    },
+    {
+      "id": 9,
+      "title": "عرض بلا أرقام قطع",
+      "status": "PASS",
+      "testedAt": "2026-09-25T13:38:24.087Z",
+      "evidence": {
+        "requestId": "aeae3532-09df-4e25-afa4-2b7c1fc86923",
+        "completedAt": "2026-09-25T13:38:03.936Z",
+        "engineVersion": "mvp-2026-09",
+        "commit": "edee7e3b",
+        "acceptance": {
+          "schemaValid": true,
+          "missingShapeFields": [],
+          "invalidItemIndexes": [],
+          "hasItems": true,
+          "hasPrintedTotal": true,
+          "hasConfidence": true,
+          "hasVin": false,
+          "identifiedParts": 0,
+          "itemCount": 3
+        },
+        "itemSummary": {
+          "total": 3,
+          "part": 2,
+          "labor": 1,
+          "service": 0,
+          "fee": 0,
+          "nonPart": 1
+        },
+        "upload": {
+          "optimized": false,
+          "originalBytes": 79758,
+          "uploadBytes": 79758,
+          "mimeType": "image/jpeg"
+        },
+        "vehicle": {
+          "vehicleId": null,
+          "vin": null,
+          "manufacturerName": null,
+          "modelName": null,
+          "vehicleDescription": null
+        },
+        "catalogState": {
+          "status": "NOT_STARTED",
+          "runId": 8
+        },
+        "pricingSummary": null,
+        "total": "TOTAL SAR 550",
+        "calculatedTotal": "SAR 550"
+      },
+      "notes": "Live production built-in no-part-number JPEG. Reviewed Brake Pads SAR 250, Air Filter SAR 180, Labor SAR 120; all part-number cells remained not visible. Identity confidence 40/100 and price confidence 15/100; no market price or savings invented; total SAR 550."
+    },
+    {
+      "id": 10,
+      "title": "إجمالي مطبوع لا يطابق مجموع البنود",
+      "status": "PASS",
+      "testedAt": "2026-09-25T13:39:05.757Z",
+      "evidence": {
+        "requestId": "67416e20-4145-4bdd-a853-5023b531174b",
+        "completedAt": "2026-09-25T13:38:45.534Z",
+        "engineVersion": "mvp-2026-09",
+        "commit": "edee7e3b",
+        "acceptance": {
+          "schemaValid": true,
+          "missingShapeFields": [],
+          "invalidItemIndexes": [],
+          "hasItems": true,
+          "hasPrintedTotal": true,
+          "hasConfidence": true,
+          "hasVin": false,
+          "identifiedParts": 1,
+          "itemCount": 2
+        },
+        "itemSummary": {
+          "total": 2,
+          "part": 1,
+          "labor": 1,
+          "service": 0,
+          "fee": 0,
+          "nonPart": 1
+        },
+        "upload": {
+          "optimized": false,
+          "originalBytes": 79953,
+          "uploadBytes": 79953,
+          "mimeType": "image/jpeg"
+        },
+        "vehicle": {
+          "vehicleId": null,
+          "vin": null,
+          "manufacturerName": null,
+          "modelName": null,
+          "vehicleDescription": null
+        },
+        "catalogState": {
+          "status": "NOT_STARTED",
+          "runId": 10
+        },
+        "pricingSummary": null,
+        "total": "PRINTED TOTAL SAR 300",
+        "calculatedTotal": "150 ريال سعودي"
+      },
+      "notes": "Live production mismatch fixture: Brake Pads BRK-123 SAR 100 + Labor SAR 50 = SAR 150, while the printed total is SAR 300. Reviewed the displayed calculation warning showing a SAR 150.00 difference."
+    }
+  ],
+  "review": {
+    "reviewedAt": "2026-09-25T13:53:54.771961+00:00",
+    "reviewedBy": "Codex under user authorization dated 2026-09-25",
+    "method": "Live Chrome UI execution with synthetic estimate files and production OpenAI/AutoParts responses; draft validator, source comparison, and official validator",
+    "sourceDraftSha256": "2892d56a0e034413f252a874c8bd003c252db9e550c6fdc86b5c07dc3892fa4c",
+    "vinHandling": "Raw VIN retained only in private evidence. Public records use SHA-256.",
+    "launchPhase": "field-test"
+  }
 }

@@ -1463,7 +1463,7 @@ function renderFieldTestDashboard(){
    : 'البوابة الرسمية: '+dashboard.officialPassed+'/10 PASS • المسودة المحلية: '+dashboard.draftPassed+' ناجح، '+dashboard.draftFailed+' فشل، '+dashboard.draftPending+' معلّق';
 
  const select=document.getElementById('fieldTestScenarioSelect');
- const previous=Number(select.value)||fieldTestSelectedId||1;
+ const previous=fieldTestSelectedId||Number(select.value)||1;
  select.replaceChildren();
  for(const scenario of dashboard.scenarios){
    const option=new Option('#'+scenario.id+' — '+scenario.title,String(scenario.id));

@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { redactFieldTestCandidate } from '../scripts/redact-field-test-candidate.mjs';
 
 import {
   createFieldTestEvidence,
@@ -91,7 +93,10 @@ test('field-test client and validator share a satisfiable 10/10 promotion contra
     }),
     passEntry({
       scenarioId: 5,
-      analysis: analysis({ requestId: 'analysis-5' }),
+      analysis: analysis({
+        requestId: 'analysis-5',
+        acceptance: { schemaValid: true, hasItems: true, identifiedParts: 1, hasVin: true }
+      }),
       vehicle: {
         vehicleId: 9445,
         vin: VIN,
@@ -195,4 +200,24 @@ test('field-test client and validator share a satisfiable 10/10 promotion contra
   assert.equal(officialValidation.valid, true, officialValidation.errors.join('\n'));
   assert.equal(officialValidation.promotionCandidate, true);
   assert.equal(official.scenarios.every(entry => entry.status === 'PASS'), true);
+
+  const publicCandidate = redactFieldTestCandidate(official);
+  assert.equal(validateOfficialFieldTestResults(publicCandidate).promotionCandidate, true);
+  assert.equal(JSON.stringify(publicCandidate).includes(VIN), false);
+  const publicVehicle = publicCandidate.scenarios.find(entry => entry.id === 5).evidence.vehicle;
+  assert.equal(publicVehicle.vinSha256, createHash('sha256').update(VIN).digest('hex'));
+  assert.equal(official.scenarios.find(entry => entry.id === 5).evidence.vehicle.vin, VIN);
+  assert.equal(validateFieldTestDraft({ ...exported, scenarios: publicCandidate.scenarios }).valid, false);
+  for (const invalidProof of [
+    { vinSha256: 'invalid' },
+    { vinRedacted: false },
+    { vinSha256: null }
+  ]) {
+    const invalid = structuredClone(publicCandidate);
+    Object.assign(invalid.scenarios.find(entry => entry.id === 5).evidence.vehicle, invalidProof);
+    assert.equal(validateOfficialFieldTestResults(invalid).valid, false);
+  }
+  const noVinAcceptance = structuredClone(publicCandidate);
+  noVinAcceptance.scenarios.find(entry => entry.id === 5).evidence.acceptance.hasVin = false;
+  assert.equal(validateOfficialFieldTestResults(noVinAcceptance).valid, false);
 });
