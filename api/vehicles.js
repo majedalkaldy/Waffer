@@ -1,5 +1,5 @@
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
-import { getMarketConfig } from '../lib/market-config.js';
+import { getMarketConfigFromRequest } from '../lib/market-config.js';
 import { enforceCatalogRequestGuard } from '../lib/catalog-abuse-guard.js';
 
 export default async function handler(req, res) {
@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     const apiKey = process.env.AUTOPARTS_API_KEY;
     if (!apiKey) return res.status(500).json({ error: 'AUTOPARTS_API_KEY is not configured' });
 
-    const config = getMarketConfig(req.query);
+    const config = getMarketConfigFromRequest(req);
     if (!config.supported) return res.status(400).json({ error: 'Unsupported market', code: 'UNSUPPORTED_MARKET', requestedMarket: config.requestedMarket });
     const ctx = { market: config.market, langId: config.catalog.langId, countryFilterId: config.catalog.countryFilterId };
     if (!enforceCatalogRequestGuard(req, res, RUNTIME_CONFIG)) return;

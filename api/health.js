@@ -1,5 +1,5 @@
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
-import { getMarketConfig } from '../lib/market-config.js';
+import { getMarketConfig, getMarketConfigFromRequest } from '../lib/market-config.js';
 import { probeCatalogHealth } from '../lib/catalog-health-probe.js';
 import { hasConfiguredPriceProvider } from '../lib/price-provider.js';
 
@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   if (req.method !== 'GET') return res.status(405).json({ ok: false, error: 'Method not allowed' });
 
-  const marketConfig = getMarketConfig(req.query || {});
+  const marketConfig = getMarketConfigFromRequest(req);
   if (!marketConfig.supported) {
     return res.status(400).json({
       ok: false,

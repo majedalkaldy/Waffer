@@ -1,5 +1,6 @@
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { getMarketConfig } from '../lib/market-config.js';
+import { getRequestQuery } from '../lib/request-query.js';
 import { enforceCatalogRequestGuard } from '../lib/catalog-abuse-guard.js';
 
 export default async function handler(req, res) {
@@ -10,8 +11,9 @@ export default async function handler(req, res) {
 
   try {
     const apiKey = process.env.AUTOPARTS_API_KEY;
-    const vehicleId = String(req.query.vehicleId || '').trim();
-    const config = getMarketConfig(req.query);
+    const query = getRequestQuery(req);
+    const vehicleId = String(query.vehicleId || '').trim();
+    const config = getMarketConfig(query);
     if (!config.supported) return res.status(400).json({ error: 'Unsupported market', code: 'UNSUPPORTED_MARKET', requestedMarket: config.requestedMarket });
     const market = config.market;
     const langId = config.catalog.langId;
