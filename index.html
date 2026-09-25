@@ -54,6 +54,34 @@
  <div class="card score"><span id="priceConfidenceLabel">ثقة المقارنة السعرية</span><b id="rPrice">—</b><small id="priceHelp">قابلية المقارنة دون تخمين</small></div></div>
  <div class="card"><h3 id="overallLabel">درجة الثقة الكلية</h3><div class="total"><b id="rOverall">—</b><small id="overallHelp">تعكس قوة الأدلة المتاحة، وليست تقييمًا للورشة</small></div><div id="confidenceBreakdown" class="note wf-inline-13"></div></div>
  <div class="card"><h3 id="findingsLabel">أبرز ما وجدناه</h3><div id="rConfidenceNote" class="note wf-inline-14">درجات الثقة تقيس قوة الأدلة المتاحة وليست تقييمًا لجودة الورشة.</div><div id="rWarningsSummary" class="lock"></div><div id="rTestMeta" class="note diagnostic wf-inline-15"></div><div id="rRequestId" class="note diagnostic wf-inline-16"></div><div id="rEngineMeta" class="note diagnostic wf-inline-16"></div><div id="rVerificationSummary" class="lock"></div><div id="rMvpGate" class="lock diagnostic"></div><div id="rReleaseReadiness" class="lock diagnostic"></div><div id="rDataIntegrity" class="lock diagnostic"></div><div id="rVersionIntegrity" class="lock diagnostic"></div><div id="rOverallGate" class="lock diagnostic"></div><div id="rManualTestPrompt" class="lock diagnostic"></div><div id="rDocQuality" class="lock"></div><div id="rCatalogCoverage" class="lock">🔎 تغطية التحقق من الكتالوج: بانتظار المطابقة.</div><div id="rCatalogGate" class="lock diagnostic">🔎 فحص الكتالوج: بانتظار المطابقة.</div><div id="rAxleGate" class="lock diagnostic"></div><div id="rFieldTestSummary" class="lock diagnostic"></div><button id="debugExportBtn" class="secondary diagnostic" type="button">تصدير تقرير الاختبار</button>
+<div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
+  <div class="lock" id="trustNotice">🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون مطابقة القطعة ومصدر سعر موثوق.</div>
+  <div id="catalogSummary" class="lock" role="status" aria-live="polite">🔎 حالة مطابقة الكتالوج: بانتظار التحليل.</div>
+  <button id="detailsBtn">عرض تفاصيل البنود</button><button id="workshopBtn" class="secondary">أنشئ رسالة للورشة</button>
+ </div>
+</section>
+
+<section id="advanced" class="hidden">
+ <div class="top"><span class="pill" id="advancedPill">نموذج تجريبي</span><h2 id="advancedTitle">التحليل المتقدم</h2></div>
+ <div class="card"><h3 id="detailsTitle">تفاصيل بنود العرض المقروءة</h3><div id="itemTypeSummary" class="note wf-inline-17"></div>
+ <div class="table-wrap"><table><caption id="itemsCaption" class="note wf-inline-18">بنود عرض الصيانة المستخرجة</caption><thead><tr><th id="colItem" scope="col">البند</th><th id="colType" scope="col">النوع</th><th id="colPartNumber" scope="col">رقم القطعة</th><th id="colPrice" scope="col">السعر</th><th id="colIdentity" scope="col">الهوية</th><th id="colCompatibility" scope="col">التوافق</th><th id="colPriceAssessment" scope="col">تقييم السعر</th><th id="colConflict" scope="col">التداخل</th></tr></thead>
+ <tbody id="itemsBody"></tbody></table></div>
+ <p class="note" id="detailsDisclaimer">البيانات مستخرجة من العرض المرفوع. الحكم مبدئي ولا يمثل مقارنة سعرية نهائية قبل التحقق من هوية القطعة ومصدر السعر.</p></div>
+ <div id="catalogMatches" class="card">
+  <h3 id="catalogMatchLabel">🔎 مطابقة كتالوج القطع</h3>
+  <div class="note" id="catalogWaitingText">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>
+ </div>
+ <div class="card"><h3 id="beforePayLabel">قبل أن تدفع</h3><div id="nextActions"></div><div id="decisionSummary" class="lock"></div><button id="shareSummaryBtn" class="secondary" type="button">مشاركة ملخص النتيجة</button></div>
+ <div class="card"><div class="price" id="confirmedSavingLabel">التوفير المؤكد: غير محسوب</div><p class="lead" id="savingNote">لا يحسب «وفّر» التوفير قبل مطابقة هوية القطعة بمصدر سعر موثوق.</p><div id="priceReadiness" class="lock">💰 مقارنة الأسعار: بانتظار هوية قطعة قابلة للتحقق ومصدر سعر موثوق.</div>
+ <button id="workshopFollowupBtn">أنشئ رسالة استكمال للورشة</button></div>
+ <div class="nav"><button id="backBtn" class="secondary">رجوع</button><button id="newAnalysisBtn">تحليل عرض آخر</button></div>
+</section>
+
+<section id="msg" class="hidden">
+ <div class="top"><span class="pill" id="messagePill">جاهزة للنسخ</span><h2 id="workshopMessageTitle">رسالة للورشة</h2></div>
+ <div class="card"><p id="message" class="wf-inline-19">السلام عليكم، قبل اعتماد العرض أحتاج فضلاً كشفًا مفصلًا يوضح اسم ورقم كل قطعة، الشركة المصنعة، وهل هي أصلية Ford/Motorcraft أو بديلة، والكمية وسعر القطعة وأجرة التركيب والضريبة والضمان. كذلك أرجو توضيح ما إذا كان السعر يشمل ضبط الزوايا بعد أعمال التعليق والدركسون. وشكرًا.</p>
+ <button id="copyMessageBtn">نسخ الرسالة</button><button id="resultBackBtn" class="secondary">العودة للنتيجة</button></div>
+</section>
 <div id="fieldTestDashboard" class="card diagnostic field-test-dashboard" aria-labelledby="fieldTestDashboardTitle">
   <h3 id="fieldTestDashboardTitle">🧪 لوحة الاختبار الميداني</h3>
   <div id="fieldTestProgress" class="note" role="status" aria-live="polite"></div>
@@ -86,34 +114,6 @@
   </div>
   <div id="fieldTestScenarioList" class="field-test-list"></div>
 </div>
-<div id="rVehicleEvidence" class="lock"></div><div id="rEvidenceLevel" class="lock"></div><div id="rTotalCheck" class="lock"></div><div id="rAlerts"></div>
-  <div class="lock" id="trustNotice">🔒 لا يعرض «وفّر» توفيرًا مؤكدًا دون مطابقة القطعة ومصدر سعر موثوق.</div>
-  <div id="catalogSummary" class="lock" role="status" aria-live="polite">🔎 حالة مطابقة الكتالوج: بانتظار التحليل.</div>
-  <button id="detailsBtn">عرض تفاصيل البنود</button><button id="workshopBtn" class="secondary">أنشئ رسالة للورشة</button>
- </div>
-</section>
-
-<section id="advanced" class="hidden">
- <div class="top"><span class="pill" id="advancedPill">نموذج تجريبي</span><h2 id="advancedTitle">التحليل المتقدم</h2></div>
- <div class="card"><h3 id="detailsTitle">تفاصيل بنود العرض المقروءة</h3><div id="itemTypeSummary" class="note wf-inline-17"></div>
- <div class="table-wrap"><table><caption id="itemsCaption" class="note wf-inline-18">بنود عرض الصيانة المستخرجة</caption><thead><tr><th id="colItem" scope="col">البند</th><th id="colType" scope="col">النوع</th><th id="colPartNumber" scope="col">رقم القطعة</th><th id="colPrice" scope="col">السعر</th><th id="colIdentity" scope="col">الهوية</th><th id="colCompatibility" scope="col">التوافق</th><th id="colPriceAssessment" scope="col">تقييم السعر</th><th id="colConflict" scope="col">التداخل</th></tr></thead>
- <tbody id="itemsBody"></tbody></table></div>
- <p class="note" id="detailsDisclaimer">البيانات مستخرجة من العرض المرفوع. الحكم مبدئي ولا يمثل مقارنة سعرية نهائية قبل التحقق من هوية القطعة ومصدر السعر.</p></div>
- <div id="catalogMatches" class="card">
-  <h3 id="catalogMatchLabel">🔎 مطابقة كتالوج القطع</h3>
-  <div class="note" id="catalogWaitingText">سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.</div>
- </div>
- <div class="card"><h3 id="beforePayLabel">قبل أن تدفع</h3><div id="nextActions"></div><div id="decisionSummary" class="lock"></div><button id="shareSummaryBtn" class="secondary" type="button">مشاركة ملخص النتيجة</button></div>
- <div class="card"><div class="price" id="confirmedSavingLabel">التوفير المؤكد: غير محسوب</div><p class="lead" id="savingNote">لا يحسب «وفّر» التوفير قبل مطابقة هوية القطعة بمصدر سعر موثوق.</p><div id="priceReadiness" class="lock">💰 مقارنة الأسعار: بانتظار هوية قطعة قابلة للتحقق ومصدر سعر موثوق.</div>
- <button id="workshopFollowupBtn">أنشئ رسالة استكمال للورشة</button></div>
- <div class="nav"><button id="backBtn" class="secondary">رجوع</button><button id="newAnalysisBtn">تحليل عرض آخر</button></div>
-</section>
-
-<section id="msg" class="hidden">
- <div class="top"><span class="pill" id="messagePill">جاهزة للنسخ</span><h2 id="workshopMessageTitle">رسالة للورشة</h2></div>
- <div class="card"><p id="message" class="wf-inline-19">السلام عليكم، قبل اعتماد العرض أحتاج فضلاً كشفًا مفصلًا يوضح اسم ورقم كل قطعة، الشركة المصنعة، وهل هي أصلية Ford/Motorcraft أو بديلة، والكمية وسعر القطعة وأجرة التركيب والضريبة والضمان. كذلك أرجو توضيح ما إذا كان السعر يشمل ضبط الزوايا بعد أعمال التعليق والدركسون. وشكرًا.</p>
- <button id="copyMessageBtn">نسخ الرسالة</button><button id="resultBackBtn" class="secondary">العودة للنتيجة</button></div>
-</section>
 </main>
 <script src="/app.js"></script>
 <script type="module" src="/app-module.js"></script>
