@@ -5,6 +5,10 @@ import {
   lookupVerifiedPricing,
   calculateVerifiedOfferSaving
 } from '../lib/price-provider.js';
+import {
+  checkPricingRequestLimit,
+  checkPricingRequestProvenance
+} from '../lib/pricing-abuse-guard.js';
 
 export default async function handler(req, res) {
   res.setHeader('Allow', 'POST');
@@ -13,6 +17,17 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   const requestedLocale = String(req.body?.locale || 'ar-SA');
   const requestedEnglish = requestedLocale.toLowerCase().startsWith('en');
+
+  const provenance = checkPricingRequestProvenance(req);
+  if (!provenance.allowed) {
+    return res.status(403).json({
+      error: requestedEnglish
+        ? 'The pricing request was blocked because it did not originate from Waffer.'
+        : 'تم حظر طلب التسعير لأنه لم يصدر من موقع وفّر.',
+      code: provenance.code
+    });
+  }
+
   try {
     const {
       partName,
@@ -53,6 +68,24 @@ export default async function handler(req, res) {
     const isEnglish = normalizedLocale.toLowerCase().startsWith('en');
     const hasPartIdentity = hasUsablePartNumber(safePartNumber);
     const hasVehicleIdentity = hasUsableVehicleIdentity(vehicle);
+
+    const requestLimit = checkPricingRequestLimit(req, RUNTIME_CONFIG);
+    if (requestLimit.burstMax != null) {
+      res.setHeader('X-RateLimit-Pricing-Burst-Limit', String(requestLimit.burstMax));
+      res.setHeader('X-RateLimit-Pricing-Burst-Remaining', String(requestLimit.burstRemaining));
+      res.setHeader('X-RateLimit-Pricing-Hourly-Limit', String(requestLimit.hourlyMax));
+      res.setHeader('X-RateLimit-Pricing-Hourly-Remaining', String(requestLimit.hourlyRemaining));
+    }
+    if (!requestLimit.allowed) {
+      res.setHeader('Retry-After', String(requestLimit.retryAfterSeconds));
+      return res.status(429).json({
+        error: isEnglish
+          ? 'Too many pricing requests. Wait briefly and try again.'
+          : 'طلبات التسعير كثيرة مؤقتًا. انتظر قليلًا ثم حاول مرة أخرى.',
+        code: 'PRICE_CLIENT_RATE_LIMITED',
+        retryAfterSeconds: requestLimit.retryAfterSeconds
+      });
+    }
 
     const pricing = await lookupVerifiedPricing({
       marketConfig,
