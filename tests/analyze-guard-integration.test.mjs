@@ -7,6 +7,8 @@ import { resetAnalysisRequestGuardForTests } from '../lib/analysis-abuse-guard.j
 
 const originalFetch = globalThis.fetch;
 const originalKey = process.env.OPENAI_API_KEY;
+const originalVercelEnv = process.env.VERCEL_ENV;
+const originalVercelCommit = process.env.VERCEL_GIT_COMMIT_SHA;
 const originalLimits = {
   analysisRateLimitBurstWindowMs: RUNTIME_CONFIG.analysisRateLimitBurstWindowMs,
   analysisRateLimitBurstMax: RUNTIME_CONFIG.analysisRateLimitBurstMax,
@@ -84,6 +86,8 @@ function aiResponse() {
 
 test.before(() => {
   process.env.OPENAI_API_KEY = 'test-key';
+  process.env.VERCEL_ENV = 'preview';
+  process.env.VERCEL_GIT_COMMIT_SHA = '1234567890abcdef1234567890abcdef12345678';
   RUNTIME_CONFIG.analysisRateLimitBurstWindowMs = 60_000;
   RUNTIME_CONFIG.analysisRateLimitBurstMax = 2;
   RUNTIME_CONFIG.analysisRateLimitHourlyWindowMs = 3_600_000;
@@ -94,6 +98,10 @@ test.after(() => {
   globalThis.fetch = originalFetch;
   if (originalKey === undefined) delete process.env.OPENAI_API_KEY;
   else process.env.OPENAI_API_KEY = originalKey;
+  if (originalVercelEnv === undefined) delete process.env.VERCEL_ENV;
+  else process.env.VERCEL_ENV = originalVercelEnv;
+  if (originalVercelCommit === undefined) delete process.env.VERCEL_GIT_COMMIT_SHA;
+  else process.env.VERCEL_GIT_COMMIT_SHA = originalVercelCommit;
   Object.assign(RUNTIME_CONFIG, originalLimits);
   resetAnalysisRequestGuardForTests();
 });
@@ -125,6 +133,10 @@ test('third valid cost-bearing request is rejected before OpenAI', async () => {
 
   assert.equal(first.statusCode, 200);
   assert.equal(second.statusCode, 200);
+  assert.deepEqual(first.body?.deployment, {
+    environment: 'preview',
+    commit: '12345678'
+  });
   assert.equal(third.statusCode, 429);
   assert.equal(third.body?.code, 'ANALYSIS_CLIENT_RATE_LIMITED');
   assert.ok(Number(third.headers['Retry-After']) >= 1);
