@@ -67,6 +67,7 @@ const required = [
   'tests/security-headers.test.mjs',
   'tests/readiness-endpoint.test.mjs',
   'tests/client-script-externalization.test.mjs',
+  'tests/client-secret-boundary.test.mjs',
   'tests/style-externalization.test.mjs',
   'tests/runtime-resilience.test.mjs',
   'lib/catalog-health-probe.js',
