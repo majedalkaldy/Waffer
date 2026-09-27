@@ -17,7 +17,7 @@
 - `launch-gate` يتحقق أيضًا من أدلة `docs/FIELD_TEST_RESULTS.json` الرسمية؛ 10/10 PASS بلا دليل صالح لا تُعد جاهزية للترقية.
 - مسار اعتماد الأدلة أصبح: draft → Validator → Candidate آمن غير قابل للكتابة فوق الملف الرسمي → مراجعة/PR.
 - `/api/readiness` يعطي ملخصًا machine-readable غير مكلف لحالة الأدلة والبوابة والتكوين؛ لا يتصل بـOpenAI أو AutoParts ولا يعرض scenarios/evidence/notes.
-- `/api/readiness` يفصل الآن بين `runtimePromotionReady` و`publicBetaReady`؛ الـruntime لا يستطيع منح موافقة Public Beta بنفسه، ويعيد `manualReviewRequired=true` حتى مراجعة حماية `main` وWAF وDeployment Protection.
+- `/api/readiness` يفصل الآن بين `runtimePromotionReady` و`publicBetaReady`، ويقرأ نتيجة المراجعات اليدوية المسجلة في `docs/RELEASE_CONTROL_REVIEWS.json`. حماية `main` مكتملة، بينما تبقى مراجعتا WAF وDeployment Protection مانعتين للإطلاق العام.
 - لوحة `?debug=1` تتضمن Browser Preflight غير مدفوع يفحص Canvas/تحسين الصور وService Worker وCSP وreadiness قبل بدء السيناريوهات، ويُصدّر كبيانات تشخيصية منفصلة لا تُحتسب PASS.
 - لوحة الاختبار تستطيع توليد Fixtures محلية قياسية للسيناريوهات 1–10 لتقليل الاعتماد على ملفات شخصية؛ اختبارات VIN/Front-Rear التي تتطلب المزود تبقى بحاجة إلى VIN حقيقي مدعوم.
 
@@ -32,7 +32,7 @@
 | حماية تكلفة `/api/analyze` | **IMPLEMENTED IN CODE / WAF MONITORING ACTIVE** | الحارس الداخلي يحد الطلبات المدفوعة إلى 4/دقيقة و20/ساعة لكل IP داخل كل runtime، يخزن hash فقط، يحظر browser cross-site، ويعيد 429 + Retry-After قبل OpenAI | تم نشر قاعدة المراقبة على Production؛ المتبقي مراقبة الحركة قبل تحويلها إلى حظر فعلي |
 | وصول Vercel الحي | **ACTIVE** | Team `waffer` والمشروع والـdeployments والسجلات مرئية، وWAF monitor تم نشره يدويًا على Production | الاستمرار في مراقبة السجلات وWAF قبل تحويله من Log إلى enforcement |
 | الوصول العام قبل Public Beta | **PROTECTED / REVIEW REQUIRED** | آخر Production = READY، لكن طلبًا مباشرًا محميًا لـ `/api/readiness` أعاد 302 إلى Vercel SSO أثناء فحص 2026-09-24 | إبقاء الحماية خلال field-test، ثم مراجعة Deployment Protection واختبار جلسة عامة غير مسجلة قبل Public Beta |
-| حماية `main` | **ACTION REQUIRED** | القراءة المباشرة للفرع تؤكد `protected=false` وrequired status checks = off | تطبيق `docs/MAIN_BRANCH_PROTECTION.md` من إعدادات GitHub لفرض PR + regression-suite قبل الدمج |
+| حماية `main` | **VERIFIED — ACTIVE** | تحقق GitHub API بتاريخ 2026-09-27: `protected=true`؛ ruleset رقم `24069197` فعال على `main` ويفرض PR و`regression-suite` مع strict status checks، ويمنع force push والحذف بلا bypass | إبقاء القاعدة فعالة؛ سجل المراجعة المنظم في `docs/RELEASE_CONTROL_REVIEWS.json` |
 
 ## ما لا يُعد دليل إطلاق
 
@@ -44,7 +44,7 @@
 2. الحفاظ على أدلة 10/10 المعتمدة وإعادة السيناريوهات المتأثرة عند تغيير مسارات التحليل/المطابقة؛ لا تعني هذه النتيجة الإطلاق العام.
 3. مراقبة قاعدة WAF المنشورة في وضع Log ومراجعة أي تجاوزات قبل تفعيل الحظر الفعلي.
 4. حسم مزود الأسعار الموثوق قبل تفعيل أي حساب للسعر السوقي أو التوفير.
-5. التحقق من حماية `main` وفرض CI كشرط دمج.
+5. الحفاظ على حماية `main` و`regression-suite` كشرط دمج، وإعادة التحقق إذا تغير الـruleset.
 6. مراجعة `docs/PUBLIC_BETA_CHECKLIST.md` بما في ذلك Deployment Protection والوصول العام.
 7. لا يتم الانتقال إلى `public-beta` إلا بعد 10/10 PASS واجتياز بوابة CI.
 
