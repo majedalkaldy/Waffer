@@ -575,13 +575,13 @@ if (!failures.length) {
   if (!readinessApi.includes('manualReviewRequired') ||
       !readinessApi.includes('publicBetaReady') ||
       !readinessApi.includes('DEPLOYMENT_PROTECTION_REVIEW_REQUIRED') ||
-      !readinessApi.includes("deploymentProtection: 'NOT_EVALUATED_BY_RUNTIME'")) {
+      !readinessApi.includes('RELEASE_CONTROL_REVIEWS')) {
     failures.push('Readiness endpoint must preserve explicit manual public-beta gates');
   }
   if (!readinessApi.includes("service: 'waffer-readiness'") ||
       !readinessApi.includes('evidenceValid: fieldTest.evidenceValid') ||
       !readinessApi.includes('integrityValid: fieldTest.integrityValid') ||
-      !readinessApi.includes("mainBranchProtection: 'NOT_EVALUATED_BY_RUNTIME'")) {
+      !readinessApi.includes("['mainBranchProtection', 'MAIN_BRANCH_PROTECTION_REVIEW_REQUIRED']")) {
     failures.push('Readiness endpoint v2 contract is incomplete');
   }
   if (readinessApi.includes('fetch(')) {
@@ -610,12 +610,22 @@ if (!failures.length) {
     'WAF MONITORING ACTIVE',
     'وصول Vercel الحي',
     'ACTIVE',
-    'ACTION REQUIRED',
-    'protected=false'
+    'VERIFIED — ACTIVE',
+    'protected=true'
   ]) {
     if (!readinessDoc.includes(requiredBoundary)) {
       failures.push('Launch readiness document is missing boundary: ' + requiredBoundary);
     }
+  }
+
+  const releaseControlReviews = JSON.parse(read('docs/RELEASE_CONTROL_REVIEWS.json'));
+  if (releaseControlReviews?.controls?.mainBranchProtection?.status !== 'PASS' ||
+      releaseControlReviews?.controls?.mainBranchProtection?.evidence?.protected !== true ||
+      releaseControlReviews?.controls?.mainBranchProtection?.evidence?.requiredStatusCheck !== 'regression-suite' ||
+      releaseControlReviews?.controls?.mainBranchProtection?.evidence?.bypassActors !== 0 ||
+      releaseControlReviews?.controls?.wafEnforcement?.status !== 'PENDING' ||
+      releaseControlReviews?.controls?.deploymentProtection?.status !== 'PENDING') {
+    failures.push('Release control review record is inconsistent with the approved manual gates');
   }
 
   const branchProtectionDoc = read('docs/MAIN_BRANCH_PROTECTION.md');
