@@ -18,7 +18,7 @@
 
 ## 3. GitHub main protection
 
-طبّق `docs/MAIN_BRANCH_PROTECTION.md`.
+تم تطبيق `docs/MAIN_BRANCH_PROTECTION.md` والتحقق عبر GitHub API بتاريخ 2026-09-27.
 
 الحد الأدنى:
 - Require pull request before merging.
@@ -26,9 +26,12 @@
 - Require `regression-suite`.
 - لا تعتمد على نجاح Vercel build وحده كبديل عن CI.
 
-الحالة المرصودة بتاريخ 2026-09-24:
-- `main protected=false`
-- required status checks = off
+الحالة المؤكدة بتاريخ 2026-09-27:
+- `main protected=true`.
+- ruleset `Waffer main protection` فعال ويستهدف `main` فقط.
+- `regression-suite` فحص إلزامي مع Require branches to be up to date.
+- force push والحذف محظوران، ولا يوجد bypass أو review بشري إلزامي.
+- التفاصيل المنظمة محفوظة في `docs/RELEASE_CONTROL_REVIEWS.json`.
 
 ## 4. Vercel Deployment Protection
 
