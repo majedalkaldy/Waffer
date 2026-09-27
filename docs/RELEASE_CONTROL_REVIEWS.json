@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-27T08:16:00.000Z",
+  "controls": {
+    "mainBranchProtection": {
+      "status": "PASS",
+      "reviewedAt": "2026-09-27T08:16:00.000Z",
+      "evidence": {
+        "protected": true,
+        "rulesetId": 24069197,
+        "rulesetName": "Waffer main protection",
+        "enforcement": "active",
+        "target": "refs/heads/main",
+        "requiredStatusCheck": "regression-suite",
+        "strictStatusChecks": true,
+        "requiredApprovals": 0,
+        "conversationResolution": true,
+        "blockForcePushes": true,
+        "blockDeletions": true,
+        "bypassActors": 0,
+        "signedCommitsRequired": false
+      }
+    },
+    "wafEnforcement": {
+      "status": "PENDING",
+      "reviewedAt": null
+    },
+    "deploymentProtection": {
+      "status": "PENDING",
+      "reviewedAt": null
+    }
+  }
+}
