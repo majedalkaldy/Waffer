@@ -10,17 +10,35 @@ import { hasConfiguredPriceProvider } from '../lib/price-provider.js';
 
 const require = createRequire(import.meta.url);
 const FIELD_TEST_RESULTS = require('../docs/FIELD_TEST_RESULTS.json');
+const RELEASE_CONTROL_REVIEWS = require('../docs/RELEASE_CONTROL_REVIEWS.json');
 
-const MANUAL_REVIEW_BLOCKERS = Object.freeze([
-  'MAIN_BRANCH_PROTECTION_REVIEW_REQUIRED',
-  'WAF_ENFORCEMENT_REVIEW_REQUIRED',
-  'DEPLOYMENT_PROTECTION_REVIEW_REQUIRED'
+const MANUAL_CONTROLS = Object.freeze([
+  ['mainBranchProtection', 'MAIN_BRANCH_PROTECTION_REVIEW_REQUIRED'],
+  ['wafEnforcement', 'WAF_ENFORCEMENT_REVIEW_REQUIRED'],
+  ['deploymentProtection', 'DEPLOYMENT_PROTECTION_REVIEW_REQUIRED']
 ]);
+
+function manualReviewState() {
+  const controls = RELEASE_CONTROL_REVIEWS?.controls || {};
+  const blockers = MANUAL_CONTROLS
+    .filter(([key]) => controls?.[key]?.status !== 'PASS')
+    .map(([, blocker]) => blocker);
+
+  return {
+    blockers,
+    checks: Object.fromEntries(MANUAL_CONTROLS.map(([key]) => [
+      key,
+      controls?.[key]?.status || 'NOT_RECORDED'
+    ])),
+    updatedAt: RELEASE_CONTROL_REVIEWS?.updatedAt || null
+  };
+}
 
 function blockerCodes({
   fieldTest,
   pricingProviderConfigured,
-  configured
+  configured,
+  manualBlockers
 }) {
   const blockers = [];
 
@@ -32,7 +50,7 @@ function blockerCodes({
   if (!configured.analysis) blockers.push('ANALYSIS_NOT_CONFIGURED');
   if (!configured.catalog) blockers.push('CATALOG_NOT_CONFIGURED');
 
-  return [...new Set([...blockers, ...MANUAL_REVIEW_BLOCKERS])];
+  return [...new Set([...blockers, ...manualBlockers])];
 }
 
 export default async function handler(req, res) {
@@ -69,11 +87,13 @@ export default async function handler(req, res) {
     catalog: Boolean(process.env.AUTOPARTS_API_KEY),
     pricing: pricingProviderConfigured
   };
+  const manualReview = manualReviewState();
 
   const knownBlockers = blockerCodes({
     fieldTest,
     pricingProviderConfigured,
-    configured
+    configured,
+    manualBlockers: manualReview.blockers
   });
 
   const runtimePromotionReady =
@@ -81,9 +101,9 @@ export default async function handler(req, res) {
     pricingProviderConfigured &&
     configured.analysis &&
     configured.catalog;
-  const manualReviewRequired = true;
+  const manualReviewRequired = manualReview.blockers.length > 0;
   const publicBetaReady = runtimePromotionReady && !manualReviewRequired;
-  const manualBlockerCount = MANUAL_REVIEW_BLOCKERS.length;
+  const manualBlockerCount = manualReview.blockers.length;
   const machineBlockerCount = Math.max(0, knownBlockers.length - manualBlockerCount);
 
   return res.status(200).json({
@@ -129,9 +149,8 @@ export default async function handler(req, res) {
     configured,
     knownBlockers,
     manualChecks: {
-      mainBranchProtection: 'NOT_EVALUATED_BY_RUNTIME',
-      wafEnforcement: 'NOT_EVALUATED_BY_RUNTIME',
-      deploymentProtection: 'NOT_EVALUATED_BY_RUNTIME',
+      ...manualReview.checks,
+      updatedAt: manualReview.updatedAt,
       note: 'Runtime readiness never authorizes Public Beta without manual release-gate review.'
     },
     timestamp: new Date().toISOString()
