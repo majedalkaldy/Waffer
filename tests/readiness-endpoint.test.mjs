@@ -60,9 +60,9 @@ test('readiness v2 reports approved field evidence but keeps public beta blocked
     assert.equal(res.body.promotion.fieldTestPromotionReady, true);
     assert.equal(res.body.promotion.verifiedPricingReady, false);
     assert.equal(res.body.promotion.runtimePromotionReady, false);
-    assert.equal(res.body.promotion.manualReviewRequired, true);
+    assert.equal(res.body.promotion.manualReviewRequired, false);
     assert.equal(res.body.promotion.publicBetaReady, false);
-    assert.equal(res.body.promotion.manualBlockerCount, 1);
+    assert.equal(res.body.promotion.manualBlockerCount, 0);
     assert.equal(res.body.promotion.machineBlockerCount, 1);
 
     assert.equal(res.body.configured.analysis, true);
@@ -73,11 +73,11 @@ test('readiness v2 reports approved field evidence but keeps public beta blocked
     assert.ok(res.body.knownBlockers.includes('VERIFIED_PRICE_PROVIDER_MISSING'));
     assert.equal(res.body.knownBlockers.includes('MAIN_BRANCH_PROTECTION_REVIEW_REQUIRED'), false);
     assert.equal(res.body.knownBlockers.includes('WAF_ENFORCEMENT_REVIEW_REQUIRED'), false);
-    assert.ok(res.body.knownBlockers.includes('DEPLOYMENT_PROTECTION_REVIEW_REQUIRED'));
+    assert.equal(res.body.knownBlockers.includes('DEPLOYMENT_PROTECTION_REVIEW_REQUIRED'), false);
     assert.equal(res.body.knownBlockers.includes('FIELD_TEST_EVIDENCE_INVALID'), false);
     assert.equal(res.body.manualChecks.mainBranchProtection, 'PASS');
     assert.equal(res.body.manualChecks.wafEnforcement, 'PASS');
-    assert.equal(res.body.manualChecks.deploymentProtection, 'PENDING');
+    assert.equal(res.body.manualChecks.deploymentProtection, 'PASS');
     assert.match(res.body.manualChecks.updatedAt, /^2026-09-28T/);
     assert.match(res.body.manualChecks.note,/never authorizes Public Beta/i);
     assert.equal(fetchCalls, 0);
@@ -118,9 +118,9 @@ test('readiness v2 reports missing service configuration without network calls',
     assert.ok(res.body.knownBlockers.includes('ANALYSIS_NOT_CONFIGURED'));
     assert.ok(res.body.knownBlockers.includes('CATALOG_NOT_CONFIGURED'));
     assert.equal(res.body.promotion.publicBetaReady, false);
-    assert.equal(res.body.promotion.manualReviewRequired, true);
+    assert.equal(res.body.promotion.manualReviewRequired, false);
     assert.equal(res.body.promotion.machineBlockerCount, 3);
-    assert.equal(res.body.promotion.manualBlockerCount, 1);
+    assert.equal(res.body.promotion.manualBlockerCount, 0);
     assert.equal(fetchCalls, 0);
   } finally {
     globalThis.fetch = originalFetch;

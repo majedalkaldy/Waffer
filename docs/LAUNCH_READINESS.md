@@ -17,7 +17,7 @@
 - `launch-gate` يتحقق أيضًا من أدلة `docs/FIELD_TEST_RESULTS.json` الرسمية؛ 10/10 PASS بلا دليل صالح لا تُعد جاهزية للترقية.
 - مسار اعتماد الأدلة أصبح: draft → Validator → Candidate آمن غير قابل للكتابة فوق الملف الرسمي → مراجعة/PR.
 - `/api/readiness` يعطي ملخصًا machine-readable غير مكلف لحالة الأدلة والبوابة والتكوين؛ لا يتصل بـOpenAI أو AutoParts ولا يعرض scenarios/evidence/notes.
-- `/api/readiness` يفصل الآن بين `runtimePromotionReady` و`publicBetaReady`، ويقرأ نتيجة المراجعات اليدوية المسجلة في `docs/RELEASE_CONTROL_REVIEWS.json`. حماية `main` مكتملة، بينما تبقى مراجعتا WAF وDeployment Protection مانعتين للإطلاق العام.
+- `/api/readiness` يفصل الآن بين `runtimePromotionReady` و`publicBetaReady`، ويقرأ نتيجة المراجعات اليدوية المسجلة في `docs/RELEASE_CONTROL_REVIEWS.json`. حماية `main` ومراجعتا WAF وDeployment Protection مكتملة؛ يبقى مزود السعر الموثوق هو مانع الترقية الحالي.
 - لوحة `?debug=1` تتضمن Browser Preflight غير مدفوع يفحص Canvas/تحسين الصور وService Worker وCSP وreadiness قبل بدء السيناريوهات، ويُصدّر كبيانات تشخيصية منفصلة لا تُحتسب PASS.
 - لوحة الاختبار تستطيع توليد Fixtures محلية قياسية للسيناريوهات 1–10 لتقليل الاعتماد على ملفات شخصية؛ اختبارات VIN/Front-Rear التي تتطلب المزود تبقى بحاجة إلى VIN حقيقي مدعوم.
 
@@ -31,7 +31,7 @@
 | مصدر أسعار موثوق | **CONTRACT READY / PROVIDER MISSING** | عقد `lib/price-provider.js` جاهز، وبحث `docs/PRICE_PROVIDER_CANDIDATES.md` وثّق مسارات تكامل محتملة؛ لم يتم اختيار أو تفويض أي مزود بعد، والإنتاج ما زال يعيد marketPrice=null وsaving=NOT_CALCULATED | قرار تجاري للحصول على API/feed مصرح به من مصدر سعودي، ثم shadow/live validation قبل تفعيل الأسعار |
 | حماية تكلفة `/api/analyze` | **IMPLEMENTED IN CODE / WAF MONITORING ACTIVE — REVIEW PASS** | الحارس الداخلي يفرض 4/دقيقة و20/ساعة لكل IP داخل كل runtime. مراجعة 2026-09-28 وجدت حركة منخفضة جدًا: 7 طلبات/3 أيام على أحدث deployment، 0 `/api/analyze` و0 429 خلال آخر 24 ساعة | إبقاء WAF على Log حاليًا؛ إعادة مراجعة enforcement بعد وجود حركة عامة كافية لتقييم false positives/NAT |
 | وصول Vercel الحي | **ACTIVE** | Team `waffer` والمشروع والـdeployments والسجلات مرئية، وWAF monitor تم نشره يدويًا على Production | الاستمرار في مراقبة السجلات وWAF قبل تحويله من Log إلى enforcement |
-| الوصول العام قبل Public Beta | **PROTECTED / REVIEW REQUIRED** | آخر Production = READY، لكن طلبًا مباشرًا محميًا لـ `/api/readiness` أعاد 302 إلى Vercel SSO أثناء فحص 2026-09-24 | إبقاء الحماية خلال field-test، ثم مراجعة Deployment Protection واختبار جلسة عامة غير مسجلة قبل Public Beta |
+| الوصول العام قبل Public Beta | **PUBLIC ACCESS VERIFIED — REVIEW PASS** | GitHub Actions runner خارجي أعاد HTTP 200 للصفحة الرئيسية و`/api/readiness` على Production `cbb85e08` بدون SSO redirect أو protection headers | إعادة probe فقط إذا تغير Deployment Protection أو الدومين قبل الترقية |
 | حماية `main` | **VERIFIED — ACTIVE** | تحقق GitHub API بتاريخ 2026-09-27: `protected=true`؛ ruleset رقم `24069197` فعال على `main` ويفرض PR و`regression-suite` مع strict status checks، ويمنع force push والحذف بلا bypass | إبقاء القاعدة فعالة؛ سجل المراجعة المنظم في `docs/RELEASE_CONTROL_REVIEWS.json` |
 
 ## ما لا يُعد دليل إطلاق
@@ -45,7 +45,7 @@
 3. مراجعة WAF مكتملة؛ إبقاء Log حتى تتوفر حركة عامة كافية، ثم إعادة تقييم enforcement.
 4. حسم مزود الأسعار الموثوق قبل تفعيل أي حساب للسعر السوقي أو التوفير.
 5. الحفاظ على حماية `main` و`regression-suite` كشرط دمج، وإعادة التحقق إذا تغير الـruleset.
-6. مراجعة `docs/PUBLIC_BETA_CHECKLIST.md` بما في ذلك Deployment Protection والوصول العام.
+6. مراجعة Deployment Protection مكتملة؛ إعادة التحقق فقط إذا تغير إعداد الوصول قبل الترقية.
 7. لا يتم الانتقال إلى `public-beta` إلا بعد 10/10 PASS واجتياز بوابة CI.
 
 ## رصد المتصفح في 2026-09-25

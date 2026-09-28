@@ -611,6 +611,7 @@ if (!failures.length) {
     'وصول Vercel الحي',
     'ACTIVE',
     'VERIFIED — ACTIVE',
+    'PUBLIC ACCESS VERIFIED — REVIEW PASS',
     'protected=true'
   ]) {
     if (!readinessDoc.includes(requiredBoundary)) {
@@ -627,7 +628,12 @@ if (!failures.length) {
       releaseControlReviews?.controls?.wafEnforcement?.evidence?.reviewDecision !== 'KEEP_LOG_MONITORING' ||
       releaseControlReviews?.controls?.wafEnforcement?.evidence?.enforcementEnabled !== false ||
       releaseControlReviews?.controls?.wafEnforcement?.evidence?.observations?.analyzeRequestsLast24h !== 0 ||
-      releaseControlReviews?.controls?.deploymentProtection?.status !== 'PENDING') {
+      releaseControlReviews?.controls?.deploymentProtection?.status !== 'PASS' ||
+      releaseControlReviews?.controls?.deploymentProtection?.evidence?.reviewDecision !== 'PUBLIC_ALIAS_ACCESSIBLE' ||
+      releaseControlReviews?.controls?.deploymentProtection?.evidence?.root?.httpStatus !== 200 ||
+      releaseControlReviews?.controls?.deploymentProtection?.evidence?.readiness?.httpStatus !== 200 ||
+      releaseControlReviews?.controls?.deploymentProtection?.evidence?.readiness?.service !== 'waffer-readiness' ||
+      releaseControlReviews?.controls?.deploymentProtection?.evidence?.protectionHeadersObserved !== false) {
     failures.push('Release control review record is inconsistent with the approved manual gates');
   }
 
@@ -663,6 +669,15 @@ if (!failures.length) {
       liveSmoke?.followUpObservations?.wafReview?.enforcementEnabled !== false ||
       liveSmoke?.followUpObservations?.wafReview?.classification !== 'REVIEW_COMPLETE_INSUFFICIENT_TRAFFIC_FOR_BLOCKING') {
     failures.push('Live smoke follow-up must record the reviewed WAF monitor decision');
+  }
+  if (liveSmoke?.followUpObservations?.deploymentProtection?.status !== 'PASS' ||
+      liveSmoke?.followUpObservations?.deploymentProtection?.rootHttpStatus !== 200 ||
+      liveSmoke?.followUpObservations?.deploymentProtection?.readinessHttpStatus !== 200 ||
+      liveSmoke?.followUpObservations?.deploymentProtection?.readinessService !== 'waffer-readiness' ||
+      liveSmoke?.followUpObservations?.deploymentProtection?.ssoRedirectObserved !== false ||
+      liveSmoke?.followUpObservations?.deploymentProtection?.protectionHeadersObserved !== false ||
+      liveSmoke?.followUpObservations?.deploymentProtection?.classification !== 'RESOLVED_PUBLIC_PRODUCTION_ACCESS_VERIFIED') {
+    failures.push('Live smoke follow-up must record verified public production access');
   }
 
   const launchReadinessSource = read('lib/launch-readiness.js');
