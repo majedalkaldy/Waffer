@@ -29,7 +29,7 @@
 | ضغط صورة كبيرة >3MB | **PASS — LIVE BROWSER** | ضغط المتصفح JPEG من 3,407,872 إلى 71,790 بايت ثم نجح التحليل | الاختبار استخدم JPEG اصطناعيًا مبطنًا؛ تجربة كاميرا هاتف فعلية لم تُجرَ |
 | VIN حي مع المزود | **PASS — LIVE PROVIDER** | التحقق الحي أعاد TOYOTA CAMRY 2.5 وVehicle ID 9445؛ اكتملت المطابقة والتحقق من الموضع الأمامي | الدليل العام يحتفظ ببصمة SHA-256 بدل VIN الكامل؛ الأصل محفوظ للمراجعة الخاصة |
 | مصدر أسعار موثوق | **CONTRACT READY / PROVIDER MISSING** | عقد `lib/price-provider.js` جاهز، وبحث `docs/PRICE_PROVIDER_CANDIDATES.md` وثّق مسارات تكامل محتملة؛ لم يتم اختيار أو تفويض أي مزود بعد، والإنتاج ما زال يعيد marketPrice=null وsaving=NOT_CALCULATED | قرار تجاري للحصول على API/feed مصرح به من مصدر سعودي، ثم shadow/live validation قبل تفعيل الأسعار |
-| حماية تكلفة `/api/analyze` | **IMPLEMENTED IN CODE / WAF MONITORING ACTIVE** | الحارس الداخلي يحد الطلبات المدفوعة إلى 4/دقيقة و20/ساعة لكل IP داخل كل runtime، يخزن hash فقط، يحظر browser cross-site، ويعيد 429 + Retry-After قبل OpenAI | تم نشر قاعدة المراقبة على Production؛ المتبقي مراقبة الحركة قبل تحويلها إلى حظر فعلي |
+| حماية تكلفة `/api/analyze` | **IMPLEMENTED IN CODE / WAF MONITORING ACTIVE — REVIEW PASS** | الحارس الداخلي يفرض 4/دقيقة و20/ساعة لكل IP داخل كل runtime. مراجعة 2026-09-28 وجدت حركة منخفضة جدًا: 7 طلبات/3 أيام على أحدث deployment، 0 `/api/analyze` و0 429 خلال آخر 24 ساعة | إبقاء WAF على Log حاليًا؛ إعادة مراجعة enforcement بعد وجود حركة عامة كافية لتقييم false positives/NAT |
 | وصول Vercel الحي | **ACTIVE** | Team `waffer` والمشروع والـdeployments والسجلات مرئية، وWAF monitor تم نشره يدويًا على Production | الاستمرار في مراقبة السجلات وWAF قبل تحويله من Log إلى enforcement |
 | الوصول العام قبل Public Beta | **PROTECTED / REVIEW REQUIRED** | آخر Production = READY، لكن طلبًا مباشرًا محميًا لـ `/api/readiness` أعاد 302 إلى Vercel SSO أثناء فحص 2026-09-24 | إبقاء الحماية خلال field-test، ثم مراجعة Deployment Protection واختبار جلسة عامة غير مسجلة قبل Public Beta |
 | حماية `main` | **VERIFIED — ACTIVE** | تحقق GitHub API بتاريخ 2026-09-27: `protected=true`؛ ruleset رقم `24069197` فعال على `main` ويفرض PR و`regression-suite` مع strict status checks، ويمنع force push والحذف بلا bypass | إبقاء القاعدة فعالة؛ سجل المراجعة المنظم في `docs/RELEASE_CONTROL_REVIEWS.json` |
@@ -42,7 +42,7 @@
 
 1. إبقاء `launchPhase=field-test`.
 2. الحفاظ على أدلة 10/10 المعتمدة وإعادة السيناريوهات المتأثرة عند تغيير مسارات التحليل/المطابقة؛ لا تعني هذه النتيجة الإطلاق العام.
-3. مراقبة قاعدة WAF المنشورة في وضع Log ومراجعة أي تجاوزات قبل تفعيل الحظر الفعلي.
+3. مراجعة WAF مكتملة؛ إبقاء Log حتى تتوفر حركة عامة كافية، ثم إعادة تقييم enforcement.
 4. حسم مزود الأسعار الموثوق قبل تفعيل أي حساب للسعر السوقي أو التوفير.
 5. الحفاظ على حماية `main` و`regression-suite` كشرط دمج، وإعادة التحقق إذا تغير الـruleset.
 6. مراجعة `docs/PUBLIC_BETA_CHECKLIST.md` بما في ذلك Deployment Protection والوصول العام.
