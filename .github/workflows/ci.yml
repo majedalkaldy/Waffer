@@ -25,3 +25,30 @@ jobs:
           node-version: 24
       - name: Run static and behavioral checks
         run: npm run ci
+      - name: External public access probe (temporary)
+        run: |
+          set -euo pipefail
+          ROOT_BODY="$(mktemp)"
+          ROOT_HEADERS="$(mktemp)"
+          READY_BODY="$(mktemp)"
+          READY_HEADERS="$(mktemp)"
+
+          ROOT_STATUS="$(curl -sS --max-time 20 --max-redirs 0 -D "$ROOT_HEADERS" -o "$ROOT_BODY" -w '%{http_code}' https://waffer-rho.vercel.app/)"
+          READY_STATUS="$(curl -sS --max-time 20 --max-redirs 0 -D "$READY_HEADERS" -o "$READY_BODY" -w '%{http_code}' https://waffer-rho.vercel.app/api/readiness)"
+
+          echo "root_status=$ROOT_STATUS"
+          echo "readiness_status=$READY_STATUS"
+          echo "--- root headers ---"
+          cat "$ROOT_HEADERS"
+          echo "--- readiness headers ---"
+          cat "$READY_HEADERS"
+          echo "--- readiness body ---"
+          cat "$READY_BODY"
+
+          test "$ROOT_STATUS" = "200"
+          test "$READY_STATUS" = "200"
+          grep -q '"service":"waffer-readiness"' "$READY_BODY"
+          if grep -Eqi 'vercel.*sso|x-vercel-protection-bypass|x-vercel-sso' "$ROOT_HEADERS" "$READY_HEADERS"; then
+            echo "Unexpected Vercel protection headers in public probe"
+            exit 1
+          fi
