@@ -1359,7 +1359,6 @@ if (!failures.length) {
     failures.push('PWA shell missing localization/runtime/total-check/image-optimization/identity/pricing/field-test modules');
   }
 
-  const packageJson = JSON.parse(read('package.json'));
   if (packageJson?.scripts?.['evaluate:price-provider-sample'] !== 'node scripts/evaluate-price-provider-sample.mjs') {
     failures.push('Price provider pilot evaluator CLI script is missing from package.json');
   }
