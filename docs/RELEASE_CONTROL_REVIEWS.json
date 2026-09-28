@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-28T05:35:32.715Z",
+  "updatedAt": "2026-09-28T05:43:04.876Z",
   "controls": {
     "mainBranchProtection": {
       "status": "PASS",
@@ -62,8 +62,33 @@
       }
     },
     "deploymentProtection": {
-      "status": "PENDING",
-      "reviewedAt": null
+      "status": "PASS",
+      "reviewedAt": "2026-09-28T05:43:04.876Z",
+      "evidence": {
+        "reviewDecision": "PUBLIC_ALIAS_ACCESSIBLE",
+        "probeSource": "GitHub Actions hosted runner without Vercel session",
+        "workflowRunNumber": 227,
+        "workflowRunId": 36383092138,
+        "workflowJobId": 108802727892,
+        "sourcePullRequest": 76,
+        "sourcePullRequestMerged": false,
+        "domain": "waffer-rho.vercel.app",
+        "productionCommit": "cbb85e08944a32d010a0bf3d118959f06dbe0d91",
+        "root": {
+          "path": "/",
+          "httpStatus": 200,
+          "ssoRedirectObserved": false
+        },
+        "readiness": {
+          "path": "/api/readiness",
+          "httpStatus": 200,
+          "service": "waffer-readiness",
+          "deploymentCommitShort": "cbb85e08",
+          "ssoRedirectObserved": false
+        },
+        "protectionHeadersObserved": false,
+        "rationale": "A fresh external GitHub Actions runner reached both the public root and readiness endpoint directly with HTTP 200 and no Vercel SSO/protection headers."
+      }
     }
   }
 }
