@@ -1,4 +1,4 @@
-# Waffer — Trusted Price Provider Candidates (2026-09-24)
+# Waffer — Trusted Price Provider Candidates (updated 2026-09-28)
 
 هذه الوثيقة هي **بحث تكامل فقط**. لا تعني اختيار مزود، ولا تمنح إذنًا باستخدام بيانات طرف ثالث، ولا تنشئ أي التزام مالي.
 
@@ -77,7 +77,67 @@ Sources reviewed:
 - https://store.as.com.sa/en
 - https://store.as.com.sa/en/shop
 
-## 3. eBay Browse API — مرجع دولي ثانوي فقط
+## 3. Speero / سبيرو — مرشح سوق سعودي متعدد التجار
+
+### ما تثبته المصادر العامة
+
+- سبيرو منصة سعودية لقطع الغيار وتتيح استلام أكثر من تسعيرة للقطع قبل الشراء.
+- بوابة الشركاء تعلن عن شبكة تتجاوز 200 تاجر وتسمح للتاجر بتحديث بيانات المخزون التي يرغب باستقبال الطلبات عليها.
+- يوجد مسار جملة منفصل `speero.sale` يعلن عن مخزون كبير وأسعار جملة وتوصيل داخل المملكة.
+- هذا يجعل سبيرو مرشحًا ذا قيمة إذا توفر API/quote feed رسمي يعيد هوية القطعة والسعر وصلاحية العرض والمورد.
+
+### المطلوب قبل أي ربط
+
+- API/quote feed أو sandbox مصرح به.
+- إثبات رقم OEM/MPN أو هوية قطعة يمكن ربطها بالكتالوج.
+- صلاحية التسعيرة، VAT والشحن، التوفر، هوية المورد ورابط/معرف العرض.
+- شروط إعادة عرض السعر في موقع خارجي.
+- لا scraping.
+
+### الحالة
+
+**PARTNERSHIP/API ACCESS REQUIRED — FOLLOW-UP SENT 2026-09-28.**
+
+Sources reviewed:
+- https://speero.net/about-us
+- https://speero.partners/
+- https://speero.sale/ar
+
+## 4. Salla Merchant API — مسار تجميع عروض من متاجر متعاونة
+
+### ما تثبته الوثائق الرسمية
+
+- تطبيقات Salla تستخدم OAuth2 بصلاحيات يوافق عليها التاجر.
+- Merchant API يتيح قراءة تفاصيل المنتج بصلاحية `products.read`.
+- نموذج المنتج يتضمن SKU وMPN ورابط العميل والسعر والعملة و`taxed_price`.
+- API منفصل للكميات يعيد quantity وprice.
+- Webhooks تتضمن أحداث تحديث سعر المنتج، ما يسمح بتقليل polling وتحديث البيانات قرب الزمن الحقيقي.
+- Partner Portal يدعم تطبيقات وتجربة على demo stores قبل النشر العام.
+
+### ملاءمة Waffer
+
+سلة ليست “مزود سوق” بنفسها، لكنها قد تكون بنية ممتازة لجمع عروض **متاجر قطع غيار وافقت صراحةً** على ربط بياناتها بوفّر. هذا يحل جانب الترخيص على مستوى كل تاجر، لكنه يحتاج شبكة متاجر كافية قبل وصف النتائج بأنها نطاق سوق.
+
+### المطلوب قبل أي ربط
+
+- اعتماد تطبيق Waffer أو تجربة خاصة مع متجر/متجرين.
+- تفويض `products.read` فقط في البداية.
+- تحديد طريقة ربط MPN/OEM وبيانات توافق السيارة؛ Salla لا يثبت fitment تلقائيًا.
+- استخدام webhooks للسعر والمخزون حيثما أمكن.
+- اتفاق واضح مع المتجر على إعادة عرض السعر والربط للشراء.
+
+### الحالة
+
+**TECHNICALLY DOCUMENTED / MERCHANT AUTHORIZATION REQUIRED — FOLLOW-UP SENT 2026-09-28.**
+
+Sources reviewed:
+- https://docs.salla.dev/421412m0
+- https://docs.salla.dev/421117m0
+- https://docs.salla.dev/5394169e0
+- https://docs.salla.dev/9612796e0
+- https://docs.salla.dev/433805m0
+
+## 5. eBay Browse API — مرجع دولي ثانوي فقط
 
 ### ما تثبته المصادر الرسمية
 
@@ -101,7 +161,7 @@ Sources reviewed:
 - https://developer.ebay.com/develop/api/buy
 - https://developer.ebay.com/api-docs/buy/ref-marketplace-supported.html
 
-## 4. AutoPartsAPI / TecDoc data — Catalog identity, not price source
+## 6. AutoPartsAPI / TecDoc data — Catalog identity, not price source
 
 ### ما تثبته الوثائق الحالية
 
@@ -119,6 +179,19 @@ Sources reviewed:
 - https://auto-parts-catalog.apiprofile.com/documentation
 - https://auto-parts-catalog.apiprofile.com/
 
+## حالة التواصل — 2026-09-28
+
+تمت المراسلات التالية من بريد المشروع، بدون أي التزام مالي أو قانوني:
+
+- **Qitea**: رسالة أولى 2026-09-25 + متابعة 2026-09-28 إلى `info@qiteapp.com`.
+- **Speero**: رسالة أولى 2026-09-25 + متابعة 2026-09-28 إلى `support@speero.net`.
+- **Salla Partners**: رسالة أولى 2026-09-25 + متابعة 2026-09-28 إلى `partners@salla.sa`.
+- **Automotive Spares Co.**: طلب Pilot أولي 2026-09-28 إلى `info@as.com.sa`.
+
+قبل إرسال متابعات 2026-09-28 لم يظهر رد وارد في خيوط Qitea أو Speero أو Salla.
+
+المطلوب من جميع الجهات متقارب: Pilot على 20–50 قطعة، API/feed/sandbox مصرح به، OEM/MPN، السعر النهائي، VAT، المخزون، المصدر، وقت التحديث، والتوافق إن توفر، مع رفض صريح للـscraping.
+
 ## مصادر غير مناسبة حاليًا
 
 - أي scraping لمتاجر/منصات بدون إذن صريح.
@@ -134,10 +207,12 @@ Sources reviewed:
 3. إضافة timeout وrate limits وcircuit/failure handling.
 4. تحويل مخرجات المزود إلى contract `price-provider.js`.
 5. اختبار OEM/MPN match + vehicle compatibility + currency + VAT + stock.
-6. تشغيل provider في وضع shadow: نجمع النتيجة للتدقيق دون إظهار توفير للمستخدم.
-7. مراجعة 20–50 حالة حقيقية.
-8. عند نجاح الأدلة فقط: تسجيل provider للسوق `SA` وتفعيل `verifiedMarketPricing`.
-9. إضافة مزود ثانٍ قبل وصف النتيجة بأنها نطاق سوق واسع، إذا كان ذلك مطلوبًا للمنتج.
+6. تشغيل `npm run evaluate:price-provider-sample -- <sample.json>` على العينة الرسمية.
+7. لا يبدأ shadow إلا إذا اجتازت بوابة `docs/PRICE_PROVIDER_PILOT.md`.
+8. تشغيل provider في وضع shadow: نجمع النتيجة للتدقيق دون إظهار توفير للمستخدم.
+9. مراجعة 20–50 حالة حقيقية.
+10. عند نجاح الأدلة فقط: تسجيل provider للسوق `SA` وتفعيل `verifiedMarketPricing`.
+11. إضافة مزود ثانٍ قبل وصف النتيجة بأنها نطاق سوق واسع، إذا كان ذلك مطلوبًا للمنتج.
 
 ## قرار تجاري مطلوب
 

@@ -9,6 +9,7 @@
     "ci": "npm run check && npm test && npm run gate",
     "gate": "node scripts/check-launch-gate.mjs",
     "validate:field-test-draft": "node scripts/validate-field-test-draft.mjs",
-    "build:field-test-candidate": "node scripts/build-field-test-candidate.mjs"
+    "build:field-test-candidate": "node scripts/build-field-test-candidate.mjs",
+    "evaluate:price-provider-sample": "node scripts/evaluate-price-provider-sample.mjs"
   }
 }
