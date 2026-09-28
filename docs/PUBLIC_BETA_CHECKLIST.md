@@ -49,22 +49,23 @@
 
 ## 5. WAF enforcement review
 
-الوضع الحالي:
+الحالة الحالية بعد مراجعة 2026-09-28:
 - In-code guard لـ `/api/analyze`: 4/min و20/hour لكل IP داخل runtime.
 - Production WAF monitor: 30 requests / 600 seconds / IP.
 - WAF action = Log.
+- Review status = **PASS**.
+- قرار المراجعة = **KEEP_LOG_MONITORING**؛ لم يتم تفعيل الحظر في Production.
 
-قبل تحويل WAF إلى enforcement:
-- راجع حجم الحركة الحقيقية.
-- تأكد أن الحد لا يصطدم بمستخدمين شرعيين/NAT.
-- اختبر 429 على Preview أو بيئة مناسبة قبل Production.
-- لا تحوّل Log إلى حظر اعتمادًا على حركة منخفضة جدًا.
+أدلة المراجعة:
+- أحدث Production `dpl_5BHNSNfdjZDzYqDTZvDFyjVWwva9` = READY.
+- على أحدث deployment خلال 3 أيام: 7 طلبات فقط، كلها 200 (4 health + 3 readiness).
+- آخر 24 ساعة: 0 طلبات `/api/analyze` و0 استجابات 429.
+- لا توجد تحذيرات runtime جديدة على أحدث deployment؛ آخر DEP0169 معروف كان على deployment قديم بتاريخ 2026-09-25.
 
-رصد آخر 24 ساعة بتاريخ 2026-09-24:
-- 16 طلبًا مسجلًا على المسارات المرصودة.
-- جميع status codes المرصودة = 200.
-- لا توجد 429 أو 5xx في التجميع.
-- الحجم الحالي غير كافٍ لاتخاذ قرار enforcement.
+القرار:
+- إبقاء WAF في وضع Log الآن أكثر أمانًا من فرض threshold غير مدعوم بحركة حقيقية كافية.
+- الحارس داخل التطبيق يبقى enforcement فعليًا ضد الإساءة لكل runtime.
+- إعادة مراجعة التحويل إلى 429 بعد وجود حجم استخدام عام ذي دلالة، مع فحص NAT/false positives أولًا.
 
 ## 6. Final public smoke
 
