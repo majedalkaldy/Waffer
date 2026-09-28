@@ -130,10 +130,23 @@
       "classification": "RESOLVED_VERIFIED_ACTIVE"
     },
     "deploymentProtection": {
-      "lastDirectReadinessProbeHttpStatus": 302,
-      "redirectedToVercelSso": true,
-      "observedAt": "2026-09-24T16:43:33.000Z",
-      "classification": "FIELD_TEST_ACCESS_PROTECTION_REVIEW_BEFORE_PUBLIC_BETA"
+      "reviewedAt": "2026-09-28T05:43:04.876Z",
+      "status": "PASS",
+      "decision": "PUBLIC_ALIAS_ACCESSIBLE",
+      "probeSource": "GitHub Actions hosted runner without Vercel session",
+      "workflowRunNumber": 227,
+      "workflowRunId": 36383092138,
+      "workflowJobId": 108802727892,
+      "sourcePullRequest": 76,
+      "sourcePullRequestMerged": false,
+      "domain": "waffer-rho.vercel.app",
+      "productionCommit": "cbb85e08",
+      "rootHttpStatus": 200,
+      "readinessHttpStatus": 200,
+      "readinessService": "waffer-readiness",
+      "ssoRedirectObserved": false,
+      "protectionHeadersObserved": false,
+      "classification": "RESOLVED_PUBLIC_PRODUCTION_ACCESS_VERIFIED"
     },
     "wafReview": {
       "reviewedAt": "2026-09-28T05:35:32.715Z",
