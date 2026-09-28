@@ -35,17 +35,20 @@
 
 ## 4. Vercel Deployment Protection
 
-خلال field-test يمكن إبقاء Vercel Authentication مفعلة.
+الحالة بعد مراجعة 2026-09-28: **PASS**.
 
-قبل Public Beta:
-- راجع Deployment Protection للمشروع والدومين العام.
-- تأكد أن المستخدم العام لا يُحوّل إلى Vercel SSO.
-- اختبر الصفحة الرئيسية و`/api/readiness` من جلسة غير مسجلة في Vercel.
-- لا تفتح الوصول العام قبل اكتمال field-test وحماية التكلفة.
+الدليل:
+- تم تشغيل probe مؤقت من GitHub Actions hosted runner غير مسجل في Vercel.
+- PR المؤقت #76 لم يُدمج.
+- `https://waffer-rho.vercel.app/` أعاد HTTP 200.
+- `https://waffer-rho.vercel.app/api/readiness` أعاد HTTP 200 و`service=waffer-readiness`.
+- الاستجابة كانت من Production commit `cbb85e08`.
+- لم يحدث redirect إلى Vercel SSO ولم تظهر headers خاصة بـProtection/SSO.
 
-ملاحظة رصد 2026-09-24:
-- Production deployment نفسه READY.
-- طلب مباشر محمي لـ `/api/readiness` أعاد 302 إلى Vercel SSO، لذلك الوصول العام ما زال محميًا في نافذة الفحص.
+القرار:
+- الـProduction alias العام متاح للمستخدم الخارجي كما هو مطلوب لـPublic Beta.
+- Preview deployments يمكن أن تبقى محمية؛ المراجعة تخص الـProduction alias العام.
+- أي تغيير لاحق في Deployment Protection يتطلب إعادة هذا probe قبل ترقية جديدة.
 
 ## 5. WAF enforcement review
 
