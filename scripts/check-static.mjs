@@ -623,7 +623,10 @@ if (!failures.length) {
       releaseControlReviews?.controls?.mainBranchProtection?.evidence?.protected !== true ||
       releaseControlReviews?.controls?.mainBranchProtection?.evidence?.requiredStatusCheck !== 'regression-suite' ||
       releaseControlReviews?.controls?.mainBranchProtection?.evidence?.bypassActors !== 0 ||
-      releaseControlReviews?.controls?.wafEnforcement?.status !== 'PENDING' ||
+      releaseControlReviews?.controls?.wafEnforcement?.status !== 'PASS' ||
+      releaseControlReviews?.controls?.wafEnforcement?.evidence?.reviewDecision !== 'KEEP_LOG_MONITORING' ||
+      releaseControlReviews?.controls?.wafEnforcement?.evidence?.enforcementEnabled !== false ||
+      releaseControlReviews?.controls?.wafEnforcement?.evidence?.observations?.analyzeRequestsLast24h !== 0 ||
       releaseControlReviews?.controls?.deploymentProtection?.status !== 'PENDING') {
     failures.push('Release control review record is inconsistent with the approved manual gates');
   }
@@ -651,9 +654,15 @@ if (!failures.length) {
       liveSmoke?.checks?.health?.status !== 'ready') {
     failures.push('Live smoke evidence must record successful production self-test and health checks');
   }
-  if (liveSmoke?.checks?.branchProtection?.protected !== false ||
-      liveSmoke?.checks?.branchProtection?.result !== 'ACTION_REQUIRED') {
-    failures.push('Live smoke evidence must truthfully record unprotected main branch');
+  if (liveSmoke?.followUpObservations?.branchProtection?.protected !== true ||
+      liveSmoke?.followUpObservations?.branchProtection?.requiredStatusCheck !== 'regression-suite' ||
+      liveSmoke?.followUpObservations?.branchProtection?.classification !== 'RESOLVED_VERIFIED_ACTIVE') {
+    failures.push('Live smoke follow-up must record verified active main branch protection');
+  }
+  if (liveSmoke?.followUpObservations?.wafReview?.decision !== 'KEEP_LOG_MONITORING' ||
+      liveSmoke?.followUpObservations?.wafReview?.enforcementEnabled !== false ||
+      liveSmoke?.followUpObservations?.wafReview?.classification !== 'REVIEW_COMPLETE_INSUFFICIENT_TRAFFIC_FOR_BLOCKING') {
+    failures.push('Live smoke follow-up must record the reviewed WAF monitor decision');
   }
 
   const launchReadinessSource = read('lib/launch-readiness.js');
