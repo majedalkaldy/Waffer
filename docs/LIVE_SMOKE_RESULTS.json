@@ -116,15 +116,35 @@
     },
     "branchProtection": {
       "branch": "main",
-      "protected": false,
-      "requiredStatusChecks": false,
-      "classification": "ACTION_REQUIRED_MANUAL_RELEASE_GATE"
+      "protected": true,
+      "rulesetId": 24069197,
+      "rulesetName": "Waffer main protection",
+      "enforcement": "active",
+      "requiredStatusCheck": "regression-suite",
+      "strictStatusChecks": true,
+      "conversationResolution": true,
+      "blockForcePushes": true,
+      "blockDeletions": true,
+      "bypassActors": 0,
+      "verifiedAt": "2026-09-27T08:16:00.000Z",
+      "classification": "RESOLVED_VERIFIED_ACTIVE"
     },
     "deploymentProtection": {
       "lastDirectReadinessProbeHttpStatus": 302,
       "redirectedToVercelSso": true,
       "observedAt": "2026-09-24T16:43:33.000Z",
       "classification": "FIELD_TEST_ACCESS_PROTECTION_REVIEW_BEFORE_PUBLIC_BETA"
+    },
+    "wafReview": {
+      "reviewedAt": "2026-09-28T05:35:32.715Z",
+      "decision": "KEEP_LOG_MONITORING",
+      "enforcementEnabled": false,
+      "latestProductionDeployment": "dpl_5BHNSNfdjZDzYqDTZvDFyjVWwva9",
+      "latestDeploymentWindow": "3d",
+      "latestDeploymentRequestCount": 7,
+      "analyzeRequestsLast24h": 0,
+      "http429Last24h": 0,
+      "classification": "REVIEW_COMPLETE_INSUFFICIENT_TRAFFIC_FOR_BLOCKING"
     }
   }
 }
