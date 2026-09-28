@@ -1,33 +1,43 @@
 # Waffer Main Branch Protection
 
-الحالة الحالية المؤكدة عبر GitHub API:
+الحالة الحالية المؤكدة عبر GitHub API بتاريخ 2026-09-27:
 
 - الفرع: `main`
-- `protected = false`
-- Required status checks: off
-- CI موجود ويعمل: workflow `Waffer CI`
-- Job الإلزامي المطلوب: `regression-suite`
+- `protected = true`
+- Ruleset ID: `24069197`
+- Ruleset: `Waffer main protection`
+- Enforcement: `active`
+- Require a pull request before merging: فعال.
+- Require status checks to pass: فعال.
+- Required status check: `regression-suite`.
+- Require branches to be up to date: فعال.
+- Conversation resolution: فعال.
+- Block force pushes: فعال.
+- Block deletions: فعال.
+- Bypass actors: 0.
+- Required human approvals: 0 حاليًا.
+- Signed commits: غير مفروضة حاليًا.
 
-## الإعداد المطلوب في GitHub
+## الإعداد المطبق في GitHub
 
-من Repository Settings:
+تم تطبيق الإعداد التالي من Repository Settings:
 
-1. افتح **Settings → Rules → Rulesets**.
-2. أنشئ **New branch ruleset** باسم:
+1. **Settings → Rules → Rulesets**.
+2. Branch ruleset باسم:
    `Waffer main protection`
-3. اجعل Target branches يشمل:
+3. Target branches يشمل:
    `main`
-4. فعّل القواعد التالية:
+4. القواعد المفعلة:
    - Require a pull request before merging.
    - Require status checks to pass.
    - Require branches to be up to date before merging.
    - Block force pushes.
    - Block deletions.
-5. أضف Required status check:
+5. Required status check:
    `regression-suite`
-6. يفضّل تفعيل:
+6. مفعّل أيضًا:
    - Require conversation resolution before merging.
-7. لا تضف bypass عام للمستخدمين أو التطبيقات إلا عند وجود حاجة تشغيلية موثقة.
+7. لا يوجد bypass عام؛ يبقى ذلك ممنوعًا إلا لحاجة تشغيلية موثقة.
 
 ## ما لا نفعله
 
