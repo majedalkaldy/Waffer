@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-27T08:16:00.000Z",
+  "updatedAt": "2026-09-28T05:35:32.715Z",
   "controls": {
     "mainBranchProtection": {
       "status": "PASS",
@@ -22,8 +22,44 @@
       }
     },
     "wafEnforcement": {
-      "status": "PENDING",
-      "reviewedAt": null
+      "status": "PASS",
+      "reviewedAt": "2026-09-28T05:35:32.715Z",
+      "evidence": {
+        "reviewDecision": "KEEP_LOG_MONITORING",
+        "enforcementEnabled": false,
+        "monitor": {
+          "path": "/api/analyze",
+          "method": "POST",
+          "environment": "production",
+          "windowSeconds": 600,
+          "requests": 30,
+          "key": "ip",
+          "exceededAction": "log"
+        },
+        "applicationGuard": {
+          "burstWindowSeconds": 60,
+          "burstMax": 4,
+          "hourlyWindowSeconds": 3600,
+          "hourlyMax": 20
+        },
+        "latestProduction": {
+          "deploymentId": "dpl_5BHNSNfdjZDzYqDTZvDFyjVWwva9",
+          "commit": "42a2f1a9234d72381d774e5cd383344cb04bec82",
+          "state": "READY"
+        },
+        "observations": {
+          "latestDeploymentWindow": "3d",
+          "latestDeploymentRequests": 7,
+          "latestDeploymentStatus200": 7,
+          "latestDeploymentHealthRequests": 4,
+          "latestDeploymentReadinessRequests": 3,
+          "analyzeRequestsLast24h": 0,
+          "http429Last24h": 0,
+          "lastLegacyRuntimeWarningAt": "2026-09-25T10:00:56.000Z",
+          "newRuntimeWarningsOnLatestDeployment": 0
+        },
+        "rationale": "Traffic remains too low to justify production blocking. Keep the distributed WAF rule in Log mode while the in-code guard continues enforcing per-runtime limits; re-review after meaningful public traffic."
+      }
     },
     "deploymentProtection": {
       "status": "PENDING",
