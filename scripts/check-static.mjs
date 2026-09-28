@@ -75,7 +75,10 @@ const required = [
   'tests/manufacturers-cdn-cache.test.mjs',
   'tests/catalog-data-cdn-cache.test.mjs',
   'lib/price-provider.js',
+  'lib/price-provider-sample-validator.js',
   'tests/price-provider-contract.test.mjs',
+  'tests/price-provider-sample-validator.test.mjs',
+  'scripts/evaluate-price-provider-sample.mjs',
   'lib/pricing-client.js',
   'tests/pricing-client.test.mjs',
   'lib/pricing-abuse-guard.js',
@@ -92,6 +95,7 @@ const required = [
   'scripts/build-field-test-candidate.mjs',
   'tests/field-test-candidate-cli.test.mjs',
   'docs/PRICE_PROVIDER_CONTRACT.md',
+  'docs/PRICE_PROVIDER_PILOT.md',
   'docs/PRICE_PROVIDER_CANDIDATES.md',
   'docs/VERCEL_FIREWALL_PLAN.md'
 ];
@@ -266,6 +270,8 @@ if (!failures.length) {
   const health = read('api/health.js');
   const identity = read('lib/identity.js');
   const priceProvider = read('lib/price-provider.js');
+  const priceProviderSampleValidator = read('lib/price-provider-sample-validator.js');
+  const priceProviderPilotDoc = read('docs/PRICE_PROVIDER_PILOT.md');
   const pricingClient = read('lib/pricing-client.js');
   const pricingAbuseGuard = read('lib/pricing-abuse-guard.js');
   const priceCompare = read('api/price-compare.js');
@@ -308,6 +314,16 @@ if (!failures.length) {
       !priceProvider.includes('normalizeVerifiedOffer') ||
       !priceProvider.includes("'CALCULATED_FROM_VERIFIED_OFFER'")) {
     failures.push('Trusted price-provider validation contract is incomplete');
+  }
+  if (!priceProviderSampleValidator.includes('evaluatePriceProviderSample') ||
+      !priceProviderSampleValidator.includes('PASS_FOR_VERIFIED_OFFER_SHADOW') ||
+      !priceProviderSampleValidator.includes('PASS_FOR_MARKET_RANGE_SHADOW_ONLY')) {
+    failures.push('Price provider pilot sample evaluator contract is incomplete');
+  }
+  for (const pilotBoundary of ['20 حالة', '80%', '90%', '48 ساعة', 'لا تفعّل']) {
+    if (!priceProviderPilotDoc.includes(pilotBoundary)) {
+      failures.push('Price provider pilot document is missing boundary: ' + pilotBoundary);
+    }
   }
   if (!priceProvider.includes("'PROVIDER_TIMEOUT'") ||
       !priceProvider.includes('signal: controller.signal') ||
@@ -1341,6 +1357,11 @@ if (!failures.length) {
       !sw.includes('/lib/field-test-client.js') ||
       !sw.includes('/lib/field-test-evidence-validator.js')) {
     failures.push('PWA shell missing localization/runtime/total-check/image-optimization/identity/pricing/field-test modules');
+  }
+
+  const packageJson = JSON.parse(read('package.json'));
+  if (packageJson?.scripts?.['evaluate:price-provider-sample'] !== 'node scripts/evaluate-price-provider-sample.mjs') {
+    failures.push('Price provider pilot evaluator CLI script is missing from package.json');
   }
 
   try {
