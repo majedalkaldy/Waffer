@@ -286,9 +286,9 @@ async function start(){
          year,
          vin,
          vehicleId:window.wafferVehicleId||null,
-         market:'SA',
-         locale:window.wafferLocale||'ar-SA',
-         currency:'SAR'
+         market:'US',
+         locale:window.wafferLocale||'en-US',
+         currency:'USD'
        }
      })
    });
@@ -540,7 +540,7 @@ function render(){
  document.getElementById('rTotal').textContent=analysis.total||ui('غير واضح','unclear');
  const currencyContext=document.getElementById('currencyContext');
  if(currencyContext){
-   currencyContext.textContent=(window.wafferLocale?.startsWith('en')?'Currency: ':'العملة: ')+(analysis?.engineContext?.currency||'SAR');
+   currencyContext.textContent=(window.wafferLocale?.startsWith('en')?'Currency: ':'العملة: ')+(analysis?.engineContext?.currency||'USD');
  }
  const calc=document.getElementById('rCalculatedTotal');
  if(calc){
@@ -708,9 +708,9 @@ async function refreshVerifiedPricing(runId=analysisRunId){
        const payload=window.wafferBuildPriceComparePayload({
          item,
          vehicle,
-         market:context.market||'SA',
-         locale:context.locale||window.wafferLocale||'ar-SA',
-         currency:context.currency||'SAR'
+         market:context.market||'US',
+         locale:context.locale||window.wafferLocale||'en-US',
+         currency:context.currency||'USD'
        });
        if(!payload)return null;
        try{
@@ -1861,7 +1861,7 @@ async function checkSystemHealth(){
  try{
    let r,d;
    try{
-     r=await fetch('/api/health',{cache:'no-store',signal:controller.signal});
+     r=await fetch('/api/health?market=US&locale=en-US&currency=USD',{cache:'no-store',signal:controller.signal});
      d=await r.json();
    }finally{
      clearTimeout(timer);
@@ -1974,7 +1974,7 @@ async function loadManufacturers(){
  try{
    let r,d;
    try{
-     r=await fetch('/api/vehicles',{signal:controller.signal});
+     r=await fetch('/api/vehicles?market=US&locale=en-US&currency=USD',{signal:controller.signal});
      d=await r.json();
    }finally{
      clearTimeout(timer);
