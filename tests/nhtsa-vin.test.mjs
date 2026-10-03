@@ -32,6 +32,7 @@ test('NHTSA VIN normalization extracts US fitment identity without inventing fie
   }, '1FTFW1E85RFA00001');
 
   assert.equal(normalized.source,'NHTSA_VPIC');
+  assert.equal(normalized.clean,true);
   assert.equal(normalized.make,'FORD');
   assert.equal(normalized.model,'F-150');
   assert.equal(normalized.year,'2024');
@@ -54,6 +55,7 @@ test('NHTSA normalization does not claim exact data when decoded values are empt
   }, '1FTFW1E85RFA00001');
 
   assert.equal(normalized.decoded,false);
+  assert.equal(normalized.clean,false);
   assert.equal(normalized.make,null);
   assert.equal(normalized.trim,null);
   assert.equal(normalized.engine,null);
