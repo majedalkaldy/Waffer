@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  const requestedLocale = String(req.body?.locale || 'ar-SA');
+  const requestedLocale = String(req.body?.locale || 'en-US');
   const requestedEnglish = requestedLocale.toLowerCase().startsWith('en');
 
   const provenance = checkPricingRequestProvenance(req);
@@ -35,9 +35,9 @@ export default async function handler(req, res) {
       workshopPrice,
       quantity = 1,
       vehicle = {},
-      market = 'SA',
-      locale = 'ar-SA',
-      currency = 'SAR'
+      market = 'US',
+      locale = 'en-US',
+      currency = 'USD'
     } = req.body || {};
 
     const safePartName = String(partName || '').trim().slice(0, 240);

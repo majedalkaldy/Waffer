@@ -1,3 +1,53 @@
+# Waffer — US-first trusted pricing strategy (adopted 2026-10-03)
+
+Waffer now treats the **United States as the primary launch market** while preserving Saudi Arabia as a secondary market. The trust boundary is unchanged: no scraping is promoted as a verified source, no savings are shown from an unverified offer, and every production provider must pass the sample evaluator and shadow review.
+
+## US priority order
+
+### 1. eBay Browse API / eBay Motors — first pricing integration candidate
+
+Role: **live U.S. offers + part identity + compatibility evidence where supported**.
+
+Implementation rules:
+- Use official Buy/Browse APIs and OAuth application access tokens.
+- Production use is gated on eBay Buy API approval/eligibility; Waffer must not assume sandbox credentials imply production rights.
+- Preserve eBay Browse result ordering inside the eBay source unless an approved agreement explicitly permits a different presentation.
+- Use the U.S. marketplace and parts-compatibility filters.
+- Treat an offer as vehicle-verified only when the provider evidence is strong enough for the exact vehicle context; Year/Make/Model alone must not be promoted as exact fitment when Trim/Engine is required.
+- Normalize item price, mandatory shipping, currency, stock/availability, seller, source URL, and checked-at time.
+- Keep the adapter in shadow mode until at least 20 real cases pass the existing pilot gate.
+
+Status: **PRIMARY US CANDIDATE — credentials/access and shadow validation required before activation.**
+
+### 2. NHTSA vPIC — U.S. VIN enrichment
+
+Role: **VIN decoding/enrichment**, especially Year/Make/Model/Trim/Engine fields needed for U.S. compatibility checks.
+
+It is not a price source and must never set verified market pricing by itself.
+
+Status: **VIN ENRICHMENT CANDIDATE.**
+
+### 3. AutoPartsAPI / TecDoc — catalog identity and cross-reference
+
+Role: existing **part identity / catalog / OEM cross-reference** layer. For the US-first transition, Waffer keeps the documented worldwide country-filter fallback until a provider-verified U.S.-specific filter identifier is available. It is not treated as a retail price source.
+
+Status: **KEEP FOR CATALOG IDENTITY; DO NOT CLAIM US-SPECIFIC PRICING.**
+
+### US comparison contract
+
+A future “Waffer Best Deal” may only use comparable offers after:
+- exact part identity is established;
+- vehicle compatibility is sufficiently verified;
+- item price and mandatory shipping/fees used by Waffer are known;
+- the offer is currently available;
+- seller/source and timestamp are traceable.
+
+Taxes that depend on destination must be identified separately unless the destination is known and the tax is actually available from the source.
+
+---
+
+# Previous Saudi provider research (retained for secondary-market work)
+
 # Waffer — Trusted Price Provider Candidates (updated 2026-09-28)
 
 هذه الوثيقة هي **بحث تكامل فقط**. لا تعني اختيار مزود، ولا تمنح إذنًا باستخدام بيانات طرف ثالث، ولا تنشئ أي التزام مالي.

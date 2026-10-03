@@ -302,7 +302,7 @@
   }
 
   const catalogContext = {
-    market: 'SA'
+    market: 'US'
   };
 
   function catalogQuery() {
@@ -529,7 +529,7 @@
     catalogContext.market = String(
       analysis?.engineContext?.market ||
       window.analysis?.engineContext?.market ||
-      'SA'
+      'US'
     ).toUpperCase();
 
     const vehicleId = window.wafferVehicleId;
