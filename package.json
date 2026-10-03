@@ -13,6 +13,7 @@
     "evaluate:price-provider-sample": "node scripts/evaluate-price-provider-sample.mjs",
     "ebay:readiness": "node scripts/check-ebay-readiness.mjs",
     "ebay:pilot": "node scripts/run-ebay-pilot.mjs",
-    "ebay:estimate-volume": "node scripts/estimate-ebay-api-volume.mjs"
+    "ebay:estimate-volume": "node scripts/estimate-ebay-api-volume.mjs",
+    "ebay:validate-cases": "node scripts/validate-ebay-pilot-cases.mjs"
   }
 }

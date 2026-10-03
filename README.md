@@ -35,6 +35,7 @@
 مسار الإطلاق الأول هو eBay Motors US. أدوات Sandbox وTaxonomy وBrowse وملف طلب الوصول جاهزة في المستودع؛ هذا لا يثبت موافقة eBay على Production أو تشغيل تجربة حية.
 
 - اقرأ `docs/EBAY_APPLICATION_DOSSIER.md` لخطوات الطلب.
+- افحص مدخلات التجربة مجانًا ودون API عبر `npm run ebay:validate-cases -- production <cases.json>` قبل تشغيلها.
 - شغّل `npm run ebay:readiness` لفحص إعدادات البيئة دون إظهار الأسرار.
 - يلزم تصريح Production وعينة حقيقية من 20–50 حالة قبل مراجعة تفعيل التسعير.
 - تبقى `verifiedMarketPricing` معطلة، ولا تعد بيانات Sandbox دليلًا لأسعار السوق.

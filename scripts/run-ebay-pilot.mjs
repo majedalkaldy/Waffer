@@ -8,6 +8,7 @@ import {
   getEbayShadowReadiness
 } from '../lib/price-providers/ebay-shadow-registry.js';
 import { buildEbayPilotSample } from '../lib/price-providers/ebay-pilot.js';
+import { validateEbayPilotInput } from '../lib/price-providers/ebay-pilot-input.js';
 
 const environment = String(process.argv[2] || '').trim().toLowerCase();
 const inputPath = process.argv[3];
@@ -29,6 +30,12 @@ try {
     error:String(error?.message || error)
   }, null, 2));
   process.exit(65);
+}
+
+const inputReport = validateEbayPilotInput(payload, {environment});
+if (!inputReport.valid) {
+  console.error(JSON.stringify({status: 'INVALID_PILOT_CASES', ...inputReport}, null, 2));
+  process.exit(66);
 }
 
 const readiness = environment === 'sandbox'

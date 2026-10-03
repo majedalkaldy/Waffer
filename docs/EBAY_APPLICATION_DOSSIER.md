@@ -98,6 +98,7 @@ The project contains:
 Commands after Sandbox credentials are configured:
 
 ```bash
+npm run ebay:validate-cases -- sandbox docs/EBAY_PILOT_CASES.json
 npm run ebay:readiness
 npm run ebay:pilot -- sandbox docs/EBAY_PILOT_CASES.json ebay-sandbox-output.json
 ```
@@ -109,6 +110,7 @@ Sandbox evidence is explicitly prevented from passing Waffer's Production pricin
 After eBay approves Production Buy API access:
 
 ```bash
+npm run ebay:validate-cases -- production <20-50-real-cases.json>
 npm run ebay:readiness
 npm run ebay:pilot -- production <20-50-real-cases.json> ebay-production-sample.json
 npm run evaluate:price-provider-sample -- ebay-production-sample.json
@@ -178,3 +180,39 @@ Official references:
 - https://developer.ebay.com/api-docs/buy/buy-requirements.html
 - https://developer.ebay.com/develop/get-started/get-started-on-a-buying-application
 - https://developer.ebay.com/api-docs/static/gs_use-the-application-growth.html
+
+## Offline input preflight
+
+`npm run ebay:validate-cases -- <sandbox|production> <cases.json>` is free, offline, and needs no API keys.
+The pilot runner uses the same preflight before checking credentials or making provider calls.
+The placeholder template intentionally fails this check until replaced with researched inputs.
+
+Production input preflight requires 20–50 unique case IDs and unique part/vehicle combinations,
+positive integer quantities, real part names/numbers, and vehicle year/make/model/trim/engine.
+Each Production case must carry `evidence.catalogVerified: true`, an HTTPS `evidence.sourceUrl`,
+and `evidence.notes` describing the exact manufacturer catalog match and any constraints.
+Only set the review flag after checking the cited source; the validator cannot verify the claim itself.
+
+Missing trim is an input blocker, never invented: the current Taxonomy resolver requires it.
+After all identity fields are supported by evidence, the eBay Taxonomy resolver must still resolve the exact canonical Trim/Engine and Browse must return COMPATIBLE. Offline input
+validation does not prove current inventory, eBay availability, exact listing fitment, live pricing,
+provider approval, or commercial release readiness.
+
+## Manufacturer-sourced candidate set (2026-10-03)
+
+`docs/EBAY_PILOT_RESEARCH_CASES.json` contains 20 research candidates, 18 distinct part numbers,
+across six Toyota/Ford models. Each cites its primary manufacturer application chart/manual.
+Five Camry/RAV4 cases additionally cite Toyota's US vehicle specifications for LE trim and engine
+dimensions. Fifteen cases deliberately retain unresolved trim or engine dimensions.
+
+Run the offline gap report:
+
+```bash
+npm run ebay:validate-cases -- production docs/EBAY_PILOT_RESEARCH_CASES.json
+```
+
+Expected result: **invalid batch**, with 15 missing-trim cases. This is useful research preparation,
+not a passed 20-case pilot. Complete the gaps using verifiable vehicle evidence before provider calls.
+Five structurally complete candidates also still require live eBay Taxonomy and listing compatibility.
+Historical source dates are retained; current part-number supersessions and seller package quantities
+must be checked during the authorized pilot. No forecast values or live prices were invented.
