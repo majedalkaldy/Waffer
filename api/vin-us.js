@@ -35,6 +35,8 @@ export function normalizeNhtsaVinResult(payload = {}, vin = '') {
   const year = clean(row.ModelYear, 4);
   const trim = clean(row.Trim) || clean(row.Series);
   const engine = buildEngine(row);
+  const displacement = Number(row.DisplacementL);
+  const cylinders = Number(row.EngineCylinders);
 
   return {
     source: 'NHTSA_VPIC',
@@ -46,6 +48,9 @@ export function normalizeNhtsaVinResult(payload = {}, vin = '') {
     year: /^\d{4}$/.test(String(year || '')) ? year : null,
     trim,
     engine,
+    engineModel: clean(row.EngineModel, 120),
+    displacementL: Number.isFinite(displacement) && displacement > 0 ? Math.round(displacement * 100) / 100 : null,
+    engineCylinders: Number.isFinite(cylinders) && cylinders > 0 ? Math.round(cylinders) : null,
     bodyClass: clean(row.BodyClass),
     driveType: clean(row.DriveType),
     fuelType: clean(row.FuelTypePrimary),

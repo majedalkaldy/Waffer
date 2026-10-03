@@ -6,26 +6,32 @@ import {
   createEbayUsShadowProvider
 } from '../lib/price-providers/ebay-us.js';
 
-test('eBay US compatibility requires Year Make Model Trim and Engine', () => {
+test('eBay US compatibility accepts only canonical eBay Taxonomy Trim and Engine values', () => {
   assert.equal(buildEbayVehicleCompatibility({
     year: 2024,
     make: 'Ford',
     model: 'F-150',
-    trim: 'XLT'
+    trim: 'XLT',
+    engine: '3.5L V6'
   }), null);
 
   assert.deepEqual(buildEbayVehicleCompatibility({
     year: 2024,
     make: 'Ford',
     model: 'F-150',
-    trim: 'XLT',
-    engine: '3.5L V6'
+    ebayCompatibility: {
+      canonical: true,
+      source: 'EBAY_TAXONOMY',
+      marketplace: 'EBAY_US',
+      trim: 'XLT Crew Cab Pickup 4-Door',
+      engine: '3.5L 3496CC V6 GAS DOHC Turbocharged'
+    }
   }), [
     { name: 'Year', value: '2024' },
     { name: 'Make', value: 'Ford' },
     { name: 'Model', value: 'F-150' },
-    { name: 'Trim', value: 'XLT' },
-    { name: 'Engine', value: '3.5L V6' }
+    { name: 'Trim', value: 'XLT Crew Cab Pickup 4-Door' },
+    { name: 'Engine', value: '3.5L 3496CC V6 GAS DOHC Turbocharged' }
   ]);
 });
 
@@ -41,7 +47,7 @@ test('eBay shadow provider refuses production calls until access is explicitly a
       market:'US',
       currency:'USD',
       part:{ number:'BC123' },
-      vehicle:{ year:2024,make:'Ford',model:'F-150',trim:'XLT',engine:'3.5L V6' }
+      vehicle:{ year:2024,make:'Ford',model:'F-150',ebayCompatibility:{canonical:true,source:'EBAY_TAXONOMY',marketplace:'EBAY_US',trim:'XLT Crew Cab Pickup 4-Door',engine:'3.5L 3496CC V6 GAS DOHC Turbocharged'} }
     }),
     error => error?.code === 'EBAY_PRODUCTION_ACCESS_REQUIRED'
   );
@@ -89,7 +95,7 @@ test('eBay shadow provider preserves source ordering and accepts only explicit M
     market:'US',
     currency:'USD',
     part:{name:'brake pads',number:'BC123'},
-    vehicle:{year:2024,make:'Ford',model:'F-150',trim:'XLT',engine:'3.5L V6'}
+    vehicle:{year:2024,make:'Ford',model:'F-150',ebayCompatibility:{canonical:true,source:'EBAY_TAXONOMY',marketplace:'EBAY_US',trim:'XLT Crew Cab Pickup 4-Door',engine:'3.5L 3496CC V6 GAS DOHC Turbocharged'}}
   });
 
   assert.equal(result.sourceLabel,'eBay Motors (US)');

@@ -38,6 +38,9 @@ test('NHTSA VIN normalization extracts US fitment identity without inventing fie
   assert.equal(normalized.year,'2024');
   assert.equal(normalized.trim,'XLT');
   assert.equal(normalized.engine,'3.5L 6-cyl Gasoline');
+  assert.equal(normalized.engineModel,null);
+  assert.equal(normalized.displacementL,3.5);
+  assert.equal(normalized.engineCylinders,6);
   assert.equal(normalized.decoded,true);
 });
 
