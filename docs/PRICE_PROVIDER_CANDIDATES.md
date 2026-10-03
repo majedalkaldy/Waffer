@@ -10,6 +10,8 @@ Role: **live U.S. offers + part identity + compatibility evidence where supporte
 
 Implementation rules:
 - Use official Buy/Browse APIs and OAuth application access tokens.
+- Production use is gated on eBay Buy API approval/eligibility; Waffer must not assume sandbox credentials imply production rights.
+- Preserve eBay Browse result ordering inside the eBay source unless an approved agreement explicitly permits a different presentation.
 - Use the U.S. marketplace and parts-compatibility filters.
 - Treat an offer as vehicle-verified only when the provider evidence is strong enough for the exact vehicle context; Year/Make/Model alone must not be promoted as exact fitment when Trim/Engine is required.
 - Normalize item price, mandatory shipping, currency, stock/availability, seller, source URL, and checked-at time.
