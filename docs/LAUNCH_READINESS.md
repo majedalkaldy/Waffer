@@ -1,6 +1,12 @@
-# Waffer Launch Readiness — 2026-09-25
+# Waffer Launch Readiness — updated 2026-10-03
 
 هذه الوثيقة تلخص **الموانع المتبقية للإطلاق العام**. وهي منفصلة عن نجاح البناء والاختبارات الآلية.
+
+## اتجاه الإطلاق الحالي
+
+الولايات المتحدة هي السوق الأول (`US` / `en-US` / `USD`) منذ PR #79. تغييرات VIN/NHTSA وeBay canonical fitment وTaxonomy وshadow/Sandbox وملف طلب eBay في PRs #80–85 مدمجة في `main`. السجلات المؤرخة أدناه تصف اختباراتها السابقة؛ لا تعني إثبات توافق كل المركبات الأمريكية أو جاهزية الأسعار الحية.
+
+الحاجز المتبقي للتسعير: تأكيد تصريح eBay Buy API Production، إعداد أسرار الخدمة بأمان، ثم تجربة Production مصرح بها من 20–50 حالة ومراجعتها. رسالة تحقق حساب المطور أو نجاح البناء لا يثبتان تصريح Production.
 
 ## ما تم التحقق منه آليًا
 
@@ -28,7 +34,7 @@
 | الاختبار الميداني الحقيقي | **PASS — 10/10** | نُفذت السيناريوهات العشرة في Chrome على Production باستخدام Fixtures معلّمة وخدمات OpenAI/AutoParts الحية، واجتازت الأدلة Validator | الدليل الرسمي في `docs/FIELD_TEST_RESULTS.json`؛ التفصيل والحدود في `docs/FIELD_TEST_SESSION_2026-09-25.md` |
 | ضغط صورة كبيرة >3MB | **PASS — LIVE BROWSER** | ضغط المتصفح JPEG من 3,407,872 إلى 71,790 بايت ثم نجح التحليل | الاختبار استخدم JPEG اصطناعيًا مبطنًا؛ تجربة كاميرا هاتف فعلية لم تُجرَ |
 | VIN حي مع المزود | **PASS — LIVE PROVIDER** | التحقق الحي أعاد TOYOTA CAMRY 2.5 وVehicle ID 9445؛ اكتملت المطابقة والتحقق من الموضع الأمامي | الدليل العام يحتفظ ببصمة SHA-256 بدل VIN الكامل؛ الأصل محفوظ للمراجعة الخاصة |
-| مصدر أسعار موثوق | **CONTRACT READY / PROVIDER MISSING** | عقد `lib/price-provider.js` جاهز، وبحث `docs/PRICE_PROVIDER_CANDIDATES.md` وثّق مسارات تكامل محتملة؛ لم يتم اختيار أو تفويض أي مزود بعد، والإنتاج ما زال يعيد marketPrice=null وsaving=NOT_CALCULATED | قرار تجاري للحصول على API/feed مصرح به من مصدر سعودي، ثم shadow/live validation قبل تفعيل الأسعار |
+| مصدر أسعار موثوق | **EBAY INTEGRATION READY / PRODUCTION EVIDENCE PENDING** | عقد `lib/price-provider.js` جاهز، وبحث `docs/PRICE_PROVIDER_CANDIDATES.md` وثّق مسارات تكامل محتملة؛ مسار eBay US مهيأ للـSandbox وshadow، ولم تسجل هنا أدلة تصريح Production أو تجربة أسعار حية؛ التسعير المعتمد ما زال معطلًا ويعيد marketPrice=null وsaving=NOT_CALCULATED | تأكيد تصريح eBay US Production وإعداد الخدمة ثم تجربة مصرح بها من 20–50 حالة قبل تفعيل الأسعار |
 | حماية تكلفة `/api/analyze` | **IMPLEMENTED IN CODE / WAF MONITORING ACTIVE — REVIEW PASS** | الحارس الداخلي يفرض 4/دقيقة و20/ساعة لكل IP داخل كل runtime. مراجعة 2026-09-28 وجدت حركة منخفضة جدًا: 7 طلبات/3 أيام على أحدث deployment، 0 `/api/analyze` و0 429 خلال آخر 24 ساعة | إبقاء WAF على Log حاليًا؛ إعادة مراجعة enforcement بعد وجود حركة عامة كافية لتقييم false positives/NAT |
 | وصول Vercel الحي | **ACTIVE** | Team `waffer` والمشروع والـdeployments والسجلات مرئية، وWAF monitor تم نشره يدويًا على Production | الاستمرار في مراقبة السجلات وWAF قبل تحويله من Log إلى enforcement |
 | الوصول العام قبل Public Beta | **PUBLIC ACCESS VERIFIED — REVIEW PASS** | GitHub Actions runner خارجي أعاد HTTP 200 للصفحة الرئيسية و`/api/readiness` على Production `cbb85e08` بدون SSO redirect أو protection headers | إعادة probe فقط إذا تغير Deployment Protection أو الدومين قبل الترقية |

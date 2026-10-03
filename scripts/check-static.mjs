@@ -640,7 +640,7 @@ if (!failures.length) {
   const readinessDoc = read('docs/LAUNCH_READINESS.md');
   for (const requiredBoundary of [
     'الاختبار الميداني الحقيقي',
-    'CONTRACT READY / PROVIDER MISSING',
+    'EBAY INTEGRATION READY / PRODUCTION EVIDENCE PENDING',
     'IMPLEMENTED IN CODE',
     'WAF MONITORING ACTIVE',
     'وصول Vercel الحي',
