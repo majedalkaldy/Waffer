@@ -134,3 +134,37 @@ test('sample below minimum case count never passes pilot readiness', () => {
   assert.equal(report.summary.verifiedOfferPilotReady,false);
   assert.equal(report.status,'NOT_READY_FOR_SHADOW');
 });
+
+
+test('sandbox samples can never pass a production pricing gate', () => {
+  const report=evaluatePriceProviderSample({
+    providerId:'ebay-us-browse-shadow-sandbox',
+    environment:'sandbox',
+    market:'US',
+    currency:'USD',
+    cases:Array.from({length:20},(_,i)=>{
+      const part='US-PART-'+String(i+1);
+      return {
+        caseId:'sandbox-'+String(i+1),
+        requestedPartNumber:part,
+        checkedAt:'2026-09-28T05:30:00.000Z',
+        bestOffer:{
+          partNumber:part,
+          finalUnitPrice:50,
+          currency:'USD',
+          seller:'Sandbox Seller',
+          sourceUrl:'https://sandbox.example/items/'+String(i+1),
+          verifiedIdentity:true,
+          vehicleVerified:true,
+          inStock:true
+        }
+      };
+    })
+  }, { now:NOW });
+
+  assert.equal(report.environment,'sandbox');
+  assert.equal(report.productionEligible,false);
+  assert.equal(report.summary.verifiedOfferCoverage,1);
+  assert.equal(report.summary.verifiedOfferPilotReady,false);
+  assert.equal(report.status,'NOT_READY_FOR_SHADOW');
+});

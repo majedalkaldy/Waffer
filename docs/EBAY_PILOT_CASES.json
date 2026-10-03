@@ -1,0 +1,24 @@
+{
+  "_instructions": "Add 20-50 real cases before a Production pilot. Sandbox cases are for integration testing only and cannot pass Waffer's verified pricing gate.",
+  "cases": [
+    {
+      "caseId": "replace-me-001",
+      "partName": "Replace with real part name",
+      "partNumber": "REPLACE-WITH-REAL-MPN",
+      "quantity": 1,
+      "vehicle": {
+        "year": "2024",
+        "make": "Replace",
+        "model": "Replace",
+        "trim": "Replace",
+        "engine": "Replace",
+        "nhtsa": {
+          "trim": "Replace",
+          "engineModel": null,
+          "displacementL": 0,
+          "engineCylinders": 0
+        }
+      }
+    }
+  ]
+}
