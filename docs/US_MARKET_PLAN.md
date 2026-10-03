@@ -43,7 +43,9 @@ Waffer must not:
 - Pilot validator defaults move to US / USD.
 
 ### Phase 2 — eBay shadow adapter
-- Obtain official eBay application credentials.
+- Create eBay Developer Sandbox credentials and validate OAuth/Taxonomy/Browse/checkCompatibility without Production approval.
+- Obtain official eBay Production application credentials and approval before any live eBay calls.
+- Keep Sandbox and Production credentials/configuration isolated.
 - Implement server-side OAuth token handling.
 - Search eBay Motors with U.S. marketplace context.
 - Resolve Year/Make/Model/Trim/Engine through the eBay Motors US Taxonomy tree (100) before calling checkCompatibility; NHTSA display values are never accepted as eBay values by assumption.
