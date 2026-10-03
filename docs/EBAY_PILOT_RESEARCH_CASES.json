@@ -1,0 +1,426 @@
+{
+  "_instructions": "Research candidates, not live provider evidence. Five cases have sourced trim/engine attributes; fifteen retain explicit gaps. Production preflight must reject this batch until all gaps are resolved. Catalogs may be historical; no current supersession, stock, fitment or price claim.",
+  "researchDate": "2026-10-03",
+  "cases": [
+    {
+      "caseId": "us-01-camry-oil",
+      "partNumber": "04152-YZZA1",
+      "partName": "Toyota engine oil filter",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2015,
+        "make": "Toyota",
+        "model": "Camry",
+        "engine": "2ARFE 4-cylinder",
+        "trim": "LE",
+        "displacementL": 2.5,
+        "engineCylinders": 4
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2021/08/06_OilFilters2021_hi.pdf#page=1",
+        "notes": "2021 Toyota US chart, current 2021-03-31: Camry 2012-2017, 2ARFE/2ARFXE row. Checked 2026-10-03. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Supplemental official US vehicle source supports LE, 2.5L, four cylinders: https://pressroom.toyota.com/2015-toyota-camry-pricing/. Composite evidence combines engine-specific parts chart with official vehicle specification; no eBay canonical identity has been verified."
+      },
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED"
+    },
+    {
+      "caseId": "us-02-camry-air",
+      "partNumber": "17801-0H050",
+      "partName": "Toyota engine air filter",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2015,
+        "make": "Toyota",
+        "model": "Camry",
+        "engine": "2ARFE 4-cylinder",
+        "trim": "LE",
+        "displacementL": 2.5,
+        "engineCylinders": 4
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2019/11/02_AirFilters2019.pdf#page=1",
+        "notes": "Toyota US chart current 2019-01-31: Camry 2012 onward, ASV50, 2ARFE; OE column. Selected year predates chart. Checked 2026-10-03. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Supplemental official US vehicle source supports LE, 2.5L, four cylinders: https://pressroom.toyota.com/2015-toyota-camry-pricing/. Composite evidence combines engine-specific parts chart with official vehicle specification; no eBay canonical identity has been verified."
+      },
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED"
+    },
+    {
+      "caseId": "us-03-camry-cabin",
+      "partNumber": "87139-02090",
+      "partName": "Toyota cabin air filter",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2015,
+        "make": "Toyota",
+        "model": "Camry",
+        "engine": "2ARFE 4-cylinder",
+        "trim": "LE",
+        "displacementL": 2.5,
+        "engineCylinders": 4
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2022/02/05_CabinAirFilters2021_hi.pdf#page=1",
+        "notes": "Toyota US chart current 2021-03-31: Camry 2012-2017 includes 2ARFE; page-2 footnote 3 identifies warranty part 87139-02090. Checked 2026-10-03. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Supplemental official US vehicle source supports LE, 2.5L, four cylinders: https://pressroom.toyota.com/2015-toyota-camry-pricing/. Composite evidence combines engine-specific parts chart with official vehicle specification; no eBay canonical identity has been verified."
+      },
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED"
+    },
+    {
+      "caseId": "us-04-corolla-oil",
+      "partNumber": "04152-YZZA6",
+      "partName": "Toyota engine oil filter",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2015,
+        "make": "Toyota",
+        "model": "Corolla",
+        "engine": "2ZRFE 4-cylinder",
+        "trim": null,
+        "displacementL": null,
+        "engineCylinders": 4
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2021/08/06_OilFilters2021_hi.pdf#page=1",
+        "notes": "2021 Toyota US chart, current 2021-03-31: Corolla 2014-2015, 2ZRFAE/2ZRFE row. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, displacementL."
+      },
+      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+    },
+    {
+      "caseId": "us-05-corolla-cabin",
+      "partNumber": "87139-07020",
+      "partName": "Toyota cabin air filter",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2015,
+        "make": "Toyota",
+        "model": "Corolla",
+        "engine": "2ZRFE 4-cylinder",
+        "trim": null,
+        "displacementL": null,
+        "engineCylinders": 4
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2022/02/05_CabinAirFilters2021_hi.pdf#page=1",
+        "notes": "Toyota US chart current 2021-03-31: Corolla 2014-2019 includes 2ZRFE; page-2 footnote 4 identifies warranty part 87139-07020. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, displacementL."
+      },
+      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+    },
+    {
+      "caseId": "us-06-prius-oil",
+      "partNumber": "04152-YZZA6",
+      "partName": "Toyota engine oil filter",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2015,
+        "make": "Toyota",
+        "model": "Prius",
+        "engine": "2ZRFXE 4-cylinder",
+        "trim": null,
+        "displacementL": null,
+        "engineCylinders": 4
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2021/08/06_OilFilters2021_hi.pdf#page=2",
+        "notes": "2021 Toyota US chart, current 2021-03-31: Prius 2010-2017, 2ZRFXE row. Prius model only; not Prius c/v/Prime. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, displacementL."
+      },
+      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+    },
+    {
+      "caseId": "us-07-prius-air",
+      "partNumber": "17801-37021",
+      "partName": "Toyota engine air filter",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2015,
+        "make": "Toyota",
+        "model": "Prius",
+        "engine": "2ZRFXE 4-cylinder",
+        "trim": null,
+        "displacementL": null,
+        "engineCylinders": 4
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2019/11/02_AirFilters2019.pdf#page=2",
+        "notes": "Toyota US chart current 2019-01-31: Prius 2010-2015, ZVW30, 2ZRFXE; OE column. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, displacementL."
+      },
+      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+    },
+    {
+      "caseId": "us-08-prius-cabin",
+      "partNumber": "87139-07010",
+      "partName": "Toyota cabin air filter",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2015,
+        "make": "Toyota",
+        "model": "Prius",
+        "engine": "2ZRFXE 4-cylinder",
+        "trim": null,
+        "displacementL": null,
+        "engineCylinders": 4
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2022/02/05_CabinAirFilters2021_hi.pdf#page=1",
+        "notes": "Toyota US chart current 2021-03-31: Prius 2010-2015, 2ZRFXE; page-2 footnote 2 identifies warranty part 87139-07010. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, displacementL."
+      },
+      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+    },
+    {
+      "caseId": "us-09-rav4-oil",
+      "partNumber": "04152-YZZA1",
+      "partName": "Toyota engine oil filter",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2015,
+        "make": "Toyota",
+        "model": "RAV4",
+        "engine": "2ARFE 4-cylinder",
+        "trim": "LE",
+        "displacementL": 2.5,
+        "engineCylinders": 4
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2021/08/06_OilFilters2021_hi.pdf#page=2",
+        "notes": "2021 Toyota US chart, current 2021-03-31: RAV4 2013-2018, 2ARFE, ASA4# row. Checked 2026-10-03. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Supplemental official US vehicle source supports LE, 2.5L, four cylinders: https://pressroom.toyota.com/toyota-2015-rav4-small-suv-pioneer/. Composite evidence combines engine-specific parts chart with official vehicle specification; no eBay canonical identity has been verified."
+      },
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED"
+    },
+    {
+      "caseId": "us-10-rav4-air",
+      "partNumber": "17801-0V020",
+      "partName": "Toyota engine air filter",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2015,
+        "make": "Toyota",
+        "model": "RAV4",
+        "engine": "2ARFE 4-cylinder",
+        "trim": "LE",
+        "displacementL": 2.5,
+        "engineCylinders": 4
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2019/11/02_AirFilters2019.pdf#page=2",
+        "notes": "Toyota US chart current 2019-01-31: RAV4 2013 onward, ASA4#, 2ARFE; OE column. Selected year predates chart. Checked 2026-10-03. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Supplemental official US vehicle source supports LE, 2.5L, four cylinders: https://pressroom.toyota.com/toyota-2015-rav4-small-suv-pioneer/. Composite evidence combines engine-specific parts chart with official vehicle specification; no eBay canonical identity has been verified."
+      },
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED"
+    },
+    {
+      "caseId": "us-11-f150-27-oil",
+      "partNumber": "FL-2062",
+      "partName": "Motorcraft engine oil filter",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2018,
+        "make": "Ford",
+        "model": "F-150",
+        "engine": "2.7L EcoBoost",
+        "trim": null,
+        "displacementL": 2.7,
+        "engineCylinders": null
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/Catalog/owner_information/2018-Ford-F-150-Owners-Manual-version-5_om_EN-US_09_2018.pdf#page=421",
+        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; printed page 418, 2.7L EcoBoost table. Different oil-filter number from 3.5L case. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+      },
+      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+    },
+    {
+      "caseId": "us-12-f150-35-oil",
+      "partNumber": "FL-500-S",
+      "partName": "Motorcraft engine oil filter",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2018,
+        "make": "Ford",
+        "model": "F-150",
+        "engine": "3.5L EcoBoost",
+        "trim": null,
+        "displacementL": 3.5,
+        "engineCylinders": null
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/Catalog/owner_information/2018-Ford-F-150-Owners-Manual-version-5_om_EN-US_09_2018.pdf#page=423",
+        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; printed page 420, 3.5L EcoBoost table. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+      },
+      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+    },
+    {
+      "caseId": "us-13-f150-35-air",
+      "partNumber": "FA-1883",
+      "partName": "Motorcraft engine air filter",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2018,
+        "make": "Ford",
+        "model": "F-150",
+        "engine": "3.5L EcoBoost",
+        "trim": null,
+        "displacementL": 3.5,
+        "engineCylinders": null
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/Catalog/owner_information/2018-Ford-F-150-Owners-Manual-version-5_om_EN-US_09_2018.pdf#page=423",
+        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; printed page 420, 3.5L EcoBoost table. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+      },
+      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+    },
+    {
+      "caseId": "us-14-f150-35-cabin",
+      "partNumber": "FP-79",
+      "partName": "Motorcraft cabin air filter",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2018,
+        "make": "Ford",
+        "model": "F-150",
+        "engine": "3.5L EcoBoost",
+        "trim": null,
+        "displacementL": 3.5,
+        "engineCylinders": null
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/Catalog/owner_information/2018-Ford-F-150-Owners-Manual-version-5_om_EN-US_09_2018.pdf#page=423",
+        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; printed page 420, 3.5L EcoBoost table. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+      },
+      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+    },
+    {
+      "caseId": "us-15-f150-50-plug",
+      "partNumber": "SP-551",
+      "partName": "Motorcraft spark plug",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2018,
+        "make": "Ford",
+        "model": "F-150",
+        "engine": "5.0L Modular V8",
+        "trim": null,
+        "displacementL": 5.0,
+        "engineCylinders": 8
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/Catalog/owner_information/2018-Ford-F-150-Owners-Manual-version-5_om_EN-US_09_2018.pdf#page=424",
+        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; 5.0L Modular V8 table starts printed page 420, part on 421. Quantity is one plug, not a full set. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim."
+      },
+      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+    },
+    {
+      "caseId": "us-16-explorer-air",
+      "partNumber": "FA-1884",
+      "partName": "Motorcraft engine air filter",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2018,
+        "make": "Ford",
+        "model": "Explorer",
+        "engine": "3.5L EcoBoost",
+        "trim": null,
+        "displacementL": 3.5,
+        "engineCylinders": null
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/vdirsnet/OwnerManual/Home/Content?ProcUid=G1724915&Uid=G1724913&buildtype=web&countryCode=USA&div=f&languageCode=en&moidRef=G1517147&userMarket=usa&vFilteringEnabled=False&variantid=4727",
+        "notes": "Ford 2018 Explorer US online manual, Motorcraft Parts - 3.5L EcoBoost; air-filter row. Web manual may differ from original printed manual. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+      },
+      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+    },
+    {
+      "caseId": "us-17-explorer-cabin",
+      "partNumber": "FP-68",
+      "partName": "Motorcraft cabin air filter",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2018,
+        "make": "Ford",
+        "model": "Explorer",
+        "engine": "3.5L EcoBoost",
+        "trim": null,
+        "displacementL": 3.5,
+        "engineCylinders": null
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/vdirsnet/OwnerManual/Home/Content?ProcUid=G1724915&Uid=G1724913&buildtype=web&countryCode=USA&div=f&languageCode=en&moidRef=G1517147&userMarket=usa&vFilteringEnabled=False&variantid=4727",
+        "notes": "Ford 2018 Explorer US online manual, Motorcraft Parts - 3.5L EcoBoost; cabin-filter row. Web manual may differ from original printed manual. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+      },
+      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+    },
+    {
+      "caseId": "us-18-explorer-wiper-driver",
+      "partNumber": "WW-2600",
+      "partName": "Motorcraft driver-side windshield wiper blade",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2018,
+        "make": "Ford",
+        "model": "Explorer",
+        "engine": "3.5L EcoBoost",
+        "trim": null,
+        "displacementL": 3.5,
+        "engineCylinders": null
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/vdirsnet/OwnerManual/Home/Content?ProcUid=G1724915&Uid=G1724913&buildtype=web&countryCode=USA&div=f&languageCode=en&moidRef=G1517147&userMarket=usa&vFilteringEnabled=False&variantid=4727",
+        "notes": "Ford 2018 Explorer US online manual, Motorcraft Parts - 3.5L EcoBoost; driver-side wiper explicitly specified. Position is mandatory. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+      },
+      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+    },
+    {
+      "caseId": "us-19-explorer-wiper-passenger",
+      "partNumber": "WW-2206",
+      "partName": "Motorcraft passenger-side windshield wiper blade",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2018,
+        "make": "Ford",
+        "model": "Explorer",
+        "engine": "3.5L EcoBoost",
+        "trim": null,
+        "displacementL": 3.5,
+        "engineCylinders": null
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/vdirsnet/OwnerManual/Home/Content?ProcUid=G1724915&Uid=G1724913&buildtype=web&countryCode=USA&div=f&languageCode=en&moidRef=G1517147&userMarket=usa&vFilteringEnabled=False&variantid=4727",
+        "notes": "Ford 2018 Explorer US online manual, Motorcraft Parts - 3.5L EcoBoost; passenger-side wiper explicitly specified. Position is mandatory. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+      },
+      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+    },
+    {
+      "caseId": "us-20-explorer-wiper-rear",
+      "partNumber": "WW-1106",
+      "partName": "Motorcraft rear-window wiper blade",
+      "quantity": 1,
+      "vehicle": {
+        "year": 2018,
+        "make": "Ford",
+        "model": "Explorer",
+        "engine": "3.5L EcoBoost",
+        "trim": null,
+        "displacementL": 3.5,
+        "engineCylinders": null
+      },
+      "evidence": {
+        "catalogVerified": true,
+        "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/vdirsnet/OwnerManual/Home/Content?ProcUid=G1724915&Uid=G1724913&buildtype=web&countryCode=USA&div=f&languageCode=en&moidRef=G1517147&userMarket=usa&vFilteringEnabled=False&variantid=4727",
+        "notes": "Ford 2018 Explorer US online manual, Motorcraft Parts - 3.5L EcoBoost; rear-window wiper explicitly specified. Position is mandatory. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+      },
+      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+    }
+  ]
+}

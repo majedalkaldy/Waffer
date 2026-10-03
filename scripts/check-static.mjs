@@ -80,6 +80,7 @@ const required = [
   'lib/price-providers/ebay-taxonomy-resolver.js',
   'lib/price-providers/ebay-shadow-registry.js',
   'lib/price-providers/ebay-pilot.js',
+  'lib/price-providers/ebay-pilot-input.js',
   'lib/price-providers/ebay-volume-estimator.js',
   'lib/price-provider-sample-validator.js',
   'tests/price-provider-contract.test.mjs',
@@ -87,12 +88,14 @@ const required = [
   'tests/ebay-taxonomy-resolver.test.mjs',
   'tests/ebay-shadow-registry.test.mjs',
   'tests/ebay-pilot.test.mjs',
+  'tests/ebay-pilot-input.test.mjs',
   'tests/ebay-volume-estimator.test.mjs',
   'tests/nhtsa-vin.test.mjs',
   'tests/price-provider-sample-validator.test.mjs',
   'scripts/evaluate-price-provider-sample.mjs',
   'scripts/check-ebay-readiness.mjs',
   'scripts/run-ebay-pilot.mjs',
+  'scripts/validate-ebay-pilot-cases.mjs',
   'scripts/estimate-ebay-api-volume.mjs',
   'lib/pricing-client.js',
   'tests/pricing-client.test.mjs',
@@ -116,6 +119,7 @@ const required = [
   'docs/EBAY_APPLICATION_DOSSIER.md',
   'docs/EBAY_GROWTH_CHECK_INPUT.json',
   'docs/EBAY_PILOT_CASES.json',
+  'docs/EBAY_PILOT_RESEARCH_CASES.json',
   'docs/VERCEL_FIREWALL_PLAN.md'
 ];
 
