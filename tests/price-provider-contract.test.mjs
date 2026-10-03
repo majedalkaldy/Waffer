@@ -20,6 +20,8 @@ const vehicle = {
   make:'FORD',
   model:'Expedition',
   year:'2013',
+  trim:'XLT',
+  engine:'5.4L V8',
   vin:'1HGCM82633A004352'
 };
 
@@ -164,6 +166,8 @@ test('trusted provider lookup returns validated range and offer only with suffic
   assert.equal(calls, 1);
   assert.equal(captured.currency, 'SAR');
   assert.equal(captured.part.number, 'BRK-123');
+  assert.equal(captured.vehicle.trim, 'XLT');
+  assert.equal(captured.vehicle.engine, '5.4L V8');
   assert.equal(result.status, 'VERIFIED');
   assert.equal(result.providerId, 'test-provider');
   assert.equal(result.marketRange.median, 250);
