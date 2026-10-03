@@ -105,6 +105,7 @@ const required = [
   'docs/PRICE_PROVIDER_CONTRACT.md',
   'docs/PRICE_PROVIDER_PILOT.md',
   'docs/PRICE_PROVIDER_CANDIDATES.md',
+  'docs/EBAY_ACCESS_PLAN.md',
   'docs/VERCEL_FIREWALL_PLAN.md'
 ];
 
