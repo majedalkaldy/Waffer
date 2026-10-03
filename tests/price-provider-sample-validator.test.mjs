@@ -34,6 +34,7 @@ function validOfferCase(index, overrides = {}) {
 
 test('20 fresh valid offers pass the verified-offer shadow gate', () => {
   const report = evaluatePriceProviderSample({
+    environment:'production',
     providerId:'pilot-provider',
     market:'SA',
     currency:'SAR',
@@ -56,6 +57,7 @@ test('fresh market ranges without verified offers are range-shadow only', () => 
     return item;
   });
   const report=evaluatePriceProviderSample({
+    environment:'production',
     providerId:'range-provider',
     market:'SA',
     currency:'SAR',
@@ -75,6 +77,7 @@ test('wrong currency, mismatched identity and stale evidence prevent offer readi
   cases[2].checkedAt='2026-09-20T00:00:00.000Z';
 
   const report=evaluatePriceProviderSample({
+    environment:'production',
     providerId:'bad-provider',
     market:'SA',
     currency:'SAR',
@@ -124,6 +127,7 @@ test('future timestamps and invalid sample schema fail shadow readiness', () => 
 
 test('sample below minimum case count never passes pilot readiness', () => {
   const report=evaluatePriceProviderSample({
+    environment:'production',
     providerId:'small-provider',
     market:'SA',
     currency:'SAR',
@@ -167,4 +171,28 @@ test('sandbox samples can never pass a production pricing gate', () => {
   assert.equal(report.summary.verifiedOfferCoverage,1);
   assert.equal(report.summary.verifiedOfferPilotReady,false);
   assert.equal(report.status,'NOT_READY_FOR_SHADOW');
+});
+
+for (const environment of [undefined, null, '', 'sandbbox', 'staging', 'test']) {
+  test(`untrusted environment ${JSON.stringify(environment)} cannot pass either production gate`, () => {
+    const report = evaluatePriceProviderSample({
+      providerId: 'pilot-provider', environment, market: 'SA', currency: 'SAR',
+      cases: Array.from({length: 20}, (_, i) => validOfferCase(i + 1))
+    }, {now: NOW});
+    assert.equal(report.status, 'NOT_READY_FOR_SHADOW');
+    assert.equal(report.productionEligible, false);
+    assert.equal(report.schemaValid, false);
+    assert.ok(report.inputErrors.includes('ENVIRONMENT_REQUIRED_OR_INVALID'));
+  });
+}
+
+test('a Sandbox provider cannot be relabeled as production evidence', () => {
+  const report = evaluatePriceProviderSample({
+    providerId: 'ebay-us-browse-shadow-sandbox', environment: 'production',
+    market: 'SA', currency: 'SAR',
+    cases: Array.from({length: 20}, (_, i) => validOfferCase(i + 1))
+  }, {now: NOW});
+  assert.equal(report.status, 'NOT_READY_FOR_SHADOW');
+  assert.equal(report.productionEligible, false);
+  assert.ok(report.inputErrors.includes('PROVIDER_ENVIRONMENT_MISMATCH'));
 });

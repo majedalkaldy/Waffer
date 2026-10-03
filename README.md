@@ -9,7 +9,7 @@
 - فك VIN وربط Vehicle ID.
 - جلب منتجات وقطع متوافقة من Auto Parts Catalog.
 - التحقق المحدود من موضع الفرامل Front / Rear عبر Article Criteria.
-- بنية السوق مفصولة إلى market / locale / currency، والسعودية هي السوق الافتراضي الأول.
+- بنية السوق مفصولة إلى market / locale / currency، والولايات المتحدة هي السوق الافتراضي الأول.
 
 ## إعدادات التشغيل
 
@@ -22,13 +22,22 @@
 
 ## السياق الافتراضي
 
-- Market: `SA`
-- Locale: `ar-SA`
-- Currency: `SAR`
+- Market: `US`
+- Locale: `en-US` (مع دعم `ar-US`)
+- Currency: `USD`
 - Catalog langId: `4`
 - Catalog countryFilterId: `63`
 
 هذه قيم افتراضية وليست قيودًا على نواة النظام؛ يمكن لاحقًا إضافة أسواق ولغات وعملات ومصادر أسعار أخرى دون إعادة بناء منطق التدقيق.
+
+## جاهزية مزود الأسعار
+
+مسار الإطلاق الأول هو eBay Motors US. أدوات Sandbox وTaxonomy وBrowse وملف طلب الوصول جاهزة في المستودع؛ هذا لا يثبت موافقة eBay على Production أو تشغيل تجربة حية.
+
+- اقرأ `docs/EBAY_APPLICATION_DOSSIER.md` لخطوات الطلب.
+- شغّل `npm run ebay:readiness` لفحص إعدادات البيئة دون إظهار الأسرار.
+- يلزم تصريح Production وعينة حقيقية من 20–50 حالة قبل مراجعة تفعيل التسعير.
+- تبقى `verifiedMarketPricing` معطلة، ولا تعد بيانات Sandbox دليلًا لأسعار السوق.
 
 ## اختبار القبول
 

@@ -11,6 +11,7 @@
 ```json
 {
   "providerId": "provider-name",
+  "environment": "production",
   "market": "SA",
   "currency": "SAR",
   "cases": [
@@ -116,3 +117,12 @@ Sandbox is **integration evidence only**.
 - Even if a Sandbox sample has 20/20 structurally valid offers, the evaluator must return `NOT_READY_FOR_SHADOW` for Production promotion.
 - Only Production-source evidence can pass the verified-offer or market-range shadow gate.
 
+
+## Explicit evidence provenance
+
+Every sample must explicitly set `environment` to `sandbox` or `production`.
+Missing or unknown environments fail closed; no legacy sample is silently treated as Production.
+A provider whose ID ends with `-sandbox` cannot pass by changing the sample label to `production`.
+The eBay pilot builder requires its requested environment to match `provider.environment` before any API calls.
+Provider evidence without `checkedAt` remains invalid rather than receiving a newly fabricated timestamp.
+Existing sample files must be reviewed for their real source environment before adding this field.
