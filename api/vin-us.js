@@ -40,6 +40,7 @@ export function normalizeNhtsaVinResult(payload = {}, vin = '') {
     source: 'NHTSA_VPIC',
     vin: String(vin || '').trim().toUpperCase(),
     decoded: Boolean(make || model || year || trim || engine),
+    clean: errorCode === '0',
     make,
     model,
     year: /^\d{4}$/.test(String(year || '')) ? year : null,
