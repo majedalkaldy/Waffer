@@ -1,5 +1,5 @@
 {
-  "_instructions": "Research candidates, not live provider evidence. Five cases have sourced trim/engine attributes; fifteen retain explicit gaps. Production preflight must reject this batch until all gaps are resolved. Catalogs may be historical; no current supersession, stock, fitment or price claim.",
+  "_instructions": "Research candidates, not live provider evidence. Eight cases have sourced trim/engine attributes; twelve retain explicit gaps. Production preflight must reject this batch until all gaps are resolved. Catalogs may be historical; no current supersession, stock, fitment or price claim.",
   "researchDate": "2026-10-03",
   "cases": [
     {
@@ -76,13 +76,13 @@
         "model": "Corolla",
         "engine": "2ZRFE 4-cylinder",
         "trim": null,
-        "displacementL": null,
+        "displacementL": 1.8,
         "engineCylinders": 4
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2021/08/06_OilFilters2021_hi.pdf#page=1",
-        "notes": "2021 Toyota US chart, current 2021-03-31: Corolla 2014-2015, 2ZRFAE/2ZRFE row. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, displacementL."
+        "notes": "2021 Toyota US chart, current 2021-03-31: Corolla 2014-2015, 2ZRFAE/2ZRFE row. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim. Supplemental official US 2015 Corolla source: https://pressroom.toyota.com/?generate_pdf=28408#page=2, downloaded and visually checked 2026-10-03. Both the standard VVT-i engine and LE Eco Valvematic engine are explicitly 1.8 liters. The retrieved article names LE and distinguishes LE Eco, but does not explicitly pair 2ZRFE with an exact trim. Because the parts-chart application includes 2ZRFAE/2ZRFE, the engine-code-to-trim join remains unverified; trim stays null."
       },
       "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
     },
@@ -97,13 +97,13 @@
         "model": "Corolla",
         "engine": "2ZRFE 4-cylinder",
         "trim": null,
-        "displacementL": null,
+        "displacementL": 1.8,
         "engineCylinders": 4
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2022/02/05_CabinAirFilters2021_hi.pdf#page=1",
-        "notes": "Toyota US chart current 2021-03-31: Corolla 2014-2019 includes 2ZRFE; page-2 footnote 4 identifies warranty part 87139-07020. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, displacementL."
+        "notes": "Toyota US chart current 2021-03-31: Corolla 2014-2019 includes 2ZRFE; page-2 footnote 4 identifies warranty part 87139-07020. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim. Supplemental official US 2015 Corolla source: https://pressroom.toyota.com/?generate_pdf=28408#page=2, downloaded and visually checked 2026-10-03. Both the standard VVT-i engine and LE Eco Valvematic engine are explicitly 1.8 liters. The retrieved article names LE and distinguishes LE Eco, but does not explicitly pair 2ZRFE with an exact trim. Because the parts-chart application includes 2ZRFAE/2ZRFE, the engine-code-to-trim join remains unverified; trim stays null."
       },
       "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
     },
@@ -117,16 +117,16 @@
         "make": "Toyota",
         "model": "Prius",
         "engine": "2ZRFXE 4-cylinder",
-        "trim": null,
-        "displacementL": null,
+        "trim": "Two",
+        "displacementL": 1.8,
         "engineCylinders": 4
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2021/08/06_OilFilters2021_hi.pdf#page=2",
-        "notes": "2021 Toyota US chart, current 2021-03-31: Prius 2010-2017, 2ZRFXE row. Prius model only; not Prius c/v/Prime. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, displacementL."
+        "notes": "2021 Toyota US chart, current 2021-03-31: Prius 2010-2017, 2ZRFXE row. Prius model only; not Prius c/v/Prime. Checked 2026-10-03. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Supplemental official US vehicle source: https://pressroom.toyota.com/?generate_pdf=28421#page=3. Its 2015 Prius Hybrid Synergy Drive description gives a 1.8-liter four-cylinder engine and its grade section explicitly includes Prius Two. Composite join uses the existing Prius 2ZRFXE catalog application; the press article does not itself print that engine code. Limited to regular Prius liftback, excluding Prius c, Prius v, Prius Plug-in and Prius Prime. No unverified drive, body variant or production-date assumption added; any catalog-required qualifiers must still be resolved at runtime. Source downloaded and visually checked 2026-10-03."
       },
-      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED"
     },
     {
       "caseId": "us-07-prius-air",
@@ -138,16 +138,16 @@
         "make": "Toyota",
         "model": "Prius",
         "engine": "2ZRFXE 4-cylinder",
-        "trim": null,
-        "displacementL": null,
+        "trim": "Two",
+        "displacementL": 1.8,
         "engineCylinders": 4
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2019/11/02_AirFilters2019.pdf#page=2",
-        "notes": "Toyota US chart current 2019-01-31: Prius 2010-2015, ZVW30, 2ZRFXE; OE column. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, displacementL."
+        "notes": "Toyota US chart current 2019-01-31: Prius 2010-2015, ZVW30, 2ZRFXE; OE column. Checked 2026-10-03. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Supplemental official US vehicle source: https://pressroom.toyota.com/?generate_pdf=28421#page=3. Its 2015 Prius Hybrid Synergy Drive description gives a 1.8-liter four-cylinder engine and its grade section explicitly includes Prius Two. Composite join uses the existing Prius 2ZRFXE catalog application; the press article does not itself print that engine code. Limited to regular Prius liftback, excluding Prius c, Prius v, Prius Plug-in and Prius Prime. No unverified drive, body variant or production-date assumption added; any catalog-required qualifiers must still be resolved at runtime. Source downloaded and visually checked 2026-10-03."
       },
-      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED"
     },
     {
       "caseId": "us-08-prius-cabin",
@@ -159,16 +159,16 @@
         "make": "Toyota",
         "model": "Prius",
         "engine": "2ZRFXE 4-cylinder",
-        "trim": null,
-        "displacementL": null,
+        "trim": "Two",
+        "displacementL": 1.8,
         "engineCylinders": 4
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2022/02/05_CabinAirFilters2021_hi.pdf#page=1",
-        "notes": "Toyota US chart current 2021-03-31: Prius 2010-2015, 2ZRFXE; page-2 footnote 2 identifies warranty part 87139-07010. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, displacementL."
+        "notes": "Toyota US chart current 2021-03-31: Prius 2010-2015, 2ZRFXE; page-2 footnote 2 identifies warranty part 87139-07010. Checked 2026-10-03. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Supplemental official US vehicle source: https://pressroom.toyota.com/?generate_pdf=28421#page=3. Its 2015 Prius Hybrid Synergy Drive description gives a 1.8-liter four-cylinder engine and its grade section explicitly includes Prius Two. Composite join uses the existing Prius 2ZRFXE catalog application; the press article does not itself print that engine code. Limited to regular Prius liftback, excluding Prius c, Prius v, Prius Plug-in and Prius Prime. No unverified drive, body variant or production-date assumption added; any catalog-required qualifiers must still be resolved at runtime. Source downloaded and visually checked 2026-10-03."
       },
-      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED"
     },
     {
       "caseId": "us-09-rav4-oil",
@@ -224,12 +224,12 @@
         "engine": "2.7L EcoBoost",
         "trim": null,
         "displacementL": 2.7,
-        "engineCylinders": null
+        "engineCylinders": 6
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/Catalog/owner_information/2018-Ford-F-150-Owners-Manual-version-5_om_EN-US_09_2018.pdf#page=421",
-        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; printed page 418, 2.7L EcoBoost table. Different oil-filter number from 3.5L case. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; printed page 418, 2.7L EcoBoost table. Different oil-filter number from 3.5L case. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim. Supplemental official US 2018 F-150 technical guide: https://media.ford.com/content/dam/fordmedia/North%20America/US/product/2018/f-150/18_F150.pdf#page=2, printed pages 46-47, downloaded and visually checked 2026-10-03. Its engine table explicitly identifies the 2.7L EcoBoost and both 3.5L EcoBoost variants as V6. The guide lists trims separately and footnote 3 restricts engine availability to select series without mapping exact pairs. No trim, cab, box or drive combination is inferred from the photo or generic feature list. The ordinary versus high-output 3.5L distinction remains for exact runtime identity resolution."
       },
       "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
     },
@@ -245,12 +245,12 @@
         "engine": "3.5L EcoBoost",
         "trim": null,
         "displacementL": 3.5,
-        "engineCylinders": null
+        "engineCylinders": 6
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/Catalog/owner_information/2018-Ford-F-150-Owners-Manual-version-5_om_EN-US_09_2018.pdf#page=423",
-        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; printed page 420, 3.5L EcoBoost table. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; printed page 420, 3.5L EcoBoost table. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim. Supplemental official US 2018 F-150 technical guide: https://media.ford.com/content/dam/fordmedia/North%20America/US/product/2018/f-150/18_F150.pdf#page=2, printed pages 46-47, downloaded and visually checked 2026-10-03. Its engine table explicitly identifies the 2.7L EcoBoost and both 3.5L EcoBoost variants as V6. The guide lists trims separately and footnote 3 restricts engine availability to select series without mapping exact pairs. No trim, cab, box or drive combination is inferred from the photo or generic feature list. The ordinary versus high-output 3.5L distinction remains for exact runtime identity resolution."
       },
       "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
     },
@@ -266,12 +266,12 @@
         "engine": "3.5L EcoBoost",
         "trim": null,
         "displacementL": 3.5,
-        "engineCylinders": null
+        "engineCylinders": 6
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/Catalog/owner_information/2018-Ford-F-150-Owners-Manual-version-5_om_EN-US_09_2018.pdf#page=423",
-        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; printed page 420, 3.5L EcoBoost table. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; printed page 420, 3.5L EcoBoost table. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim. Supplemental official US 2018 F-150 technical guide: https://media.ford.com/content/dam/fordmedia/North%20America/US/product/2018/f-150/18_F150.pdf#page=2, printed pages 46-47, downloaded and visually checked 2026-10-03. Its engine table explicitly identifies the 2.7L EcoBoost and both 3.5L EcoBoost variants as V6. The guide lists trims separately and footnote 3 restricts engine availability to select series without mapping exact pairs. No trim, cab, box or drive combination is inferred from the photo or generic feature list. The ordinary versus high-output 3.5L distinction remains for exact runtime identity resolution."
       },
       "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
     },
@@ -287,12 +287,12 @@
         "engine": "3.5L EcoBoost",
         "trim": null,
         "displacementL": 3.5,
-        "engineCylinders": null
+        "engineCylinders": 6
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/Catalog/owner_information/2018-Ford-F-150-Owners-Manual-version-5_om_EN-US_09_2018.pdf#page=423",
-        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; printed page 420, 3.5L EcoBoost table. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; printed page 420, 3.5L EcoBoost table. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim. Supplemental official US 2018 F-150 technical guide: https://media.ford.com/content/dam/fordmedia/North%20America/US/product/2018/f-150/18_F150.pdf#page=2, printed pages 46-47, downloaded and visually checked 2026-10-03. Its engine table explicitly identifies the 2.7L EcoBoost and both 3.5L EcoBoost variants as V6. The guide lists trims separately and footnote 3 restricts engine availability to select series without mapping exact pairs. No trim, cab, box or drive combination is inferred from the photo or generic feature list. The ordinary versus high-output 3.5L distinction remains for exact runtime identity resolution."
       },
       "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
     },

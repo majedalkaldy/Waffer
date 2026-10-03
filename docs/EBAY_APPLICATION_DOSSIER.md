@@ -202,8 +202,8 @@ provider approval, or commercial release readiness.
 
 `docs/EBAY_PILOT_RESEARCH_CASES.json` contains 20 research candidates, 18 distinct part numbers,
 across six Toyota/Ford models. Each cites its primary manufacturer application chart/manual.
-Five Camry/RAV4 cases additionally cite Toyota's US vehicle specifications for LE trim and engine
-dimensions. Fifteen cases deliberately retain unresolved trim or engine dimensions.
+Eight Camry/RAV4/Prius cases additionally cite Toyota's US vehicle specifications for LE or Two trim and engine
+dimensions. Twelve cases deliberately retain unresolved trim or engine dimensions.
 
 Run the offline gap report:
 
@@ -211,8 +211,26 @@ Run the offline gap report:
 npm run ebay:validate-cases -- production docs/EBAY_PILOT_RESEARCH_CASES.json
 ```
 
-Expected result: **invalid batch**, with 15 missing-trim cases. This is useful research preparation,
+Expected result: **invalid batch**, with 12 missing-trim cases. This is useful research preparation,
 not a passed 20-case pilot. Complete the gaps using verifiable vehicle evidence before provider calls.
-Five structurally complete candidates also still require live eBay Taxonomy and listing compatibility.
+Eight structurally complete candidates also still require live eBay Taxonomy and listing compatibility.
 Historical source dates are retained; current part-number supersessions and seller package quantities
 must be checked during the authorized pilot. No forecast values or live prices were invented.
+
+### Remaining identity evidence gaps
+
+The second manufacturer-source audit added Prius Two / 1.8L for three cases, Corolla 1.8L
+for two cases, and F-150 V6 counts for four cases. Sources:
+- [Toyota 2015 Prius press PDF](https://pressroom.toyota.com/?generate_pdf=28421), page 3.
+- [Toyota 2015 Corolla press PDF](https://pressroom.toyota.com/?generate_pdf=28408), pages 2 and 4.
+- [Ford 2018 F-150 technical guide](https://media.ford.com/content/dam/fordmedia/North%20America/US/product/2018/f-150/18_F150.pdf), page 2.
+
+Twelve candidates remain blocked before pilot execution:
+- Two Corolla cases: no retrieved source explicitly pairs 2ZRFE with a named 2015 trim; the product-specification page was inaccessible.
+- Five F-150 cases: the retrieved guide lists engines and trims separately and restricts engine availability to selected series; it does not establish exact pairings.
+- Five Explorer cases: the manufacturer spec-sheet URL returned 404. Search extracts alone were not accepted as full-source evidence; trim and cylinder count remain unset.
+
+These are documented source-evidence gaps, not proof that only an account-restricted provider can
+resolve them. A verifiable manufacturer specification or actual vehicle identity can close them.
+Do not infer combinations from separate engine/trim lists. Even after the gaps are closed, eBay
+Production authorization and live canonical fitment/offer checks are separate mandatory gates.
