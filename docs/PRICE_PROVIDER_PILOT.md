@@ -104,3 +104,15 @@ npm run evaluate:price-provider-sample -- ./provider-sample.json
 5. مراجعة VAT والشحن وأي رسوم إلزامية.
 6. لا يسجل المزود في Production registry إلا بعد قرار تجاري صريح.
 7. لا يتحول `verifiedMarketPricing` إلى true إلا بعد live validation.
+
+
+## Sandbox evidence
+
+Sandbox is **integration evidence only**.
+
+- An eBay Sandbox sample must include `environment: "sandbox"`.
+- Sandbox samples can test OAuth, Browse, Taxonomy, compatibility, normalization, timeouts and failure handling.
+- Sandbox prices/listings are not Production market evidence.
+- Even if a Sandbox sample has 20/20 structurally valid offers, the evaluator must return `NOT_READY_FOR_SHADOW` for Production promotion.
+- Only Production-source evidence can pass the verified-offer or market-range shadow gate.
+
