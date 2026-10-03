@@ -108,6 +108,8 @@ export default async function handler(req, res) {
       clientManufacturersTimeoutMs: RUNTIME_CONFIG.clientManufacturersTimeoutMs,
       vinTimeoutMs: RUNTIME_CONFIG.vinTimeoutMs,
       clientVinTimeoutMs: RUNTIME_CONFIG.clientVinTimeoutMs,
+      nhtsaVinTimeoutMs: RUNTIME_CONFIG.nhtsaVinTimeoutMs,
+      clientNhtsaVinTimeoutMs: RUNTIME_CONFIG.clientNhtsaVinTimeoutMs,
       catalogProductsTimeoutMs: RUNTIME_CONFIG.catalogProductsTimeoutMs,
       catalogArticlesTimeoutMs: RUNTIME_CONFIG.catalogArticlesTimeoutMs,
       catalogCriteriaTimeoutMs: RUNTIME_CONFIG.catalogCriteriaTimeoutMs,

@@ -284,6 +284,8 @@ async function start(){
          make:document.getElementById('make').selectedOptions?.[0]?.text||'',
          model:document.getElementById('model').value,
          year,
+         trim:window.wafferVehicle?.trim||null,
+         engine:window.wafferVehicle?.engine||null,
          vin,
          vehicleId:window.wafferVehicleId||null,
          market:'US',
@@ -627,6 +629,8 @@ function currentPricingVehicle(){
    make:v.manufacturerName||document.getElementById('make')?.selectedOptions?.[0]?.text||null,
    model:v.modelName||document.getElementById('model')?.value||null,
    year:v.year||document.getElementById('year')?.value||null,
+   trim:v.trim||null,
+   engine:v.engine||null,
    vin:v.vin||document.getElementById('vin')?.value||null
  };
 }

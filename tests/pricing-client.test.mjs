@@ -13,6 +13,8 @@ const vehicle={
   make:'FORD',
   model:'Expedition',
   year:'2013',
+  trim:'XLT',
+  engine:'5.4L V8',
   vin:'1HGCM82633A004352'
 };
 
@@ -55,6 +57,8 @@ test('price payload normalizes numeric price and quantity without changing marke
   assert.equal(payload.locale,'en-SA');
   assert.equal(payload.currency,'SAR');
   assert.equal(payload.vehicle.vehicleId,9445);
+  assert.equal(payload.vehicle.trim,'XLT');
+  assert.equal(payload.vehicle.engine,'5.4L V8');
 });
 
 test('summary counts ranges and offers but sums only CALCULATED_FROM_VERIFIED_OFFER',()=>{
