@@ -194,7 +194,7 @@
         );
         let data = null;
         try { data = await response.json(); } catch {}
-        if (!response.ok || !data?.decoded) return detail;
+        if (!response.ok || !data?.decoded || data?.clean !== true) return detail;
 
         const current = window.wafferVehicle?.vin === vin ? window.wafferVehicle : detail;
         const enriched = {
