@@ -22,7 +22,7 @@ The current repair-estimate analyzer remains a useful acquisition and verificati
 
 - **NHTSA vPIC:** U.S. VIN enrichment. Not a price source.
 - **AutoPartsAPI / TecDoc:** catalog identity, OEM/cross-reference and existing vehicle-to-part matching. Not a verified retail price source.
-- **eBay Browse API / eBay Motors:** first official U.S. live-offer integration candidate.
+- **eBay Browse API / eBay Motors:** first official U.S. live-offer integration candidate. Production activation requires eBay approval/eligibility, and eBay Browse ordering must be preserved unless the approved terms explicitly permit otherwise.
 - **Additional retailers/affiliate feeds:** added only through documented APIs, feeds, or explicit partnerships.
 
 ## Trust rules
