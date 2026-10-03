@@ -2,6 +2,7 @@ import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { getMarketConfig, getMarketConfigFromRequest } from '../lib/market-config.js';
 import { probeCatalogHealth } from '../lib/catalog-health-probe.js';
 import { hasConfiguredPriceProvider } from '../lib/price-provider.js';
+import { getEbayShadowReadiness } from '../lib/price-providers/ebay-shadow-registry.js';
 
 export default async function handler(req, res) {
   res.setHeader('Allow', 'GET');
@@ -18,6 +19,7 @@ export default async function handler(req, res) {
     });
   }
 
+  const ebayShadow = getEbayShadowReadiness(process.env);
   const configured = {
     analysis: Boolean(process.env.OPENAI_API_KEY),
     catalog: Boolean(process.env.AUTOPARTS_API_KEY),
@@ -80,9 +82,11 @@ export default async function handler(req, res) {
       quoteAnalysisVerified: false,
       vinAndCatalog: configured.catalog && upstream.catalog === 'reachable',
       verifiedMarketPricing: configured.pricing,
+      ebayShadowPricingReady: marketConfig.market === 'US' && ebayShadow.ready,
       persistentAccounts: false
     },
     configured,
+    shadowPricing: marketConfig.market === 'US' ? { ebay: ebayShadow } : null,
     verification,
     upstream,
     latency,
