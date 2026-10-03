@@ -65,8 +65,8 @@ test('researched candidate set exposes all unresolved trim gaps without masquera
   const report = validateEbayPilotInput(payload, {environment: 'production'});
   assert.equal(report.caseCount, 20);
   assert.equal(report.valid, false);
-  assert.equal(report.cases.filter(entry => entry.valid).length, 5);
-  assert.equal(report.cases.filter(entry => entry.reasons.includes('VEHICLE_TRIM_REQUIRED')).length, 15);
+  assert.equal(report.cases.filter(entry => entry.valid).length, 8);
+  assert.equal(report.cases.filter(entry => entry.reasons.includes('VEHICLE_TRIM_REQUIRED')).length, 12);
   for (const entry of payload.cases) {
     assert.equal(entry.bestOffer, undefined);
     assert.equal(entry.marketRange, undefined);
