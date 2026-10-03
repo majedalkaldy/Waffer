@@ -10,6 +10,9 @@
   let vinAbortController = null;
   let lastVin = '';
   let vinCandidates = [];
+  let nhtsaRequest = null;
+  let nhtsaRequestVin = '';
+  let nhtsaAbortController = null;
 
   function firstArray(obj, paths) {
     for (const path of paths) {
@@ -60,6 +63,10 @@
 
   function clearResolvedVehicleState() {
     lastVin = '';
+    nhtsaAbortController?.abort();
+    nhtsaAbortController = null;
+    nhtsaRequest = null;
+    nhtsaRequestVin = '';
     window.wafferVehicleId = '';
     window.wafferModelId = '';
     window.wafferManufacturerId = '';
@@ -155,6 +162,81 @@
     ].filter(Boolean);
     return (parts.join(' — ') || (isEnglish() ? 'Vehicle option' : 'خيار سيارة')) +
       ' | Vehicle ID: ' + candidate.vehicleId;
+  }
+
+  async function enrichUsVehicle(detail) {
+    if (!detail?.vin) return detail;
+    const vin = String(detail.vin).trim().toUpperCase();
+    if (detail?.nhtsa?.source === 'NHTSA_VPIC') return detail;
+
+    if (nhtsaRequest && nhtsaRequestVin === vin) {
+      const enriched = await nhtsaRequest;
+      return enriched || detail;
+    }
+    if (nhtsaRequest && nhtsaRequestVin !== vin) {
+      nhtsaAbortController?.abort();
+      nhtsaRequest = null;
+    }
+
+    nhtsaRequestVin = vin;
+    const controller = new AbortController();
+    nhtsaAbortController = controller;
+    const timer = setTimeout(
+      () => controller.abort(),
+      Number(window.WAFFER_RUNTIME?.clientNhtsaVinTimeoutMs) || 10000
+    );
+
+    nhtsaRequest = (async function () {
+      try {
+        const response = await fetch(
+          '/api/vin-us?vin=' + encodeURIComponent(vin),
+          { signal: controller.signal }
+        );
+        let data = null;
+        try { data = await response.json(); } catch {}
+        if (!response.ok || !data?.decoded) return detail;
+
+        const current = window.wafferVehicle?.vin === vin ? window.wafferVehicle : detail;
+        const enriched = {
+          ...current,
+          manufacturerName: current.manufacturerName || data.make || '',
+          modelName: current.modelName || data.model || '',
+          year: current.year || data.year || '',
+          trim: data.trim || current.trim || null,
+          engine: data.engine || current.engine || null,
+          bodyClass: data.bodyClass || current.bodyClass || null,
+          driveType: data.driveType || current.driveType || null,
+          fuelType: data.fuelType || current.fuelType || null,
+          nhtsa: data
+        };
+
+        if (window.wafferVehicle?.vin === vin) {
+          window.wafferVehicle = enriched;
+          const vehicleInfo = document.getElementById('vehicleInfo');
+          if (vehicleInfo) {
+            const fitment = [enriched.trim, enriched.engine].filter(Boolean).join(' • ');
+            if (fitment) {
+              vehicleInfo.textContent += (isEnglish() ? ' • US fitment: ' : ' • مواصفات السوق الأمريكي: ') + fitment;
+            }
+          }
+        }
+
+        window.dispatchEvent(new CustomEvent('wafferVinEnriched', { detail: enriched }));
+        return enriched;
+      } catch (error) {
+        if (error?.name !== 'AbortError') console.warn('NHTSA VIN enrichment unavailable:', error);
+        return detail;
+      } finally {
+        clearTimeout(timer);
+        if (nhtsaRequestVin === vin) {
+          nhtsaRequest = null;
+          nhtsaRequestVin = '';
+          if (nhtsaAbortController === controller) nhtsaAbortController = null;
+        }
+      }
+    })();
+
+    return nhtsaRequest;
   }
 
   function applyCandidate(candidate) {
@@ -257,7 +339,7 @@
     // Preserve an explicit candidate selection for the same VIN, even when start()
     // calls this function in force mode.
     if (vin === lastVin && window.wafferVehicleId && window.wafferVehicle) {
-      return window.wafferVehicle;
+      return enrichUsVehicle(window.wafferVehicle);
     }
     if (vin === lastVin && !window.wafferVehicleId && vinCandidates.length > 1) {
       return {
@@ -377,7 +459,7 @@
         }
 
         clearCandidateSelection();
-        return applyCandidate(candidates[0]);
+        return enrichUsVehicle(applyCandidate(candidates[0]));
 
       } catch (error) {
         if (error?.name === 'AbortError') {
@@ -420,7 +502,7 @@
       select.dataset.wafferCandidateBound = '1';
       select.addEventListener('change', function () {
         const candidate = vinCandidates.find(item => item.vehicleId === String(select.value || ''));
-        if (candidate) applyCandidate(candidate);
+        if (candidate) void enrichUsVehicle(applyCandidate(candidate));
       });
     }
 
