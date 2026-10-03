@@ -46,7 +46,8 @@ Waffer must not:
 - Obtain official eBay application credentials.
 - Implement server-side OAuth token handling.
 - Search eBay Motors with U.S. marketplace context.
-- Resolve Trim and Engine to canonical eBay compatibility values before calling checkCompatibility; NHTSA display values are not accepted as eBay values by assumption.
+- Resolve Year/Make/Model/Trim/Engine through the eBay Motors US Taxonomy tree (100) before calling checkCompatibility; NHTSA display values are never accepted as eBay values by assumption.
+- The resolver fails closed on ambiguous Trim or Engine values and only accepts exact, unique-prefix, or unique engine-dimension matches.
 - Normalize part identity, compatibility evidence, item price, shipping, seller, source URL and checked-at time.
 - Do not expose “verified savings” during shadow mode.
 
