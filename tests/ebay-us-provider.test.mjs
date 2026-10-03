@@ -23,6 +23,9 @@ test('eBay US compatibility accepts only canonical eBay Taxonomy Trim and Engine
       canonical: true,
       source: 'EBAY_TAXONOMY',
       marketplace: 'EBAY_US',
+      year: '2024',
+      make: 'Ford',
+      model: 'F-150',
       trim: 'XLT Crew Cab Pickup 4-Door',
       engine: '3.5L 3496CC V6 GAS DOHC Turbocharged'
     }
@@ -57,9 +60,10 @@ test('eBay shadow provider preserves source ordering and accepts only explicit M
   const calls=[];
   const responses=[
     { access_token:'token', expires_in:7200 },
-    { itemSummaries:[{itemId:'first'},{itemId:'second'}] },
+    { itemSummaries:[{itemId:'first',categoryId:'33559'},{itemId:'second',categoryId:'33559'}] },
     {
       itemId:'first',
+      categoryId:'33559',
       mpn:'WRONG',
       price:{value:'40',currency:'USD'},
       shippingOptions:[{shippingCost:{value:'0',currency:'USD'}}],
@@ -69,6 +73,7 @@ test('eBay shadow provider preserves source ordering and accepts only explicit M
     },
     {
       itemId:'second',
+      categoryId:'33559',
       mpn:'BC-123',
       price:{value:'45.00',currency:'USD'},
       shippingOptions:[{shippingCost:{value:'5.50',currency:'USD'}}],
@@ -76,6 +81,11 @@ test('eBay shadow provider preserves source ordering and accepts only explicit M
       seller:{username:'seller-two'},
       itemWebUrl:'https://www.ebay.com/itm/second'
     },
+    { compatibilityProperties:[{name:'Year'},{name:'Make'},{name:'Model'},{name:'Trim'},{name:'Engine'}] },
+    { compatibilityPropertyValues:[{value:'Ford'}] },
+    { compatibilityPropertyValues:[{value:'F-150'}] },
+    { compatibilityPropertyValues:[{value:'XLT Crew Cab Pickup 4-Door'}] },
+    { compatibilityPropertyValues:[{value:'3.5L 3496CC V6 GAS DOHC Turbocharged'}] },
     { compatibilityStatus:'COMPATIBLE' }
   ];
   const fetchImpl=async(url,options={})=>{
@@ -95,7 +105,14 @@ test('eBay shadow provider preserves source ordering and accepts only explicit M
     market:'US',
     currency:'USD',
     part:{name:'brake pads',number:'BC123'},
-    vehicle:{year:2024,make:'Ford',model:'F-150',ebayCompatibility:{canonical:true,source:'EBAY_TAXONOMY',marketplace:'EBAY_US',trim:'XLT Crew Cab Pickup 4-Door',engine:'3.5L 3496CC V6 GAS DOHC Turbocharged'}}
+    vehicle:{
+      year:2024,
+      make:'Ford',
+      model:'F-150',
+      trim:'XLT',
+      engine:'3.5L 6-cyl Gasoline',
+      nhtsa:{trim:'XLT',displacementL:3.5,engineCylinders:6}
+    }
   });
 
   assert.equal(result.sourceLabel,'eBay Motors (US)');
@@ -105,5 +122,16 @@ test('eBay shadow provider preserves source ordering and accepts only explicit M
   assert.equal(result.bestOffer.vehicleVerified,true);
   assert.equal(result.bestOffer.verifiedIdentity,true);
   assert.equal(calls.filter(call=>call.url.includes('/check_compatibility')).length,1);
+  assert.equal(calls.filter(call=>call.url.includes('/get_compatibility_properties?')).length,1);
+  assert.equal(calls.filter(call=>call.url.includes('/get_compatibility_property_values?')).length,4);
+  const compatibilityCall=calls.find(call=>call.url.includes('/check_compatibility'));
+  const compatibilityBody=JSON.parse(compatibilityCall.body);
+  assert.deepEqual(compatibilityBody.compatibilityProperties,[
+    {name:'Year',value:'2024'},
+    {name:'Make',value:'Ford'},
+    {name:'Model',value:'F-150'},
+    {name:'Trim',value:'XLT Crew Cab Pickup 4-Door'},
+    {name:'Engine',value:'3.5L 3496CC V6 GAS DOHC Turbocharged'}
+  ]);
   assert.ok(calls[1].url.includes('buyingOptions%3A%7BFIXED_PRICE%7D'));
 });
