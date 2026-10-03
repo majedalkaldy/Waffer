@@ -135,3 +135,41 @@ test('eBay shadow provider preserves source ordering and accepts only explicit M
   ]);
   assert.ok(calls[1].url.includes('buyingOptions%3A%7BFIXED_PRICE%7D'));
 });
+
+
+test('eBay Sandbox mode uses sandbox OAuth and does not require production approval', async () => {
+  const calls=[];
+  const fetchImpl=async(url)=>{
+    calls.push(String(url));
+    return {
+      ok:true,
+      status:200,
+      async json(){
+        if(String(url).includes('/identity/v1/oauth2/token')) {
+          return {access_token:'sandbox-token',expires_in:7200};
+        }
+        return {itemSummaries:[]};
+      }
+    };
+  };
+
+  const provider=createEbayUsShadowProvider({
+    clientId:'sandbox-id',
+    clientSecret:'sandbox-secret',
+    environment:'sandbox',
+    productionAccessApproved:false,
+    fetchImpl
+  });
+
+  const result=await provider.lookup({
+    market:'US',
+    currency:'USD',
+    part:{name:'brake pads',number:'BC123'},
+    vehicle:{year:2024,make:'Ford',model:'F-150'}
+  });
+
+  assert.equal(provider.environment,'sandbox');
+  assert.equal(result.bestOffer,null);
+  assert.ok(calls[0].startsWith('https://api.sandbox.ebay.com/identity/v1/oauth2/token'));
+  assert.ok(calls[1].startsWith('https://api.sandbox.ebay.com/buy/browse/v1/item_summary/search'));
+});
