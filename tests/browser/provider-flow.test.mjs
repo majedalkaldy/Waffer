@@ -5,6 +5,7 @@ import {mkdir, writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {chromium} from 'playwright';
 import {startFixtureServer} from './fixture-server.mjs';
+import {isExpectedHealthResourceError} from './expected-resource-error.mjs';
 import {input, vehicle} from '../fixtures/ebay-runtime-fixture.mjs';
 import {buildFieldTestPdfBytes} from '../../lib/field-test-fixtures.js';
 
@@ -61,6 +62,8 @@ async function runFixture(t, viewport, scenario, exercise) {
   const externalRequests = [];
   const clientLeaks = [];
   const responseChecks = [];
+  const healthResponses = [];
+  const healthUrl = `${server.origin}/api/health?market=US&locale=en-US&currency=USD`;
   page.on('pageerror', error => runtimeErrors.push({
     kind: 'pageerror', message: error.message, stack: error.stack || null, ...errorContext(page)
   }));
@@ -90,6 +93,7 @@ async function runFixture(t, viewport, scenario, exercise) {
   page.on('response', response => {
     if (!/javascript|json|text\/html/.test(response.headers()['content-type'] || '')) return;
     responseChecks.push(response.text().then(body => {
+      if (response.url() === healthUrl) healthResponses.push({url: response.url(), status: response.status(), bodyStatus: JSON.parse(body).status});
       if (SECRET_PATTERNS.test(body)) clientLeaks.push(response.url());
     }).catch(() => {})); // An intentionally aborted obsolete response has no readable body.
   });
@@ -101,11 +105,12 @@ async function runFixture(t, viewport, scenario, exercise) {
     await page.waitForFunction(() => typeof window.wafferRenderPricingListings === 'function' && !document.getElementById('make').disabled);
     await assertNoOverflow(page);
     setPhase(page, 'exercise scenario');
-    await exercise({page, server});
+    await exercise({page, server, healthResponses});
     setPhase(page, 'final layout and runtime assertions');
     await assertNoOverflow(page);
     await Promise.all(responseChecks);
-    assert.deepEqual(runtimeErrors, [], 'Browser runtime/console errors');
+    const unexpectedErrors = runtimeErrors.filter(entry => !isExpectedHealthResourceError(entry, {scenario, healthUrl, observedResponses: healthResponses}));
+    assert.deepEqual(unexpectedErrors, [], 'Unexpected browser runtime/console errors');
     assert.deepEqual(externalRequests, [], 'Requests must stay on the loopback fixture origin');
     assert.deepEqual(clientLeaks, [], 'No credential/token/configuration secrets may reach the client');
     assert.deepEqual(server.state.unexpected, [], 'Every browser request must have an explicit fixture route');
@@ -123,7 +128,7 @@ async function runFixture(t, viewport, scenario, exercise) {
       await page.screenshot({path: resolve(directory, `${name}.png`), fullPage: true});
       await writeFile(resolve(directory, `${name}.json`), JSON.stringify({
         notice: 'SYNTHETIC TEST ONLY. No live/provider release evidence.',
-        error: error.stack, ...errorContext(page), runtimeErrors, externalRequests, clientLeaks,
+        error: error.stack, ...errorContext(page), runtimeErrors, healthResponses, externalRequests, clientLeaks,
         requests: server.state.requests, unexpected: server.state.unexpected, failures: server.state.failures,
         pricingStatuses: server.state.prices.map(record => ({scenario: record.scenario, status: record.response?.status, completed: record.completed}))
       }, null, 2));
@@ -179,6 +184,68 @@ function assertUnpriced(response) {
 }
 
 for (const viewport of VIEWPORTS) {
+  test(`${viewport.name}: visible home EN-AR-EN-AR switches keep layout and readiness/accessibility text localized`, {timeout: 30_000}, async t => {
+    await runFixture(t, viewport, 'health-not-ready', async ({page, server, healthResponses}) => {
+      setPhase(page, 'home locale: await completed not-ready health response');
+      await page.waitForFunction(() => document.getElementById('systemStatus').textContent.includes('Some required services are not ready'));
+      await eventually(() => healthResponses.some(response => response.status === 503 && response.bodyStatus === 'unavailable'), 'Browser must observe the actual unavailable HTTP 503 health fixture');
+      const healthRequestCount = server.state.requests.filter(request => request.path === '/api/health').length;
+      assert.ok(healthRequestCount > 0);
+      for (const locale of ['en-US', 'ar-US', 'en-US', 'ar-US']) {
+        setPhase(page, `home locale: ${locale} with not-ready services`);
+        await page.locator('#home').waitFor({state: 'visible'});
+        await page.locator('#localeSelect').selectOption(locale);
+        assert.equal(await page.locator('#home').isVisible(), true, 'Locale switching must keep the home form visible');
+        // Check here, before any upload/result transition can hide the offscreen file input.
+        await assertNoOverflow(page);
+        const arabic = locale === 'ar-US';
+        assert.equal(await page.locator('html').getAttribute('dir'), arabic ? 'rtl' : 'ltr');
+        assert.equal(await page.locator('html').getAttribute('lang'), arabic ? 'ar' : 'en');
+        const warning = arabic ? 'بعض الخدمات المطلوبة غير جاهزة' : 'Some required services are not ready';
+        await page.waitForFunction(expected => document.getElementById('systemStatus').textContent.includes(expected), warning);
+        const readiness = await page.locator('#systemStatus').innerText();
+        const vinLabel = await page.locator('label:has(#vinLabel)').innerText();
+        const placeholder = await page.locator('#vin').getAttribute('placeholder');
+        const uploadAria = await page.locator('#uploadBox').getAttribute('aria-label');
+        assert.match(await page.locator('#systemStatus').getAttribute('class'), /system-status-warn/);
+        if (arabic) {
+          assert.doesNotMatch(readiness, /Some required services are not ready/);
+          assert.match(vinLabel, /اختياري/);
+          assert.doesNotMatch(vinLabel, /optional/i);
+          assert.match(placeholder, /[\u0600-\u06ff]/);
+          assert.doesNotMatch(placeholder, /Improves exact vehicle/i);
+          assert.match(uploadAria, /[\u0600-\u06ff]/);
+          assert.doesNotMatch(uploadAria, /Upload a repair estimate/i);
+        } else {
+          assert.match(vinLabel, /optional/i);
+          assert.doesNotMatch(vinLabel, /اختياري/);
+          assert.match(placeholder, /vehicle|fitment/i);
+          assert.doesNotMatch(placeholder, /[\u0600-\u06ff]/);
+          assert.match(uploadAria, /upload.*estimate/i);
+          assert.doesNotMatch(uploadAria, /[\u0600-\u06ff]/);
+        }
+        await assertNoOverflow(page);
+        assert.equal(await page.locator('#file').inputValue(), '');
+        assert.equal(await page.evaluate(() => window.wafferVerifiedMarketPricing), false);
+        assert.equal(await page.evaluate(() => window.wafferSandboxPricingPreview), false);
+      }
+      assert.equal(server.state.requests.filter(request => request.path === '/api/health').length, healthRequestCount,
+        'Locale switches should render cached health without repeating the health request');
+      setPhase(page, 'home locale: reload persisted Arabic preference');
+      await page.reload();
+      await page.locator('#home').waitFor({state: 'visible'});
+      await page.waitForFunction(() => document.documentElement.dir === 'rtl' && document.getElementById('systemStatus').textContent.includes('بعض الخدمات المطلوبة غير جاهزة'));
+      assert.equal(await page.locator('#localeSelect').inputValue(), 'ar-US');
+      assert.equal(await page.locator('html').getAttribute('lang'), 'ar');
+      assert.match(await page.locator('label:has(#vinLabel)').innerText(), /اختياري/);
+      assert.match(await page.locator('#uploadBox').getAttribute('aria-label'), /[\u0600-\u06ff]/);
+      await assertNoOverflow(page);
+      assert.equal(server.state.analyses.length, 0, 'Home locale checks must not submit an analysis');
+      assert.equal(server.state.prices.length, 0, 'Home locale checks must not request provider pricing');
+      assert.equal(server.state.transports.length, 0);
+    });
+  });
+
   test(`${viewport.name}: actual upload and matched adapter response retain identity, currency and uncertain totals`, {timeout: 35_000}, async t => {
     await runFixture(t, viewport, 'matched', async ({page, server}) => {
       await beginAnalysis(page);
@@ -310,6 +377,17 @@ for (const viewport of VIEWPORTS) {
       assert.match(text, /<img src=x onerror=alert\(1\)>/);
       assert.equal(await page.locator('#pricingListings img, #pricingListings script').count(), 0);
       assert.match(await page.locator('#confirmedSavingLabel').innerText(), /غير محسوب/);
+      setPhase(page, 'Arabic reset: return to visible home after rendered analysis');
+      await page.locator('#newAnalysisBtn').click();
+      await page.locator('#home').waitFor({state: 'visible'});
+      assert.equal(await page.locator('html').getAttribute('dir'), 'rtl');
+      assert.equal(await page.locator('#localeSelect').inputValue(), 'ar-US');
+      assert.equal(await page.locator('#file').inputValue(), '');
+      assert.equal(await page.locator('#pricingListings article').count(), 0);
+      assert.equal(await page.locator('#catalogMatchLabel').count(), 1);
+      assert.match(await page.locator('label:has(#vinLabel)').innerText(), /اختياري/);
+      assert.match(await page.locator('#uploadBox').getAttribute('aria-label'), /[\u0600-\u06ff]/);
+      await assertNoOverflow(page);
     });
   });
 

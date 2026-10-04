@@ -28,7 +28,7 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 .wf-inline-4{text-align:center}
 .wf-inline-5{margin:0 0 12px}
 .wf-inline-6{font-size:38px}
-.wf-inline-7{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.wf-inline-7{position:absolute;width:1px;height:1px;min-height:0;padding:0;border:0;margin:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;opacity:0}
 .wf-inline-8{margin-top:8px;padding:10px;font-size:14px;min-height:40px}
 .wf-inline-9{font-weight:normal;color:#6b7773}
 .wf-inline-10{text-align:center;margin-top:8px}

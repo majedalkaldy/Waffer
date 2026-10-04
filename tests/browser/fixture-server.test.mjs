@@ -73,3 +73,21 @@ test('fixture API preserves actual cross-origin provenance checks', async () => 
     assert.equal(server.state.transports[0].calls.length, 0, 'Blocked requests must never enter even the synthetic transport');
   } finally { await server.close(); }
 });
+
+
+test('unavailable HTTP 503 health fixture disables all pricing without creating a provider transport', async () => {
+  const server = await startFixtureServer({scenario: 'health-not-ready'});
+  try {
+    const response = await fetch(server.origin + '/api/health?market=US&locale=en-US&currency=USD');
+    const health = await response.json();
+    assert.equal(response.status, 503);
+    assert.equal(health.ok, false);
+    assert.equal(health.status, 'unavailable');
+    assert.deepEqual(health.configured, {analysis: false, catalog: false, pricing: false});
+    assert.equal(health.synthetic, true);
+    assert.equal(health.capabilities.verifiedMarketPricing, false);
+    assert.equal(health.capabilities.sandboxPricingPreview, false);
+    assert.equal(server.state.transports.length, 0);
+    assert.doesNotMatch(JSON.stringify(health), /synthetic-secret|synthetic-client|synthetic-token/);
+  } finally { await server.close(); }
+});

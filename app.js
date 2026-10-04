@@ -1875,13 +1875,49 @@ updateNetworkStatus();
 
 let healthCheckRun=0;
 let healthCheckController=null;
+let systemHealthState={status:'checking'};
 function setSystemStatusTone(element,tone){
   if(!element)return;
   element.classList.remove('system-status-ok','system-status-warn');
   element.classList.add(tone==='ok'?'system-status-ok':'system-status-warn');
 }
-async function checkSystemHealth(){
+function renderSystemHealth(){
  const el=document.getElementById('systemStatus');
+ if(!el)return;
+ const d=systemHealthState;
+ const en=window.wafferLocale?.startsWith('en');
+ if(d.status==='checking'){
+   el.textContent=en?'Checking service readiness...':'جارٍ التحقق من جاهزية الخدمات...';
+   setSystemStatusTone(el,'warn');
+ }else if(d.status==='request_error'){
+   el.textContent=en?'⚠ Could not verify service status':'⚠ تعذر التحقق من حالة الخدمة';
+   setSystemStatusTone(el,'warn');
+ }else if(d.status==='ready'){
+   const ms=Number(d?.latency?.catalogMs);
+   const latencyText=Number.isFinite(ms)
+     ? (en?' • catalog ':' • الكتالوج ')+ms+'ms'
+     : '';
+   const analysisBasis=d?.verification?.analysis==='configuration_only'
+     ? (en?' • analysis configured':' • التحليل مهيأ')
+     : '';
+   const version=d?.version?' • '+d.version:'';
+   const commit=d?.deployment?.commit?' • '+d.deployment.commit:'';
+   el.textContent=(en?'● Core services ready':'● الخدمات الأساسية جاهزة')+analysisBasis+latencyText+version+commit;
+   setSystemStatusTone(el,'ok');
+ }else if(d.status==='degraded'){
+   el.textContent=en
+     ? '⚠ Analysis is configured, but catalog service is currently limited'
+     : '⚠ التحليل مهيأ، لكن خدمة الكتالوج محدودة حاليًا';
+   setSystemStatusTone(el,'warn');
+ }else{
+   el.textContent=en
+     ? '⚠ Some required services are not ready'
+     : '⚠ بعض الخدمات المطلوبة غير جاهزة';
+   setSystemStatusTone(el,'warn');
+ }
+}
+window.wafferRenderSystemHealth=renderSystemHealth;
+async function checkSystemHealth(){
  const run=++healthCheckRun;
  healthCheckController?.abort();
  const controller=new AbortController();
@@ -1903,40 +1939,15 @@ async function checkSystemHealth(){
    }else if(typeof window.wafferRenderPricingSummary==='function'){
      window.wafferRenderPricingSummary();
    }
-   const en=window.wafferLocale?.startsWith('en');
-   if(d.status==='ready'){
-     const ms=Number(d?.latency?.catalogMs);
-     const latencyText=Number.isFinite(ms)
-       ? (en?' • catalog ':' • الكتالوج ')+ms+'ms'
-       : '';
-     const analysisBasis=d?.verification?.analysis==='configuration_only'
-       ? (en?' • analysis configured':' • التحليل مهيأ')
-       : '';
-     const version=d?.version?' • '+d.version:'';
-     const commit=d?.deployment?.commit?' • '+d.deployment.commit:'';
-     el.textContent=(en?'● Core services ready':'● الخدمات الأساسية جاهزة')+analysisBasis+latencyText+version+commit;
-     setSystemStatusTone(el,'ok');
-   }else if(d.status==='degraded'){
-     el.textContent=en
-       ? '⚠ Analysis is configured, but catalog service is currently limited'
-       : '⚠ التحليل مهيأ، لكن خدمة الكتالوج محدودة حاليًا';
-     setSystemStatusTone(el,'warn');
-   }else{
-     el.textContent=en
-       ? '⚠ Some required services are not ready'
-       : '⚠ بعض الخدمات المطلوبة غير جاهزة';
-     setSystemStatusTone(el,'warn');
-   }
+   systemHealthState=d;
+   renderSystemHealth();
  }catch(e){
    if(run!==healthCheckRun)return;
    window.wafferVerifiedMarketPricing=false;
-window.wafferSandboxPricingPreview=false;
+   window.wafferSandboxPricingPreview=false;
    if(typeof window.wafferRenderPricingSummary==='function')window.wafferRenderPricingSummary();
-   const en=window.wafferLocale?.startsWith('en');
-   el.textContent=en
-     ? '⚠ Could not verify service status'
-     : '⚠ تعذر التحقق من حالة الخدمة';
-   setSystemStatusTone(el,'warn');
+   systemHealthState={status:'request_error'};
+   renderSystemHealth();
  }finally{
    clearTimeout(timer);
    if(healthCheckController===controller)healthCheckController=null;

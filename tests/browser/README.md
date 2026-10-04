@@ -39,6 +39,9 @@ At **1280×900** and **390×844**, tests cover:
 3. Stale, empty, provider-error, wrong-brand and incompatible responses fail closed.
 4. Arabic/RTL rendering and seller markup rendered safely as text.
 5. Repeated pricing retries, result/details navigation, a newer analysis while an old response is held, clearing an estimate, and real browser Back/Forward after clearing.
-6. No browser runtime/console errors, secret-bearing client responses, unexpected routes, external requests or document-level horizontal overflow.
+6. Repeated EN→AR→EN→AR switches while the home form remains visible, including document/body overflow, a completed unavailable/HTTP 503 health warning, VIN optional text/placeholder, and the upload accessible label. Persisted-Arabic reload and Arabic reset-to-home are also checked. This catches offscreen-input RTL overflow before result navigation hides the home form.
+7. No browser runtime/console errors, secret-bearing client responses, unexpected routes, external requests or document-level horizontal overflow.
+
+The unavailable-health case permits only Chromium’s exact HTTP 503 resource notice for the same observed `/api/health` response. JavaScript exceptions, other URLs/statuses and application console errors still fail. The narrow exception has independent positive/negative tests.
 
 Failures save a screenshot and concise fictional diagnostics to `test-results/` for CI artifact upload. No raw credentials or upload bodies are written into diagnostics. Native device rendering, real provider authorization, production checkout and actual supplier accuracy remain outside this isolated suite.

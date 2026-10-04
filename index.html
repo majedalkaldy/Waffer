@@ -21,13 +21,13 @@
  <p class="lead" id="heroLead">Identify your vehicle, verify part fitment, and compare trusted U.S. offers. Repair-estimate upload remains available while live retailer pricing is connected.</p>
  <div class="card upload" id="uploadBox" role="button" tabindex="0" aria-controls="file" aria-label="Upload a repair estimate image or PDF">
   <div class="wf-inline-6">📄</div><strong id="fileText">Upload an estimate image or PDF</strong><small>JPG, PNG, WEBP, PDF</small>
-  <input id="file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.jpg,.jpeg,.png,.webp,.pdf" class="wf-inline-7">
+  <input id="file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.jpg,.jpeg,.png,.webp,.pdf" class="wf-inline-7" tabindex="-1" aria-hidden="true">
  </div>
  <div class="card">
   <div class="grid"><div><label id="makeLabel">Make</label><select id="make" disabled><option value="">Loading makes...</option></select><button id="retryMakes" class="secondary hidden wf-inline-8" type="button">Reload makes</button></div>
   <div><label id="modelLabel">Model</label><input id="model" value="Expedition" dir="ltr"></div></div>
   <label id="yearLabel">Model year</label><input id="year" type="number" value="2013" inputmode="numeric">
-  <label><span id="vinLabel">VIN</span> <span class="wf-inline-9">(optional)</span></label><input id="vin" placeholder="Improves exact vehicle and parts fitment" dir="ltr" maxlength="17" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="formHint">
+  <label><span id="vinLabel">VIN</span> <span class="wf-inline-9" id="vinOptionalLabel">(optional)</span></label><input id="vin" placeholder="Improves exact vehicle and parts fitment" dir="ltr" maxlength="17" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="formHint">
   <div id="vehicleInfo" class="vehicle-info hidden"></div>
   <div id="vehicleCandidates" class="vehicle-info hidden"><label for="candidateSelect" id="candidateLabel">Matching vehicle variant</label><select id="candidateSelect"><option value="">Choose the matching vehicle variant</option></select></div>
   <button id="analyzeBtn">Analyze my estimate</button><div id="formHint" class="note wf-inline-10" role="status" aria-live="polite"></div>

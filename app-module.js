@@ -65,6 +65,10 @@ function applyLocale(locale){
  document.getElementById('heroTitle').textContent=t(locale,'heroTitle');
  document.getElementById('heroLead').textContent=t(locale,'heroLead');
  if(!document.getElementById('file').files[0])document.getElementById('fileText').textContent=t(locale,'upload');
+ document.getElementById('uploadBox').setAttribute('aria-label',t(locale,'uploadLabel'));
+ document.getElementById('vinOptionalLabel').textContent=t(locale,'optional');
+ document.getElementById('vin').placeholder=t(locale,'vinPlaceholder');
+ document.getElementById('offlineStatus').textContent=t(locale,'offline');
  document.getElementById('makeLabel').textContent=t(locale,'make');
  const makeSelect=document.getElementById('make');
  const retryMakes=document.getElementById('retryMakes');
@@ -136,6 +140,7 @@ function applyLocale(locale){
  if(!window.wafferPartMatches)document.getElementById('priceReadiness').textContent=t(locale,'priceWaiting');
  document.getElementById('workshopFollowupBtn').textContent=t(locale,'workshopFollowup');
  if(typeof window.wafferRenderPricingSummary==='function')window.wafferRenderPricingSummary();
+ if(typeof window.wafferRenderSystemHealth==='function')window.wafferRenderSystemHealth();
  if(typeof window.wafferRenderFieldTestDashboard==='function')window.wafferRenderFieldTestDashboard();
  const debugExport=document.getElementById('debugExportBtn');
  if(debugExport)debugExport.textContent=locale.startsWith('en')?'Export test report':'تصدير تقرير الاختبار';

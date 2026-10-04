@@ -17,7 +17,7 @@ const ASSETS = new Map([
     'field-test-fixtures', 'field-test-evidence-validator'].map(name => [`/lib/${name}.js`, `lib/${name}.js`])
 ]);
 const SCENARIOS = new Set(['matched', 'unknown-shipping', 'sandbox', 'stale', 'empty',
-  'provider-error', 'wrong-brand', 'incompatible', 'hostile-seller']);
+  'provider-error', 'wrong-brand', 'incompatible', 'hostile-seller', 'health-not-ready']);
 const BANNER = '<aside id="syntheticTestBanner" class="card" role="note">SYNTHETIC TEST ONLY · Fictional fixtures · No live provider calls · Not release or market evidence</aside>';
 const SYNTHETIC_SECRET = 'synthetic-secret';
 const SAFE_HOSTS = new Set(['api.ebay.com', 'api.sandbox.ebay.com']);
@@ -119,11 +119,25 @@ export async function startFixtureServer({scenario = 'matched'} = {}) {
         return;
       }
       if (req.method !== 'GET') return json(res, {error: 'Fixture method not allowed'}, 405);
-      if (route === '/api/health') return json(res, {
-        status: 'ready', synthetic: true, capabilities: {
-          verifiedMarketPricing: state.scenario !== 'sandbox', sandboxPricingPreview: state.scenario === 'sandbox'
-        }
-      });
+      if (route === '/api/health') {
+        if (state.scenario === 'health-not-ready') return json(res, {
+          ok: false, status: 'unavailable', service: 'waffer', synthetic: true,
+          configured: {analysis: false, catalog: false, pricing: false},
+          upstream: {analysis: 'not_configured', catalog: 'not_configured'},
+          verification: {analysis: 'unavailable', catalog: 'unavailable'},
+          latency: {catalogMs: null},
+          capabilities: {
+            quoteAnalysis: false, quoteAnalysisVerified: false, vinAndCatalog: false,
+            verifiedMarketPricing: false, sandboxPricingPreview: false,
+            ebayShadowPricingReady: false, ebaySandboxReady: false, persistentAccounts: false
+          }
+        }, 503);
+        return json(res, {
+          ok: true, status: 'ready', synthetic: true, capabilities: {
+            verifiedMarketPricing: state.scenario !== 'sandbox', sandboxPricingPreview: state.scenario === 'sandbox'
+          }
+        });
+      }
       if (route === '/api/vehicles') return json(res, {manufacturers: [{manufacturerId: 1, manufacturerName: vehicle.make}]});
       if (route === '/api/vin') return json(res, {
         matchingManufacturers: [{manufacturerId: 1, manufacturerName: vehicle.make}],

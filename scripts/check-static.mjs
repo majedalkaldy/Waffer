@@ -950,7 +950,12 @@ if (!failures.length) {
   if (!healthClient.includes('run!==healthCheckRun') || !healthClient.includes('healthCheckController?.abort()')) {
     failures.push('Client health checks are not protected against stale responses');
   }
-  if (!healthClient.includes('Core services ready') || !healthClient.includes('الخدمات الأساسية جاهزة')) {
+  const healthRendererStart = app.indexOf('function renderSystemHealth(){');
+  const healthRenderer = healthRendererStart >= 0 && healthRendererStart < healthFunctionStart
+    ? app.slice(healthRendererStart, healthFunctionStart)
+    : '';
+  if (!healthRenderer.includes('Core services ready') || !healthRenderer.includes('الخدمات الأساسية جاهزة') ||
+      !healthClient.includes('renderSystemHealth();') || !appModule.includes('window.wafferRenderSystemHealth()')) {
     failures.push('Health status is not localized for Arabic and English');
   }
 
