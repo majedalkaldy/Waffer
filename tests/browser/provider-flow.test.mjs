@@ -22,6 +22,9 @@ const upload = {
   ]))
 };
 let browser;
+const testPhases = new WeakMap();
+function setPhase(page, phase) { testPhases.set(page, phase); }
+function errorContext(page) { return {url: page.url(), phase: testPhases.get(page) || 'initializing'}; }
 before(async () => {
   browser = await chromium.launch({
     headless: true,
@@ -58,11 +61,23 @@ async function runFixture(t, viewport, scenario, exercise) {
   const externalRequests = [];
   const clientLeaks = [];
   const responseChecks = [];
-  page.on('pageerror', error => runtimeErrors.push(error.message));
-  page.on('console', message => {if (message.type() === 'error') runtimeErrors.push(message.text());});
-  page.on('dialog', async dialog => {runtimeErrors.push(`Unexpected dialog: ${dialog.message()}`); await dialog.dismiss();});
+  page.on('pageerror', error => runtimeErrors.push({
+    kind: 'pageerror', message: error.message, stack: error.stack || null, ...errorContext(page)
+  }));
+  page.on('console', message => {
+    if (message.type() === 'error') runtimeErrors.push({
+      kind: 'console', message: message.text(), location: message.location(), ...errorContext(page)
+    });
+  });
+  page.on('dialog', async dialog => {
+    runtimeErrors.push({kind: 'dialog', message: `Unexpected dialog: ${dialog.message()}`, ...errorContext(page)});
+    await dialog.dismiss();
+  });
   context.on('page', newPage => {
-    if (newPage !== page) runtimeErrors.push('Unexpected popup; listing links must never be followed in fixture tests');
+    if (newPage !== page) runtimeErrors.push({
+      kind: 'popup', message: 'Unexpected popup; listing links must never be followed in fixture tests',
+      popupUrl: newPage.url(), ...errorContext(page)
+    });
   });
   await context.route('**/*', async route => {
     const url = new URL(route.request().url());
@@ -79,12 +94,15 @@ async function runFixture(t, viewport, scenario, exercise) {
     }).catch(() => {})); // An intentionally aborted obsolete response has no readable body.
   });
   try {
+    setPhase(page, 'initial page navigation');
     await page.goto(server.origin);
     await page.locator('#syntheticTestBanner').waitFor({state: 'visible'});
     assert.match(await page.locator('#syntheticTestBanner').innerText(), /SYNTHETIC TEST ONLY/);
     await page.waitForFunction(() => typeof window.wafferRenderPricingListings === 'function' && !document.getElementById('make').disabled);
     await assertNoOverflow(page);
+    setPhase(page, 'exercise scenario');
     await exercise({page, server});
+    setPhase(page, 'final layout and runtime assertions');
     await assertNoOverflow(page);
     await Promise.all(responseChecks);
     assert.deepEqual(runtimeErrors, [], 'Browser runtime/console errors');
@@ -105,7 +123,7 @@ async function runFixture(t, viewport, scenario, exercise) {
       await page.screenshot({path: resolve(directory, `${name}.png`), fullPage: true});
       await writeFile(resolve(directory, `${name}.json`), JSON.stringify({
         notice: 'SYNTHETIC TEST ONLY. No live/provider release evidence.',
-        error: error.stack, runtimeErrors, externalRequests, clientLeaks,
+        error: error.stack, ...errorContext(page), runtimeErrors, externalRequests, clientLeaks,
         requests: server.state.requests, unexpected: server.state.unexpected, failures: server.state.failures,
         pricingStatuses: server.state.prices.map(record => ({scenario: record.scenario, status: record.response?.status, completed: record.completed}))
       }, null, 2));
@@ -118,10 +136,14 @@ async function runFixture(t, viewport, scenario, exercise) {
 }
 
 async function beginAnalysis(page, {locale = 'en-US', waitForPrice = true} = {}) {
+  setPhase(page, 'analysis: wait for home');
   await page.locator('#home').waitFor({state: 'visible'});
+  setPhase(page, `analysis: select locale ${locale}`);
   await page.locator('#localeSelect').selectOption(locale);
+  setPhase(page, 'analysis: upload synthetic PDF');
   await page.locator('#file').setInputFiles(upload);
   assert.match(await page.locator('#fileText').innerText(), /SYNTHETIC-TEST-ONLY\.pdf/);
+  setPhase(page, 'analysis: enter and resolve vehicle identity');
   await page.locator('#make').selectOption('1');
   await page.locator('#model').fill(vehicle.model);
   await page.locator('#year').fill(vehicle.year);
@@ -133,14 +155,17 @@ async function beginAnalysis(page, {locale = 'en-US', waitForPrice = true} = {})
   assert.match(identity, /F-150/);
   assert.ok(identity.includes(vehicle.trim));
   assert.ok(identity.includes(vehicle.engine));
+  setPhase(page, 'analysis: submit and wait for result');
   await page.locator('#analyzeBtn').click();
   await page.locator('#result').waitFor({state: 'visible'});
   assert.match(await page.locator('#rVehicleEvidence').innerText(), /Ford.*F-150/);
   assert.match(await page.locator('#currencyContext').innerText(), /USD/);
   await assertNoOverflow(page);
+  setPhase(page, 'analysis: open details');
   await page.locator('#detailsBtn').click();
   await page.locator('#advanced').waitFor({state: 'visible'});
   if (waitForPrice) {
+    setPhase(page, 'analysis: await pricing result and renderer');
     await page.waitForFunction(() => window.wafferPricingResults?.length === 1);
     await page.locator('#pricingListings article').waitFor({state: 'visible'});
   }
@@ -256,6 +281,18 @@ for (const viewport of VIEWPORTS) {
         assert.match(await page.locator('#confirmedSavingLabel').innerText(), /not calculated/);
         await assertNoOverflow(page);
       }
+      await page.waitForFunction(() => window.wafferCatalogState?.status === 'COMPLETED' && window.wafferCatalogState.matched === 0);
+      assert.equal(await page.locator('#catalogMatchLabel').count(), 1, 'Rendered no-match catalog must retain its localized heading');
+      setPhase(page, 'catalog no-match: switch locale with rendered results');
+      // The language control is in the hidden home section. Force a native select change
+      // to exercise the actual locale handler against the populated catalog DOM.
+      await page.locator('#localeSelect').selectOption('ar-US', {force: true});
+      assert.equal(await page.locator('#catalogMatchLabel').count(), 1);
+      assert.match(await page.locator('#catalogMatchLabel').innerText(), /كتالوج/);
+      await assertNoOverflow(page);
+      await page.locator('#localeSelect').selectOption('en-US', {force: true});
+      assert.equal(await page.locator('#catalogMatchLabel').count(), 1);
+      assert.match(await page.locator('#catalogMatchLabel').innerText(), /catalog/i);
     });
   });
 
@@ -278,34 +315,44 @@ for (const viewport of VIEWPORTS) {
 
   test(`${viewport.name}: newer analysis wins over delayed pricing; clear and browser back-forward never restore old offers`, {timeout: 45_000}, async t => {
     await runFixture(t, viewport, 'matched', async ({page, server}) => {
+      setPhase(page, 'newer analysis: hold obsolete price response');
       const releaseOldPrice = server.holdNextPrice();
       await beginAnalysis(page, {waitForPrice: false});
       await eventually(() => server.state.prices[0]?.response != null, 'The obsolete provider response did not become pending');
       assert.equal(server.state.prices[0].completed, false);
+      setPhase(page, 'newer analysis: clear first analysis with price response pending');
       await page.locator('#newAnalysisBtn').click();
       await page.locator('#home').waitFor({state: 'visible'});
+      assert.equal(await page.locator('#catalogMatchLabel').count(), 1, 'Reset must preserve the catalog heading used by localization');
       assert.equal(await page.locator('#pricingListings article').count(), 0);
       assert.equal(await page.locator('#file').inputValue(), '');
       server.setScenario('empty');
       await beginAnalysis(page);
       assert.equal(server.state.prices[1].response.status, 'NO_VERIFIED_PRICE_AVAILABLE');
+      setPhase(page, 'newer analysis: release obsolete response after newer result');
       releaseOldPrice();
       await eventually(() => server.state.prices[0].completed, 'The obsolete fixture response did not finish');
       await page.waitForFunction(() => window.wafferPricingResults?.[0]?.data?.status === 'NO_VERIFIED_PRICE_AVAILABLE');
       assert.equal(await page.locator('#pricingListings a').count(), 0);
       assert.match(await page.locator('#pricingListings').innerText(), /No fresh matched listing/);
       assert.equal(server.state.analyses.length, 2);
+      setPhase(page, 'newer analysis: clear completed second analysis');
       await page.locator('#newAnalysisBtn').click();
+      assert.equal(await page.locator('#catalogMatchLabel').count(), 1, 'Every reset must retain exactly one catalog heading');
       assert.equal(await page.locator('#pricingListings article').count(), 0);
       assert.equal(await page.evaluate(() => window.wafferPricingResults.length), 0);
+      setPhase(page, 'history: navigate away after clearing');
       await page.goto(`${server.origin}/__fixture/away`);
       await page.locator('#away').waitFor();
+      setPhase(page, 'history: back to cleared home');
       await page.goBack();
       await page.locator('#home').waitFor({state: 'visible'});
       assert.equal(await page.locator('#pricingListings article').count(), 0);
       assert.equal(await page.locator('#file').inputValue(), '');
+      setPhase(page, 'history: forward to local away page');
       await page.goForward();
       await page.locator('#away').waitFor();
+      setPhase(page, 'history: back to cleared home');
       await page.goBack();
       await page.locator('#home').waitFor({state: 'visible'});
       assert.equal(await page.locator('#pricingListings article').count(), 0);

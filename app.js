@@ -852,7 +852,7 @@ function resetAnalysis(){
    : '💰 مقارنة الأسعار: بانتظار هوية قطعة قابلة للتحقق ومصدر سعر موثوق.';
 
  const catalogMatches=document.getElementById('catalogMatches');
- if(catalogMatches)catalogMatches.innerHTML='<h3>🔎 '+esc(ui('مطابقة كتالوج القطع','Parts catalog matching'))+'</h3><div class="note">'+esc(ui('سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.','Catalog results will appear here after matching completes.'))+'</div>';
+ if(catalogMatches)catalogMatches.innerHTML='<h3 id="catalogMatchLabel">🔎 '+esc(ui('مطابقة كتالوج القطع','Parts catalog matching'))+'</h3><div class="note" id="catalogWaitingText">'+esc(ui('سيتم عرض نتائج الكتالوج هنا بعد اكتمال المطابقة.','Catalog results will appear here after matching completes.'))+'</div>';
 
  updateFormHint();
  show('home');
@@ -2117,12 +2117,12 @@ window.addEventListener('wafferPartsMatched', function(event){
  }
 
  if(!matched.length){
-   box.innerHTML='<h3>🔎 '+esc(ui('مطابقة كتالوج القطع','Parts catalog matching'))+'</h3>'+
+   box.innerHTML='<h3 id="catalogMatchLabel">🔎 '+esc(ui('مطابقة كتالوج القطع','Parts catalog matching'))+'</h3>'+
      '<div class="note">'+esc(ui('تم فحص الكتالوج، لكن لم يتم العثور على مطابقة مناسبة للبنود المستخرجة.','The catalog was checked, but no suitable match was found for the extracted items.'))+'</div>';
    return;
  }
 
- box.innerHTML='<h3>🔎 '+esc(ui('مطابقة كتالوج القطع','Parts catalog matching'))+'</h3>'+
+ box.innerHTML='<h3 id="catalogMatchLabel">🔎 '+esc(ui('مطابقة كتالوج القطع','Parts catalog matching'))+'</h3>'+
    '<p class="note">'+esc(ui(
      'تمت مقارنة بنود عرض الورشة بكتالوج السيارة، ويعرض وفّر حتى 3 بدائل مميزة فقط لكل بند بدل إظهار مئات النتائج.',
      'Estimate items were compared with the vehicle catalog. Waffer shows up to 3 distinct alternatives per item instead of hundreds of results.'

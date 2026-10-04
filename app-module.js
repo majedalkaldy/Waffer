@@ -99,7 +99,8 @@ function applyLocale(locale){
  document.getElementById('priceConfidenceLabel').textContent=t(locale,'priceConfidence');
  document.getElementById('overallLabel').textContent=t(locale,'overall');
  document.getElementById('findingsLabel').textContent=t(locale,'findings');
- document.getElementById('catalogMatchLabel').textContent='🔎 '+t(locale,'catalogMatch');
+ const catalogMatchLabel=document.getElementById('catalogMatchLabel');
+ if(catalogMatchLabel)catalogMatchLabel.textContent='🔎 '+t(locale,'catalogMatch');
  document.getElementById('beforePayLabel').textContent=t(locale,'beforePay');
  document.getElementById('confirmedSavingLabel').textContent=t(locale,'confirmedSaving');
  document.getElementById('privacyText').textContent=t(locale,'privacy');
