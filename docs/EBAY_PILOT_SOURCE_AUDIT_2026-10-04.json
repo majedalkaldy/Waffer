@@ -1,0 +1,159 @@
+{
+  "researchDate": "2026-10-04",
+  "baselineCommit": "61c1274ed9725de39993121528fee28639136398",
+  "repository": "https://github.com/majedalkaldy/Waffer",
+  "targetFile": "docs/EBAY_PILOT_RESEARCH_CASES.json",
+  "status": "PROPOSED_MANUFACTURER_INPUT_EVIDENCE_COMPLETE_RUNTIME_FITMENT_REQUIRED",
+  "results": {
+    "caseCount": 20,
+    "distinctVehiclePartPairs": 20,
+    "changedCases": 12,
+    "previousCompleteCasesRetained": 8,
+    "remainingNullRequiredVehicleFields": 0,
+    "newLiveFitmentApprovals": 0,
+    "newLivePriceEvidence": 0
+  },
+  "sources": [
+    {
+      "id": "C1",
+      "url": "https://pressroom.toyota.com/toyota-2014-corolla-efficiency-driving-dynamics/",
+      "downloadUrl": "https://pressroom.toyota.com/?generate_pdf=28849",
+      "pages": [
+        1,
+        2
+      ],
+      "quote": "The base 1.8-liter unit with VVT-i is available on the L, LE, and S grades and is rated at 132 horsepower.",
+      "supportedFields": {
+        "year": 2014,
+        "make": "Toyota",
+        "model": "Corolla",
+        "trim": "LE",
+        "engine": "2ZRFE 4-cylinder",
+        "displacementL": 1.8,
+        "engineCylinders": 4
+      },
+      "interpretation": "Same model-year article joins L/LE/S to 132-hp VVT-i; its adjacent table identifies that configuration as 2ZR-FE, 1798 cc and four inline cylinders. Normalize engine-code punctuation only.",
+      "appliesTo": [
+        "us-04-corolla-oil",
+        "us-05-corolla-cabin"
+      ],
+      "sha256": "18ad5ab85b85f01e849ff187acc927c5f2c23326795b45679c80bec46e3eb171"
+    },
+    {
+      "id": "C2",
+      "url": "https://www.toyotapartsandservice.com/wp-content/uploads/2021/08/06_OilFilters2021_hi.pdf#page=1",
+      "pages": [
+        1
+      ],
+      "quote": "2014-2015 4 Cyl. (2ZRFAE, 2ZRFE) 04152-YZZA6",
+      "supportedFields": {
+        "partNumber": "04152-YZZA6",
+        "application": "2014 Toyota Corolla 2ZRFE"
+      },
+      "appliesTo": [
+        "us-04-corolla-oil"
+      ],
+      "sourceCurrencyDate": "2021-03-31",
+      "sha256": "398c03cbe953db38f5d77b16478baaf6d5bfa7d88b3ed3702bea64c377015c70"
+    },
+    {
+      "id": "C3",
+      "url": "https://www.toyotapartsandservice.com/wp-content/uploads/2022/02/05_CabinAirFilters2021_hi.pdf",
+      "pages": [
+        1,
+        2
+      ],
+      "quote": "Warranty Part Number: Please use 87139-07020 (Pollen)",
+      "supportedFields": {
+        "partNumber": "87139-07020",
+        "application": "2014 Toyota Corolla 2ZRFE",
+        "qualification": "Warranty pollen-filter part from footnote 4"
+      },
+      "interpretation": "Page 1 Corolla 2014-2019 2ZRFAE/2ZRFE row has 87139-YZZ20 with superscript 4; page 2 maps footnote 4 to 87139-07020. Preserve original selected part rather than silently claiming it is the premium/standard replacement column.",
+      "appliesTo": [
+        "us-05-corolla-cabin"
+      ],
+      "sourceCurrencyDate": "2021-03-31",
+      "sha256": "376e3efc203097509e362e3cb942a7f168cd8b9f25eb9890ac6503b53b2a4de4"
+    },
+    {
+      "id": "F1",
+      "url": "https://content.fordpro.com/content/dam/fordpro/us/en-us/pdf/towing-guides/Ford_Linc_18RVTTowGuide.pdf",
+      "pages": [
+        11,
+        30
+      ],
+      "quoteFragments": [
+        "Lariat Base.",
+        "Requires 5.0L V8 or 3.5L V6 EcoBoost® gas engine.",
+        "3.5L EcoBoost® V6(5)",
+        "(5) Sport/Platinum series only."
+      ],
+      "supportedPairings": [
+        "2018 Ford F-150 Lariat / ordinary 3.5L EcoBoost V6",
+        "2018 Ford F-150 Lariat / 5.0L V8",
+        "2018 Ford Explorer Sport / 3.5L EcoBoost V6 / 4WD"
+      ],
+      "qualifications": [
+        "Page 11 F-150 Heavy-Duty Payload Package 627 is offered on Lariat Base; 5.0L requires Trailer Tow Package, 3.5L requires Max Trailer Tow Package.",
+        "Page 30 Explorer engine row and footnote explicitly restrict 3.5L EcoBoost to Sport/Platinum; 4WD column populated, FWD dash.",
+        "Configuration evidence is separate from parts manual applications and from eBay property validation."
+      ],
+      "appliesTo": [
+        "us-12-f150-35-oil",
+        "us-13-f150-35-air",
+        "us-14-f150-35-cabin",
+        "us-15-f150-50-plug",
+        "us-16-explorer-air",
+        "us-17-explorer-cabin",
+        "us-18-explorer-wiper-driver",
+        "us-19-explorer-wiper-passenger",
+        "us-20-explorer-wiper-rear"
+      ],
+      "sha256": "659ad9b15076b2e20fb49d253502c874100bb4fed934ef21c30113bf49e5aba5"
+    },
+    {
+      "id": "F2",
+      "url": "https://www.windowsticker.forddirect.com/windowsticker.pdf?vin=1FTEW1EP7JFC91269",
+      "pages": [
+        1
+      ],
+      "quoteFragments": [
+        "2018 F-150 4X4 SUPERCREW",
+        "2.7L V6 ECOBOOST",
+        "LARIAT SERIES"
+      ],
+      "supportedFields": {
+        "year": 2018,
+        "make": "Ford",
+        "model": "F-150",
+        "trim": "Lariat",
+        "engine": "2.7L EcoBoost",
+        "displacementL": 2.7,
+        "engineCylinders": 6
+      },
+      "qualification": "VIN-specific actual US configuration: SuperCrew 4x4, 145-inch wheelbase, equipment group 502A. Establishes pairing existence, not universal parts fitment. VIN was public dealer inventory evidence, not personal user data.",
+      "provenanceUrl": "https://keysermatthewsford.worktrucksolutions.com/work-truck/2018-ford-f-150-supercrew-cab-4wd-pickup-24733974",
+      "appliesTo": [
+        "us-11-f150-27-oil"
+      ],
+      "sha256": "5bd5f3977fc5b91fe7ae69f73d38dd3ba1681760d4afcfa2156f28539c2fb06e"
+    }
+  ],
+  "originalPartSourcesRetained": {
+    "F150": "Existing US/Canada 2018 owner manual fifth printing, printed pages 418, 420-421 / PDF pages 421, 423-424. No part number or quantity changed.",
+    "Explorer": "Existing Ford online 2018 Explorer owner manual variant 4727, 3.5L EcoBoost Motorcraft Parts; title, model-year label and all five part rows rechecked today."
+  },
+  "original2015CorollaDisposition": "Not promoted. Actual linked 2015 product PDF establishes trim/1.8L/cylinders but omits engine code; replacement with fully documented 2014 avoids a cross-year engine-code inference.",
+  "verification": [
+    "Manufacturer PDFs downloaded and relevant pages rendered and visually checked.",
+    "20 distinct year/make/model/trim/engine/part-number keys; 20 case IDs; zero null vehicle fields.",
+    "Original 8 complete cases retained without change; 12 original gap cases changed, no additions.",
+    "Only local proposed research artifacts written. No repository edits, commits, pushes, eBay account requests, live price calls, API credentials or spending."
+  ],
+  "unresolved": [
+    "Runtime provider canonical Year/Make/Model/Trim/Engine and any additional required vehicle qualifiers remain unverified.",
+    "Manufacturer source values must not be marked as eBay-approved canonical properties.",
+    "No current supersession/stock/availability claims, no real offer prices, no 20-case live provider pilot, no production approval or launch readiness."
+  ]
+}

@@ -110,3 +110,5 @@ button.secondary{background:#e8f3ef;color:var(--g)}button:disabled{opacity:.6;cu
 .field-test-export-readiness strong{display:block;margin-bottom:5px}
 .field-test-export-readiness ul{margin:0;padding-inline-start:20px}
 .field-test-next-btn{margin-top:8px!important}
+
+.pricing-listing{margin:1rem 0;padding:1rem;border:1px solid #54627a;border-radius:12px;overflow-wrap:anywhere}.pricing-listing h4{margin:0 0 .7rem}.pricing-listing p{margin:.5rem 0}.pricing-listing a{color:#78cdff}

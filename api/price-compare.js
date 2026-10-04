@@ -3,6 +3,7 @@ import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { hasUsablePartNumber, hasUsableVehicleIdentity } from '../lib/identity.js';
 import {
   lookupVerifiedPricing,
+  getPriceProviderReadinessForMarket,
   calculateVerifiedOfferSaving
 } from '../lib/price-provider.js';
 import {
@@ -10,7 +11,8 @@ import {
   checkPricingRequestProvenance
 } from '../lib/pricing-abuse-guard.js';
 
-export default async function handler(req, res) {
+export function createPriceCompareHandler({ lookupPricing = lookupVerifiedPricing } = {}) {
+return async function handler(req, res) {
   res.setHeader('Allow', 'POST');
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -31,6 +33,7 @@ export default async function handler(req, res) {
   try {
     const {
       partName,
+      manufacturer,
       partNumber,
       workshopPrice,
       quantity = 1,
@@ -87,11 +90,12 @@ export default async function handler(req, res) {
       });
     }
 
-    const pricing = await lookupVerifiedPricing({
+    const pricing = await lookupPricing({
       marketConfig,
       part: {
         name: safePartName,
-        number: safePartNumber
+        number: safePartNumber,
+        manufacturer: String(manufacturer || '').trim().slice(0, 120)
       },
       vehicle,
       quantity: qty,
@@ -110,10 +114,22 @@ export default async function handler(req, res) {
       PROVIDER_ERROR: 'PRICE_SOURCE_UNAVAILABLE',
       PROVIDER_TIMEOUT: 'PRICE_SOURCE_TIMEOUT',
       NO_VERIFIED_PRICE: 'NO_VERIFIED_PRICE_AVAILABLE',
-      VERIFIED: 'VERIFIED_PRICE_DATA_AVAILABLE'
+      VERIFIED: 'VERIFIED_PRICE_DATA_AVAILABLE',
+      MATCHED_LISTING: 'MATCHED_LISTING_TOTAL_UNVERIFIED',
+      SANDBOX_ONLY: 'SANDBOX_TEST_DATA_ONLY',
+      STALE_PRICE: 'PRICE_SOURCE_STALE'
     }[pricing.status] || 'WAITING_FOR_VERIFIED_PRICE_SOURCE';
 
     const responseMessage = (() => {
+      if (pricing.status === 'SANDBOX_ONLY') return isEnglish
+        ? 'Sandbox test data only. These are not real offers; no market price or savings are calculated.'
+        : 'بيانات Sandbox للاختبار فقط. ليست عروضًا حقيقية ولا يُحسب منها سعر سوق أو توفير.';
+      if (pricing.status === 'MATCHED_LISTING') return isEnglish
+        ? 'An eBay listing matches the part number, manufacturer and vehicle. Shipping, tax, quantity and checkout total still need confirmation; savings are not calculated.'
+        : 'إعلان eBay مطابق لرقم القطعة والشركة والسيارة. يلزم تأكيد الشحن والضريبة والكمية والإجمالي عند الشراء؛ لم يُحسب التوفير.';
+      if (pricing.status === 'STALE_PRICE') return isEnglish
+        ? 'The returned price is stale or has an invalid future timestamp. No price or savings are displayed.'
+        : 'السعر قديم أو مؤرخ في المستقبل. لم يُعرض سعر أو توفير.';
       if (pricing.status === 'VERIFIED') {
         return isEnglish
           ? 'Verified price data is available from the connected source. Savings are calculated only when a verified in-stock offer is available.'
@@ -179,8 +195,12 @@ export default async function handler(req, res) {
         status: pricing.status,
         id: pricing.providerId,
         sourceLabel: pricing.sourceLabel,
-        checkedAt: pricing.checkedAt
+        checkedAt: pricing.checkedAt,
+        environment: pricing.environment || null,
+        readiness: getPriceProviderReadinessForMarket(normalizedMarket)
       },
+      matchedListing: pricing.matchedListing ? {...pricing.matchedListing, checkedAt: pricing.checkedAt} : null,
+      sandboxPreview: pricing.sandboxPreview ? {...pricing.sandboxPreview, checkedAt: pricing.checkedAt} : null,
       marketPrice: {
         min: pricing.marketRange?.min ?? null,
         median: pricing.marketRange?.median ?? null,
@@ -210,9 +230,12 @@ export default async function handler(req, res) {
       message: responseMessage
     });
   } catch (error) {
-    console.error('Waffer price compare error:', error);
+    console.error('Waffer price compare error');
     return res.status(500).json({
       error: requestedEnglish ? 'Price comparison is currently unavailable.' : 'تعذر تنفيذ مقارنة السعر حاليًا.'
     });
   }
+};
 }
+
+export default createPriceCompareHandler();

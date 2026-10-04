@@ -1,3 +1,5 @@
+import { renderPricingListings } from '/lib/pricing-view.js';
+window.wafferRenderPricingListings=renderPricingListings;
 import { t } from '/lib/i18n.js';
 import { RUNTIME_CONFIG } from '/lib/runtime-config.js';
 import { compareDisplayedTotals } from '/lib/total-check.js';

@@ -6,7 +6,7 @@ import {
   evaluateFieldTestResults,
   evaluateLaunchGate
 } from '../lib/launch-readiness.js';
-import { hasConfiguredPriceProvider } from '../lib/price-provider.js';
+import { hasConfiguredPriceProvider, getPriceProviderReadinessForMarket } from '../lib/price-provider.js';
 
 const require = createRequire(import.meta.url);
 const FIELD_TEST_RESULTS = require('../docs/FIELD_TEST_RESULTS.json');
@@ -38,7 +38,8 @@ function blockerCodes({
   fieldTest,
   pricingProviderConfigured,
   configured,
-  manualBlockers
+  manualBlockers,
+  pricingRuntime
 }) {
   const blockers = [];
 
@@ -50,7 +51,7 @@ function blockerCodes({
   if (!configured.analysis) blockers.push('ANALYSIS_NOT_CONFIGURED');
   if (!configured.catalog) blockers.push('CATALOG_NOT_CONFIGURED');
 
-  return [...new Set([...blockers, ...manualBlockers])];
+  return [...new Set([...blockers, ...(pricingRuntime?.blockers || []), ...manualBlockers])];
 }
 
 export default async function handler(req, res) {
@@ -82,6 +83,7 @@ export default async function handler(req, res) {
   });
 
   const pricingProviderConfigured = hasConfiguredPriceProvider(marketConfig.market);
+  const pricingRuntime = getPriceProviderReadinessForMarket(marketConfig.market);
   const configured = {
     analysis: Boolean(process.env.OPENAI_API_KEY),
     catalog: Boolean(process.env.AUTOPARTS_API_KEY),
@@ -92,6 +94,7 @@ export default async function handler(req, res) {
   const knownBlockers = blockerCodes({
     fieldTest,
     pricingProviderConfigured,
+    pricingRuntime,
     configured,
     manualBlockers: manualReview.blockers
   });
@@ -147,6 +150,7 @@ export default async function handler(req, res) {
       manualBlockerCount
     },
     configured,
+    pricingRuntime,
     knownBlockers,
     manualChecks: {
       ...manualReview.checks,

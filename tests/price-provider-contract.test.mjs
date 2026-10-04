@@ -160,7 +160,8 @@ test('trusted provider lookup returns validated range and offer only with suffic
     marketConfig,
     part:{ name:'Brake pad', number:'BRK-123' },
     vehicle,
-    quantity:2
+    quantity:2,
+    now:Date.parse('2026-09-23T18:00:00.000Z')
   });
 
   assert.equal(calls, 1);

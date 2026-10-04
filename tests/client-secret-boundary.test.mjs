@@ -17,12 +17,18 @@ const CLIENT_FILES = [
   'lib/total-check.js',
   'lib/image-optimization.js',
   'lib/pricing-client.js',
+  'lib/pricing-view.js',
+  'lib/matched-listing.js',
   'lib/field-test-client.js',
   'lib/field-test-fixtures.js',
   'lib/field-test-evidence-validator.js'
 ];
 
 const FORBIDDEN_CLIENT_TOKENS = [
+  'EBAY_CLIENT_SECRET',
+  'EBAY_SANDBOX_CLIENT_SECRET',
+  'api.ebay.com',
+  'api.sandbox.ebay.com',
   'OPENAI_API_KEY',
   'AUTOPARTS_API_KEY',
   'x-apiprofile-key',

@@ -90,6 +90,7 @@ test('summary counts ranges and offers but sums only CALCULATED_FROM_VERIFIED_OF
     checkedItems:3,
     verifiedOfferCount:2,
     marketRangeCount:2,
+    matchedListingCount:0,
     verifiedSavingCount:1,
     verifiedSaving:160,
     currency:'SAR'

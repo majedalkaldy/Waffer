@@ -1,6 +1,6 @@
 {
-  "_instructions": "Research candidates, not live provider evidence. Eight cases have sourced trim/engine attributes; twelve retain explicit gaps. Production preflight must reject this batch until all gaps are resolved. Catalogs may be historical; no current supersession, stock, fitment or price claim.",
-  "researchDate": "2026-10-03",
+  "_instructions": "Research candidates, not live provider evidence. Twenty distinct cases have source-supported required trim/engine attributes after the 2026-10-04 completion audit; the two Corolla candidates explicitly replace model year 2015 with 2014. The other eight previously complete cases are unchanged. Historical manufacturer catalog and vehicle-configuration evidence does not establish individual-vehicle fitment, eBay canonical properties, live compatibility, current supersession, availability, prices, API production approval or launch readiness. Runtime canonical fitment and all live pilot gates must still pass; fail closed on ambiguity.",
+  "researchDate": "2026-10-04",
   "cases": [
     {
       "caseId": "us-01-camry-oil",
@@ -21,7 +21,8 @@
         "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2021/08/06_OilFilters2021_hi.pdf#page=1",
         "notes": "2021 Toyota US chart, current 2021-03-31: Camry 2012-2017, 2ARFE/2ARFXE row. Checked 2026-10-03. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Supplemental official US vehicle source supports LE, 2.5L, four cylinders: https://pressroom.toyota.com/2015-toyota-camry-pricing/. Composite evidence combines engine-specific parts chart with official vehicle specification; no eBay canonical identity has been verified."
       },
-      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Toyota"
     },
     {
       "caseId": "us-02-camry-air",
@@ -42,7 +43,8 @@
         "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2019/11/02_AirFilters2019.pdf#page=1",
         "notes": "Toyota US chart current 2019-01-31: Camry 2012 onward, ASV50, 2ARFE; OE column. Selected year predates chart. Checked 2026-10-03. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Supplemental official US vehicle source supports LE, 2.5L, four cylinders: https://pressroom.toyota.com/2015-toyota-camry-pricing/. Composite evidence combines engine-specific parts chart with official vehicle specification; no eBay canonical identity has been verified."
       },
-      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Toyota"
     },
     {
       "caseId": "us-03-camry-cabin",
@@ -63,7 +65,8 @@
         "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2022/02/05_CabinAirFilters2021_hi.pdf#page=1",
         "notes": "Toyota US chart current 2021-03-31: Camry 2012-2017 includes 2ARFE; page-2 footnote 3 identifies warranty part 87139-02090. Checked 2026-10-03. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Supplemental official US vehicle source supports LE, 2.5L, four cylinders: https://pressroom.toyota.com/2015-toyota-camry-pricing/. Composite evidence combines engine-specific parts chart with official vehicle specification; no eBay canonical identity has been verified."
       },
-      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Toyota"
     },
     {
       "caseId": "us-04-corolla-oil",
@@ -71,20 +74,21 @@
       "partName": "Toyota engine oil filter",
       "quantity": 1,
       "vehicle": {
-        "year": 2015,
+        "year": 2014,
         "make": "Toyota",
         "model": "Corolla",
         "engine": "2ZRFE 4-cylinder",
-        "trim": null,
+        "trim": "LE",
         "displacementL": 1.8,
         "engineCylinders": 4
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2021/08/06_OilFilters2021_hi.pdf#page=1",
-        "notes": "2021 Toyota US chart, current 2021-03-31: Corolla 2014-2015, 2ZRFAE/2ZRFE row. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim. Supplemental official US 2015 Corolla source: https://pressroom.toyota.com/?generate_pdf=28408#page=2, downloaded and visually checked 2026-10-03. Both the standard VVT-i engine and LE Eco Valvematic engine are explicitly 1.8 liters. The retrieved article names LE and distinguishes LE Eco, but does not explicitly pair 2ZRFE with an exact trim. Because the parts-chart application includes 2ZRFAE/2ZRFE, the engine-code-to-trim join remains unverified; trim stays null."
+        "notes": "Toyota US oil-filter chart current 2021-03-31, page 1: Corolla 2014-2015, 2ZRFAE/2ZRFE application lists 04152-YZZA6. Rechecked by download and visual table inspection 2026-10-04. This explicitly replaces the earlier 2015 candidate with model year 2014 rather than assuming that engine/trim details carry forward. Official Toyota US source: https://pressroom.toyota.com/toyota-2014-corolla-efficiency-driving-dynamics/ (generated PDF https://pressroom.toyota.com/?generate_pdf=28849, pages 1-2), retrieved and visually checked 2026-10-04. Its text assigns the 1.8-liter VVT-i 132-hp engine to L/LE/S; its model-year-specific engine table identifies that engine as 2ZR-FE, 1798 cc, four in-line cylinders. Selected trim LE; engine spelling normalized to existing catalog form 2ZRFE. No sample added or duplicated. Historical catalog candidate only; no current supersession, stock, price, individual-vehicle fitment or eBay canonical identity is verified. Runtime Taxonomy and listing compatibility must resolve the exact vehicle and any further qualifiers, or fail closed."
       },
-      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Toyota"
     },
     {
       "caseId": "us-05-corolla-cabin",
@@ -92,20 +96,21 @@
       "partName": "Toyota cabin air filter",
       "quantity": 1,
       "vehicle": {
-        "year": 2015,
+        "year": 2014,
         "make": "Toyota",
         "model": "Corolla",
         "engine": "2ZRFE 4-cylinder",
-        "trim": null,
+        "trim": "LE",
         "displacementL": 1.8,
         "engineCylinders": 4
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2022/02/05_CabinAirFilters2021_hi.pdf#page=1",
-        "notes": "Toyota US chart current 2021-03-31: Corolla 2014-2019 includes 2ZRFE; page-2 footnote 4 identifies warranty part 87139-07020. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim. Supplemental official US 2015 Corolla source: https://pressroom.toyota.com/?generate_pdf=28408#page=2, downloaded and visually checked 2026-10-03. Both the standard VVT-i engine and LE Eco Valvematic engine are explicitly 1.8 liters. The retrieved article names LE and distinguishes LE Eco, but does not explicitly pair 2ZRFE with an exact trim. Because the parts-chart application includes 2ZRFAE/2ZRFE, the engine-code-to-trim join remains unverified; trim stays null."
+        "notes": "Toyota US cabin-filter chart current 2021-03-31, page 1: Corolla 2014-2019, 2ZRFAE/2ZRFE application carries footnote 4; page 2 footnote 4 identifies warranty pollen-filter part 87139-07020. Rechecked by download and visual table inspection 2026-10-04. This explicitly replaces the earlier 2015 candidate with model year 2014 rather than assuming that engine/trim details carry forward. Official Toyota US source: https://pressroom.toyota.com/toyota-2014-corolla-efficiency-driving-dynamics/ (generated PDF https://pressroom.toyota.com/?generate_pdf=28849, pages 1-2), retrieved and visually checked 2026-10-04. Its text assigns the 1.8-liter VVT-i 132-hp engine to L/LE/S; its model-year-specific engine table identifies that engine as 2ZR-FE, 1798 cc, four in-line cylinders. Selected trim LE; engine spelling normalized to existing catalog form 2ZRFE. No sample added or duplicated. Historical catalog candidate only; no current supersession, stock, price, individual-vehicle fitment or eBay canonical identity is verified. Runtime Taxonomy and listing compatibility must resolve the exact vehicle and any further qualifiers, or fail closed."
       },
-      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Toyota"
     },
     {
       "caseId": "us-06-prius-oil",
@@ -126,7 +131,8 @@
         "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2021/08/06_OilFilters2021_hi.pdf#page=2",
         "notes": "2021 Toyota US chart, current 2021-03-31: Prius 2010-2017, 2ZRFXE row. Prius model only; not Prius c/v/Prime. Checked 2026-10-03. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Supplemental official US vehicle source: https://pressroom.toyota.com/?generate_pdf=28421#page=3. Its 2015 Prius Hybrid Synergy Drive description gives a 1.8-liter four-cylinder engine and its grade section explicitly includes Prius Two. Composite join uses the existing Prius 2ZRFXE catalog application; the press article does not itself print that engine code. Limited to regular Prius liftback, excluding Prius c, Prius v, Prius Plug-in and Prius Prime. No unverified drive, body variant or production-date assumption added; any catalog-required qualifiers must still be resolved at runtime. Source downloaded and visually checked 2026-10-03."
       },
-      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Toyota"
     },
     {
       "caseId": "us-07-prius-air",
@@ -147,7 +153,8 @@
         "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2019/11/02_AirFilters2019.pdf#page=2",
         "notes": "Toyota US chart current 2019-01-31: Prius 2010-2015, ZVW30, 2ZRFXE; OE column. Checked 2026-10-03. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Supplemental official US vehicle source: https://pressroom.toyota.com/?generate_pdf=28421#page=3. Its 2015 Prius Hybrid Synergy Drive description gives a 1.8-liter four-cylinder engine and its grade section explicitly includes Prius Two. Composite join uses the existing Prius 2ZRFXE catalog application; the press article does not itself print that engine code. Limited to regular Prius liftback, excluding Prius c, Prius v, Prius Plug-in and Prius Prime. No unverified drive, body variant or production-date assumption added; any catalog-required qualifiers must still be resolved at runtime. Source downloaded and visually checked 2026-10-03."
       },
-      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Toyota"
     },
     {
       "caseId": "us-08-prius-cabin",
@@ -168,7 +175,8 @@
         "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2022/02/05_CabinAirFilters2021_hi.pdf#page=1",
         "notes": "Toyota US chart current 2021-03-31: Prius 2010-2015, 2ZRFXE; page-2 footnote 2 identifies warranty part 87139-07010. Checked 2026-10-03. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Supplemental official US vehicle source: https://pressroom.toyota.com/?generate_pdf=28421#page=3. Its 2015 Prius Hybrid Synergy Drive description gives a 1.8-liter four-cylinder engine and its grade section explicitly includes Prius Two. Composite join uses the existing Prius 2ZRFXE catalog application; the press article does not itself print that engine code. Limited to regular Prius liftback, excluding Prius c, Prius v, Prius Plug-in and Prius Prime. No unverified drive, body variant or production-date assumption added; any catalog-required qualifiers must still be resolved at runtime. Source downloaded and visually checked 2026-10-03."
       },
-      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Toyota"
     },
     {
       "caseId": "us-09-rav4-oil",
@@ -189,7 +197,8 @@
         "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2021/08/06_OilFilters2021_hi.pdf#page=2",
         "notes": "2021 Toyota US chart, current 2021-03-31: RAV4 2013-2018, 2ARFE, ASA4# row. Checked 2026-10-03. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Supplemental official US vehicle source supports LE, 2.5L, four cylinders: https://pressroom.toyota.com/toyota-2015-rav4-small-suv-pioneer/. Composite evidence combines engine-specific parts chart with official vehicle specification; no eBay canonical identity has been verified."
       },
-      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Toyota"
     },
     {
       "caseId": "us-10-rav4-air",
@@ -210,7 +219,8 @@
         "sourceUrl": "https://www.toyotapartsandservice.com/wp-content/uploads/2019/11/02_AirFilters2019.pdf#page=2",
         "notes": "Toyota US chart current 2019-01-31: RAV4 2013 onward, ASA4#, 2ARFE; OE column. Selected year predates chart. Checked 2026-10-03. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Supplemental official US vehicle source supports LE, 2.5L, four cylinders: https://pressroom.toyota.com/toyota-2015-rav4-small-suv-pioneer/. Composite evidence combines engine-specific parts chart with official vehicle specification; no eBay canonical identity has been verified."
       },
-      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Toyota"
     },
     {
       "caseId": "us-11-f150-27-oil",
@@ -222,16 +232,17 @@
         "make": "Ford",
         "model": "F-150",
         "engine": "2.7L EcoBoost",
-        "trim": null,
+        "trim": "Lariat",
         "displacementL": 2.7,
         "engineCylinders": 6
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/Catalog/owner_information/2018-Ford-F-150-Owners-Manual-version-5_om_EN-US_09_2018.pdf#page=421",
-        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; printed page 418, 2.7L EcoBoost table. Different oil-filter number from 3.5L case. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim. Supplemental official US 2018 F-150 technical guide: https://media.ford.com/content/dam/fordmedia/North%20America/US/product/2018/f-150/18_F150.pdf#page=2, printed pages 46-47, downloaded and visually checked 2026-10-03. Its engine table explicitly identifies the 2.7L EcoBoost and both 3.5L EcoBoost variants as V6. The guide lists trims separately and footnote 3 restricts engine availability to select series without mapping exact pairs. No trim, cab, box or drive combination is inferred from the photo or generic feature list. The ordinary versus high-output 3.5L distinction remains for exact runtime identity resolution."
+        "notes": "Ford 2018 F-150 US/Canada owner manual, September 2018 fifth printing, printed page 418 (PDF page 421): 2.7L EcoBoost Motorcraft table lists FL-2062. Supplemental official Ford-distribution evidence: https://www.windowsticker.forddirect.com/windowsticker.pdf?vin=1FTEW1EP7JFC91269. The factory sticker identifies a US 2018 F-150 4x4 SuperCrew, 2.7L V6 EcoBoost, Lariat Series (502A), 145-inch wheelbase. Retrieved and visually inspected 2026-10-04. Public source VIN provenance: https://keysermatthewsford.worktrucksolutions.com/work-truck/2018-ford-f-150-supercrew-cab-4wd-pickup-24733974 . This establishes existence of the selected trim/engine combination, not universal Lariat fitment or a user-supplied VIN. Cab, drive and equipment are evidence-specific qualifiers, not silently assigned to all candidates. Historical sticker vehicle pricing is not Waffer part-price evidence. Original catalog evidence remains historical. No current supersession, availability, price, individual-vehicle fitment or eBay canonical identity is verified. Runtime Taxonomy and listing compatibility must resolve exact identity and further qualifiers, or fail closed."
       },
-      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Motorcraft"
     },
     {
       "caseId": "us-12-f150-35-oil",
@@ -243,16 +254,17 @@
         "make": "Ford",
         "model": "F-150",
         "engine": "3.5L EcoBoost",
-        "trim": null,
+        "trim": "Lariat",
         "displacementL": 3.5,
         "engineCylinders": 6
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/Catalog/owner_information/2018-Ford-F-150-Owners-Manual-version-5_om_EN-US_09_2018.pdf#page=423",
-        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; printed page 420, 3.5L EcoBoost table. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim. Supplemental official US 2018 F-150 technical guide: https://media.ford.com/content/dam/fordmedia/North%20America/US/product/2018/f-150/18_F150.pdf#page=2, printed pages 46-47, downloaded and visually checked 2026-10-03. Its engine table explicitly identifies the 2.7L EcoBoost and both 3.5L EcoBoost variants as V6. The guide lists trims separately and footnote 3 restricts engine availability to select series without mapping exact pairs. No trim, cab, box or drive combination is inferred from the photo or generic feature list. The ordinary versus high-output 3.5L distinction remains for exact runtime identity resolution."
+        "notes": "Ford 2018 F-150 US/Canada owner manual, September 2018 fifth printing, printed page 420 (PDF page 423): 3.5L EcoBoost Motorcraft table. Original part and quantity retained. Supplemental official Ford Pro US source: https://content.fordpro.com/content/dam/fordpro/us/en-us/pdf/towing-guides/Ford_Linc_18RVTTowGuide.pdf#page=11, 2018 RV & Trailer Towing Guide, page revised 05.07.18, F-150 Heavy-Duty Payload Package (627). It offers the package on Lariat Base and requires 5.0L V8 or 3.5L V6 EcoBoost gas. The 5.0L choice additionally requires Trailer Tow Package; the 3.5L choice requires Max Trailer Tow Package. Supports Lariat with each selected engine in a documented configuration; does not assert package installation on an individual vehicle. Downloaded and visually inspected 2026-10-04. The selected 3.5L Lariat engine is ordinary gas EcoBoost, not Raptor high-output; no Raptor pairing imported. Existing engine name retained as owner-manual label. Original catalog evidence remains historical. No current supersession, availability, price, individual-vehicle fitment or eBay canonical identity is verified. Runtime Taxonomy and listing compatibility must resolve exact identity and further qualifiers, or fail closed."
       },
-      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Motorcraft"
     },
     {
       "caseId": "us-13-f150-35-air",
@@ -264,16 +276,17 @@
         "make": "Ford",
         "model": "F-150",
         "engine": "3.5L EcoBoost",
-        "trim": null,
+        "trim": "Lariat",
         "displacementL": 3.5,
         "engineCylinders": 6
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/Catalog/owner_information/2018-Ford-F-150-Owners-Manual-version-5_om_EN-US_09_2018.pdf#page=423",
-        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; printed page 420, 3.5L EcoBoost table. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim. Supplemental official US 2018 F-150 technical guide: https://media.ford.com/content/dam/fordmedia/North%20America/US/product/2018/f-150/18_F150.pdf#page=2, printed pages 46-47, downloaded and visually checked 2026-10-03. Its engine table explicitly identifies the 2.7L EcoBoost and both 3.5L EcoBoost variants as V6. The guide lists trims separately and footnote 3 restricts engine availability to select series without mapping exact pairs. No trim, cab, box or drive combination is inferred from the photo or generic feature list. The ordinary versus high-output 3.5L distinction remains for exact runtime identity resolution."
+        "notes": "Ford 2018 F-150 US/Canada owner manual, September 2018 fifth printing, printed page 420 (PDF page 423): 3.5L EcoBoost Motorcraft table. Original part and quantity retained. Supplemental official Ford Pro US source: https://content.fordpro.com/content/dam/fordpro/us/en-us/pdf/towing-guides/Ford_Linc_18RVTTowGuide.pdf#page=11, 2018 RV & Trailer Towing Guide, page revised 05.07.18, F-150 Heavy-Duty Payload Package (627). It offers the package on Lariat Base and requires 5.0L V8 or 3.5L V6 EcoBoost gas. The 5.0L choice additionally requires Trailer Tow Package; the 3.5L choice requires Max Trailer Tow Package. Supports Lariat with each selected engine in a documented configuration; does not assert package installation on an individual vehicle. Downloaded and visually inspected 2026-10-04. The selected 3.5L Lariat engine is ordinary gas EcoBoost, not Raptor high-output; no Raptor pairing imported. Existing engine name retained as owner-manual label. Original catalog evidence remains historical. No current supersession, availability, price, individual-vehicle fitment or eBay canonical identity is verified. Runtime Taxonomy and listing compatibility must resolve exact identity and further qualifiers, or fail closed."
       },
-      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Motorcraft"
     },
     {
       "caseId": "us-14-f150-35-cabin",
@@ -285,16 +298,17 @@
         "make": "Ford",
         "model": "F-150",
         "engine": "3.5L EcoBoost",
-        "trim": null,
+        "trim": "Lariat",
         "displacementL": 3.5,
         "engineCylinders": 6
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/Catalog/owner_information/2018-Ford-F-150-Owners-Manual-version-5_om_EN-US_09_2018.pdf#page=423",
-        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; printed page 420, 3.5L EcoBoost table. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim. Supplemental official US 2018 F-150 technical guide: https://media.ford.com/content/dam/fordmedia/North%20America/US/product/2018/f-150/18_F150.pdf#page=2, printed pages 46-47, downloaded and visually checked 2026-10-03. Its engine table explicitly identifies the 2.7L EcoBoost and both 3.5L EcoBoost variants as V6. The guide lists trims separately and footnote 3 restricts engine availability to select series without mapping exact pairs. No trim, cab, box or drive combination is inferred from the photo or generic feature list. The ordinary versus high-output 3.5L distinction remains for exact runtime identity resolution."
+        "notes": "Ford 2018 F-150 US/Canada owner manual, September 2018 fifth printing, printed page 420 (PDF page 423): 3.5L EcoBoost Motorcraft table. Original part and quantity retained. Supplemental official Ford Pro US source: https://content.fordpro.com/content/dam/fordpro/us/en-us/pdf/towing-guides/Ford_Linc_18RVTTowGuide.pdf#page=11, 2018 RV & Trailer Towing Guide, page revised 05.07.18, F-150 Heavy-Duty Payload Package (627). It offers the package on Lariat Base and requires 5.0L V8 or 3.5L V6 EcoBoost gas. The 5.0L choice additionally requires Trailer Tow Package; the 3.5L choice requires Max Trailer Tow Package. Supports Lariat with each selected engine in a documented configuration; does not assert package installation on an individual vehicle. Downloaded and visually inspected 2026-10-04. The selected 3.5L Lariat engine is ordinary gas EcoBoost, not Raptor high-output; no Raptor pairing imported. Existing engine name retained as owner-manual label. Original catalog evidence remains historical. No current supersession, availability, price, individual-vehicle fitment or eBay canonical identity is verified. Runtime Taxonomy and listing compatibility must resolve exact identity and further qualifiers, or fail closed."
       },
-      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Motorcraft"
     },
     {
       "caseId": "us-15-f150-50-plug",
@@ -306,16 +320,17 @@
         "make": "Ford",
         "model": "F-150",
         "engine": "5.0L Modular V8",
-        "trim": null,
-        "displacementL": 5.0,
+        "trim": "Lariat",
+        "displacementL": 5,
         "engineCylinders": 8
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/Catalog/owner_information/2018-Ford-F-150-Owners-Manual-version-5_om_EN-US_09_2018.pdf#page=424",
-        "notes": "2018 F-150 US/Canada manual, September 2018 fifth printing; 5.0L Modular V8 table starts printed page 420, part on 421. Quantity is one plug, not a full set. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim."
+        "notes": "Ford 2018 F-150 US/Canada owner manual, September 2018 fifth printing: 5.0L Modular V8 table begins printed page 420; SP-551 appears on printed page 421 (PDF page 424). Quantity remains one spark plug, not a full set. Supplemental official Ford Pro US source: https://content.fordpro.com/content/dam/fordpro/us/en-us/pdf/towing-guides/Ford_Linc_18RVTTowGuide.pdf#page=11, 2018 RV & Trailer Towing Guide, page revised 05.07.18, F-150 Heavy-Duty Payload Package (627). It offers the package on Lariat Base and requires 5.0L V8 or 3.5L V6 EcoBoost gas. The 5.0L choice additionally requires Trailer Tow Package; the 3.5L choice requires Max Trailer Tow Package. Supports Lariat with each selected engine in a documented configuration; does not assert package installation on an individual vehicle. Downloaded and visually inspected 2026-10-04. The selected 3.5L Lariat engine is ordinary gas EcoBoost, not Raptor high-output; no Raptor pairing imported. Existing engine name retained as owner-manual label. Original catalog evidence remains historical. No current supersession, availability, price, individual-vehicle fitment or eBay canonical identity is verified. Runtime Taxonomy and listing compatibility must resolve exact identity and further qualifiers, or fail closed."
       },
-      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Motorcraft"
     },
     {
       "caseId": "us-16-explorer-air",
@@ -327,16 +342,17 @@
         "make": "Ford",
         "model": "Explorer",
         "engine": "3.5L EcoBoost",
-        "trim": null,
+        "trim": "Sport",
         "displacementL": 3.5,
-        "engineCylinders": null
+        "engineCylinders": 6
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/vdirsnet/OwnerManual/Home/Content?ProcUid=G1724915&Uid=G1724913&buildtype=web&countryCode=USA&div=f&languageCode=en&moidRef=G1517147&userMarket=usa&vFilteringEnabled=False&variantid=4727",
-        "notes": "Ford 2018 Explorer US online manual, Motorcraft Parts - 3.5L EcoBoost; air-filter row. Web manual may differ from original printed manual. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+        "notes": "Ford 2018 Explorer online owner manual, Motorcraft Parts - 3.5L EcoBoost, air-filter row FA-1884. Original part and position retained; web manual may differ from the original printed manual. Page title, 2018 model-year label and five applicable part rows rechecked 2026-10-04. Supplemental official Ford Pro US source: https://content.fordpro.com/content/dam/fordpro/us/en-us/pdf/towing-guides/Ford_Linc_18RVTTowGuide.pdf#page=30, 2018 RV & Trailer Towing Guide, Explorer table, page revised 05.15.18; downloaded and visually inspected 2026-10-04. Its 3.5L EcoBoost V6 row is restricted by footnote 5 to Sport/Platinum and appears in the 4WD column. Select Sport, 3.5L, six cylinders; 4WD is a supported runtime qualifier. No inference from vehicle photographs. Retain US manual variant 4727; China-market variant 4729 is not equivalent despite USA URL parameters. Manufacturer-source candidate only, not individual-vehicle or eBay canonical fitment approval; no stock, live-price or current-supersession claim. Runtime Taxonomy and listing compatibility must resolve exact identity and qualifiers, or fail closed."
       },
-      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Motorcraft"
     },
     {
       "caseId": "us-17-explorer-cabin",
@@ -348,16 +364,17 @@
         "make": "Ford",
         "model": "Explorer",
         "engine": "3.5L EcoBoost",
-        "trim": null,
+        "trim": "Sport",
         "displacementL": 3.5,
-        "engineCylinders": null
+        "engineCylinders": 6
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/vdirsnet/OwnerManual/Home/Content?ProcUid=G1724915&Uid=G1724913&buildtype=web&countryCode=USA&div=f&languageCode=en&moidRef=G1517147&userMarket=usa&vFilteringEnabled=False&variantid=4727",
-        "notes": "Ford 2018 Explorer US online manual, Motorcraft Parts - 3.5L EcoBoost; cabin-filter row. Web manual may differ from original printed manual. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+        "notes": "Ford 2018 Explorer online owner manual, Motorcraft Parts - 3.5L EcoBoost, cabin-filter row FP-68. Original part and position retained; web manual may differ from the original printed manual. Page title, 2018 model-year label and five applicable part rows rechecked 2026-10-04. Supplemental official Ford Pro US source: https://content.fordpro.com/content/dam/fordpro/us/en-us/pdf/towing-guides/Ford_Linc_18RVTTowGuide.pdf#page=30, 2018 RV & Trailer Towing Guide, Explorer table, page revised 05.15.18; downloaded and visually inspected 2026-10-04. Its 3.5L EcoBoost V6 row is restricted by footnote 5 to Sport/Platinum and appears in the 4WD column. Select Sport, 3.5L, six cylinders; 4WD is a supported runtime qualifier. No inference from vehicle photographs. Retain US manual variant 4727; China-market variant 4729 is not equivalent despite USA URL parameters. Manufacturer-source candidate only, not individual-vehicle or eBay canonical fitment approval; no stock, live-price or current-supersession claim. Runtime Taxonomy and listing compatibility must resolve exact identity and qualifiers, or fail closed."
       },
-      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Motorcraft"
     },
     {
       "caseId": "us-18-explorer-wiper-driver",
@@ -369,16 +386,17 @@
         "make": "Ford",
         "model": "Explorer",
         "engine": "3.5L EcoBoost",
-        "trim": null,
+        "trim": "Sport",
         "displacementL": 3.5,
-        "engineCylinders": null
+        "engineCylinders": 6
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/vdirsnet/OwnerManual/Home/Content?ProcUid=G1724915&Uid=G1724913&buildtype=web&countryCode=USA&div=f&languageCode=en&moidRef=G1517147&userMarket=usa&vFilteringEnabled=False&variantid=4727",
-        "notes": "Ford 2018 Explorer US online manual, Motorcraft Parts - 3.5L EcoBoost; driver-side wiper explicitly specified. Position is mandatory. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+        "notes": "Ford 2018 Explorer online owner manual, Motorcraft Parts - 3.5L EcoBoost, driver-side windshield-wiper row WW-2600. Original part and position retained; web manual may differ from the original printed manual. Page title, 2018 model-year label and five applicable part rows rechecked 2026-10-04. Supplemental official Ford Pro US source: https://content.fordpro.com/content/dam/fordpro/us/en-us/pdf/towing-guides/Ford_Linc_18RVTTowGuide.pdf#page=30, 2018 RV & Trailer Towing Guide, Explorer table, page revised 05.15.18; downloaded and visually inspected 2026-10-04. Its 3.5L EcoBoost V6 row is restricted by footnote 5 to Sport/Platinum and appears in the 4WD column. Select Sport, 3.5L, six cylinders; 4WD is a supported runtime qualifier. No inference from vehicle photographs. Retain US manual variant 4727; China-market variant 4729 is not equivalent despite USA URL parameters. Manufacturer-source candidate only, not individual-vehicle or eBay canonical fitment approval; no stock, live-price or current-supersession claim. Runtime Taxonomy and listing compatibility must resolve exact identity and qualifiers, or fail closed."
       },
-      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Motorcraft"
     },
     {
       "caseId": "us-19-explorer-wiper-passenger",
@@ -390,16 +408,17 @@
         "make": "Ford",
         "model": "Explorer",
         "engine": "3.5L EcoBoost",
-        "trim": null,
+        "trim": "Sport",
         "displacementL": 3.5,
-        "engineCylinders": null
+        "engineCylinders": 6
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/vdirsnet/OwnerManual/Home/Content?ProcUid=G1724915&Uid=G1724913&buildtype=web&countryCode=USA&div=f&languageCode=en&moidRef=G1517147&userMarket=usa&vFilteringEnabled=False&variantid=4727",
-        "notes": "Ford 2018 Explorer US online manual, Motorcraft Parts - 3.5L EcoBoost; passenger-side wiper explicitly specified. Position is mandatory. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+        "notes": "Ford 2018 Explorer online owner manual, Motorcraft Parts - 3.5L EcoBoost, passenger-side windshield-wiper row WW-2206. Original part and position retained; web manual may differ from the original printed manual. Page title, 2018 model-year label and five applicable part rows rechecked 2026-10-04. Supplemental official Ford Pro US source: https://content.fordpro.com/content/dam/fordpro/us/en-us/pdf/towing-guides/Ford_Linc_18RVTTowGuide.pdf#page=30, 2018 RV & Trailer Towing Guide, Explorer table, page revised 05.15.18; downloaded and visually inspected 2026-10-04. Its 3.5L EcoBoost V6 row is restricted by footnote 5 to Sport/Platinum and appears in the 4WD column. Select Sport, 3.5L, six cylinders; 4WD is a supported runtime qualifier. No inference from vehicle photographs. Retain US manual variant 4727; China-market variant 4729 is not equivalent despite USA URL parameters. Manufacturer-source candidate only, not individual-vehicle or eBay canonical fitment approval; no stock, live-price or current-supersession claim. Runtime Taxonomy and listing compatibility must resolve exact identity and qualifiers, or fail closed."
       },
-      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Motorcraft"
     },
     {
       "caseId": "us-20-explorer-wiper-rear",
@@ -411,16 +430,17 @@
         "make": "Ford",
         "model": "Explorer",
         "engine": "3.5L EcoBoost",
-        "trim": null,
+        "trim": "Sport",
         "displacementL": 3.5,
-        "engineCylinders": null
+        "engineCylinders": 6
       },
       "evidence": {
         "catalogVerified": true,
         "sourceUrl": "https://www.fordservicecontent.com/Ford_Content/vdirsnet/OwnerManual/Home/Content?ProcUid=G1724915&Uid=G1724913&buildtype=web&countryCode=USA&div=f&languageCode=en&moidRef=G1517147&userMarket=usa&vFilteringEnabled=False&variantid=4727",
-        "notes": "Ford 2018 Explorer US online manual, Motorcraft Parts - 3.5L EcoBoost; rear-window wiper explicitly specified. Position is mandatory. Checked 2026-10-03. Trim unverified and omitted. NOT_READY_FOR_LIVE_PILOT: missing sourced trim. Runtime Taxonomy must resolve exact canonical fitment or fail closed; no live compatibility, availability, price, or current-supersession claim. Unverified fields remain null: trim, engineCylinders."
+        "notes": "Ford 2018 Explorer online owner manual, Motorcraft Parts - 3.5L EcoBoost, rear-window-wiper row WW-1106. Original part and position retained; web manual may differ from the original printed manual. Page title, 2018 model-year label and five applicable part rows rechecked 2026-10-04. Supplemental official Ford Pro US source: https://content.fordpro.com/content/dam/fordpro/us/en-us/pdf/towing-guides/Ford_Linc_18RVTTowGuide.pdf#page=30, 2018 RV & Trailer Towing Guide, Explorer table, page revised 05.15.18; downloaded and visually inspected 2026-10-04. Its 3.5L EcoBoost V6 row is restricted by footnote 5 to Sport/Platinum and appears in the 4WD column. Select Sport, 3.5L, six cylinders; 4WD is a supported runtime qualifier. No inference from vehicle photographs. Retain US manual variant 4727; China-market variant 4729 is not equivalent despite USA URL parameters. Manufacturer-source candidate only, not individual-vehicle or eBay canonical fitment approval; no stock, live-price or current-supersession claim. Runtime Taxonomy and listing compatibility must resolve exact identity and qualifiers, or fail closed."
       },
-      "researchStatus": "NOT_READY_FOR_LIVE_PILOT"
+      "researchStatus": "CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED",
+      "manufacturer": "Motorcraft"
     }
   ]
 }

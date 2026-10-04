@@ -64,6 +64,7 @@ test('eBay shadow provider preserves source ordering and accepts only explicit M
     {
       itemId:'first',
       categoryId:'33559',
+      buyingOptions:['FIXED_PRICE'],
       mpn:'WRONG',
       price:{value:'40',currency:'USD'},
       shippingOptions:[{shippingCost:{value:'0',currency:'USD'}}],
@@ -74,6 +75,7 @@ test('eBay shadow provider preserves source ordering and accepts only explicit M
     {
       itemId:'second',
       categoryId:'33559',
+      buyingOptions:['FIXED_PRICE'],
       mpn:'BC-123',
       price:{value:'45.00',currency:'USD'},
       shippingOptions:[{shippingCost:{value:'5.50',currency:'USD'}}],
@@ -109,18 +111,21 @@ test('eBay shadow provider preserves source ordering and accepts only explicit M
       year:2024,
       make:'Ford',
       model:'F-150',
-      trim:'XLT',
-      engine:'3.5L 6-cyl Gasoline',
-      nhtsa:{trim:'XLT',displacementL:3.5,engineCylinders:6}
+      trim:'XLT Crew Cab Pickup 4-Door',
+      engine:'3.5L 3496CC V6 GAS DOHC Turbocharged',
+      nhtsa:{trim:'XLT Crew Cab Pickup 4-Door',displacementL:3.5,engineCylinders:6}
     }
   });
 
   assert.equal(result.sourceLabel,'eBay Motors (US)');
-  assert.equal(result.bestOffer.partNumber,'BC123');
-  assert.equal(result.bestOffer.finalUnitPrice,50.5);
-  assert.equal(result.bestOffer.seller,'seller-two');
-  assert.equal(result.bestOffer.vehicleVerified,true);
-  assert.equal(result.bestOffer.verifiedIdentity,true);
+  assert.equal(result.bestOffer,null);
+  assert.equal(result.matchedListing.totalPrice,null);
+  assert.equal(result.matchedListing.shippingEstimate,5.5);
+  assert.equal(result.matchedListing.partNumber,'BC123');
+  assert.equal(result.matchedListing.itemPrice,45);
+  assert.equal(result.matchedListing.seller,'seller-two');
+  assert.equal(result.matchedListing.vehicleVerified,true);
+  assert.equal(result.matchedListing.verifiedIdentity,true);
   assert.equal(calls.filter(call=>call.url.includes('/check_compatibility')).length,1);
   assert.equal(calls.filter(call=>call.url.includes('/get_compatibility_properties?')).length,1);
   assert.equal(calls.filter(call=>call.url.includes('/get_compatibility_property_values?')).length,4);

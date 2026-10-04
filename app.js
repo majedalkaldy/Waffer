@@ -8,8 +8,10 @@ let activePricingController=null;
 let pricingPromise=null;
 let pricingPromiseRunId=0;
 let pricingCompletedRunId=0;
+let pricingExpiryTimer=null;
 window.wafferAnalysisRunId=0;
 window.wafferVerifiedMarketPricing=false;
+window.wafferSandboxPricingPreview=false;
 window.wafferPricingResults=[];
 window.wafferPricingSummary=null;
 
@@ -19,6 +21,7 @@ function beginAnalysisRun(){
  activeAnalysisController?.abort();
  activeCatalogController?.abort();
  activePricingController?.abort();
+ clearTimeout(pricingExpiryTimer);
  activeAnalysisController=new AbortController();
  activeCatalogController=null;
  activePricingController=null;
@@ -35,6 +38,7 @@ function invalidateAnalysisRun(){
  activeAnalysisController?.abort();
  activeCatalogController?.abort();
  activePricingController?.abort();
+ clearTimeout(pricingExpiryTimer);
  activeAnalysisController=null;
  activeCatalogController=null;
  activePricingController=null;
@@ -631,6 +635,8 @@ function currentPricingVehicle(){
    year:v.year||document.getElementById('year')?.value||null,
    trim:v.trim||null,
    engine:v.engine||null,
+   displacementL:v.nhtsa?.displacementL||v.displacementL||null,
+   engineCylinders:v.nhtsa?.engineCylinders||v.engineCylinders||null,
    vin:v.vin||document.getElementById('vin')?.value||null
  };
 }
@@ -642,6 +648,19 @@ function renderPricingSummary(){
  if(!label||!note||!readiness)return;
 
  const summary=window.wafferPricingSummary;
+ window.wafferRenderPricingListings?.(document.getElementById('pricingListings'),(window.wafferVerifiedMarketPricing||window.wafferSandboxPricingPreview)?window.wafferPricingResults||[]:[],{locale:window.wafferLocale||'en-US'});
+ const retry=document.getElementById('pricingRetryBtn');
+ if(retry){
+   retry.classList.toggle('hidden',!window.wafferVerifiedMarketPricing && !window.wafferSandboxPricingPreview);
+   retry.textContent=ui('إعادة فحص الأسعار','Check prices again');
+   retry.onclick=()=>{if(pricingPromise)return;pricingCompletedRunId=0;refreshVerifiedPricing();};
+ }
+ if(window.wafferSandboxPricingPreview){
+   label.textContent=ui('Sandbox: بيانات اختبار فقط','Sandbox: test data only');
+   note.textContent=ui('ليست أسعارًا حقيقية ولا يُحسب منها توفير.','These are not real prices. No savings are calculated.');
+   readiness.textContent=ui('بيئة اختبار منفصلة؛ لا تُستخدم كدليل سوق.','Separate test environment. These results are not market evidence.');
+   return;
+ }
  if(!window.wafferVerifiedMarketPricing){
    label.textContent=ui('التوفير المؤكد: غير محسوب','Confirmed savings: not calculated');
    note.textContent=ui('لا يحسب «وفّر» التوفير قبل مطابقة هوية القطعة بمصدر سعر موثوق.','Waffer does not calculate savings until part identity is matched to a trusted price source.');
@@ -665,15 +684,15 @@ function renderPricingSummary(){
    note.textContent=ui('قد تتوفر بيانات نطاق سوق، لكن لا يُحسب التوفير دون عرض شراء موثّق.','Market-range data may be available, but savings require a verified purchase offer.');
  }
  readiness.textContent=ui(
-   '💰 فُحصت '+summary.checkedItems+' بنود؛ عروض موثقة: '+summary.verifiedOfferCount+'، نطاقات سوق: '+summary.marketRangeCount+'.',
-   '💰 Checked '+summary.checkedItems+' items; verified offers: '+summary.verifiedOfferCount+', market ranges: '+summary.marketRangeCount+'.'
+   '💰 فُحصت '+summary.checkedItems+' بنود؛ إعلانات مطابقة: '+summary.matchedListingCount+'، عروض نهائية موثقة: '+summary.verifiedOfferCount+'، نطاقات سوق: '+summary.marketRangeCount+'.',
+   '💰 Checked '+summary.checkedItems+' items; matched listings: '+summary.matchedListingCount+', verified final offers: '+summary.verifiedOfferCount+', market ranges: '+summary.marketRangeCount+'.'
  );
 }
 window.wafferRenderPricingSummary=renderPricingSummary;
 
 async function refreshVerifiedPricing(runId=analysisRunId){
  if(!isCurrentAnalysisRun(runId)||!analysis)return;
- if(!window.wafferVerifiedMarketPricing){
+ if(!window.wafferVerifiedMarketPricing && !window.wafferSandboxPricingPreview){
    renderPricingSummary();
    return;
  }
@@ -717,12 +736,16 @@ async function refreshVerifiedPricing(runId=analysisRunId){
          currency:context.currency||'USD'
        });
        if(!payload)return null;
+       const requestController=new AbortController();
+       const requestTimer=setTimeout(()=>requestController.abort(),(window.WAFFER_RUNTIME?.priceProviderTimeoutMs||7000)+5000);
+       const abortRequest=()=>requestController.abort();
+       controller.signal.addEventListener('abort',abortRequest,{once:true});
        try{
          const response=await fetch('/api/price-compare',{
            method:'POST',
            headers:{'Content-Type':'application/json'},
            body:JSON.stringify(payload),
-           signal:controller.signal
+           signal:requestController.signal
          });
          let data=null;
          try{data=await response.json();}catch(e){}
@@ -730,7 +753,7 @@ async function refreshVerifiedPricing(runId=analysisRunId){
        }catch(error){
          if(controller.signal.aborted)throw error;
          return {index,ok:false,data:null};
-       }
+       }finally{clearTimeout(requestTimer);controller.signal.removeEventListener('abort',abortRequest);}
      }));
      entries.push(...batchResults.filter(Boolean));
    }
@@ -742,6 +765,8 @@ async function refreshVerifiedPricing(runId=analysisRunId){
      analysis?.engineContext?.currency||'SAR'
    );
    pricingCompletedRunId=runId;
+   clearTimeout(pricingExpiryTimer);
+   pricingExpiryTimer=setTimeout(()=>{if(isCurrentAnalysisRun(runId))renderPricingSummary();},300001);
    renderPricingSummary();
  })().catch(error=>{
    if(!controller.signal.aborted){
@@ -1872,7 +1897,8 @@ async function checkSystemHealth(){
    }
    if(run!==healthCheckRun)return;
    window.wafferVerifiedMarketPricing=d?.capabilities?.verifiedMarketPricing===true;
-   if(window.wafferVerifiedMarketPricing && analysis){
+   window.wafferSandboxPricingPreview=d?.capabilities?.sandboxPricingPreview===true;
+   if((window.wafferVerifiedMarketPricing || window.wafferSandboxPricingPreview) && analysis){
      void refreshVerifiedPricing(analysisRunId);
    }else if(typeof window.wafferRenderPricingSummary==='function'){
      window.wafferRenderPricingSummary();
@@ -1904,6 +1930,7 @@ async function checkSystemHealth(){
  }catch(e){
    if(run!==healthCheckRun)return;
    window.wafferVerifiedMarketPricing=false;
+window.wafferSandboxPricingPreview=false;
    if(typeof window.wafferRenderPricingSummary==='function')window.wafferRenderPricingSummary();
    const en=window.wafferLocale?.startsWith('en');
    el.textContent=en
@@ -2160,3 +2187,7 @@ function bindUiActions(){
   document.getElementById('fieldTestNotes')?.addEventListener('input',()=>renderFieldTestEvidencePreview());
 }
 bindUiActions();
+
+// Recheck wall-clock freshness after a suspended tab or back/forward cache restore.
+window.addEventListener('pageshow',()=>{renderPricingSummary();});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')renderPricingSummary();});
