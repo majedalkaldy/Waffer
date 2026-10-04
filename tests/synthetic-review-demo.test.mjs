@@ -68,7 +68,7 @@ test('demo uses strong labels, same-origin assets, responsive layout and explici
   assert.doesNotMatch(html, /<style\b|style=|\son\w+=|https?:\/\//);
   assert.match(html, /aria-live="polite"/);
   assert.match(read('review-demo/styles.css'), /@media\(max-width:720px\)/);
-  const rule = JSON.parse(read('vercel.json')).headers.find(rule => rule.source === '/review-demo/:path*');
+  const rule = JSON.parse(read('vercel.json')).headers.find(rule => rule.source === '/review-demo(.*)');
   assert.ok(rule.headers.some(h => h.key === 'Cache-Control' && h.value === 'no-store'));
   assert.ok(rule.headers.some(h => h.key === 'X-Robots-Tag' && h.value === 'noindex, nofollow'));
 });

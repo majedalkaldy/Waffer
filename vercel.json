@@ -34,7 +34,7 @@
       ]
     },
     {
-      "source": "/review-demo/:path*",
+      "source": "/review-demo(.*)",
       "headers": [
         {
           "key": "Cache-Control",
