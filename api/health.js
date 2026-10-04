@@ -1,7 +1,7 @@
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 import { getMarketConfig, getMarketConfigFromRequest } from '../lib/market-config.js';
 import { probeCatalogHealth } from '../lib/catalog-health-probe.js';
-import { hasConfiguredPriceProvider } from '../lib/price-provider.js';
+import { hasConfiguredPriceProvider, getPriceProviderReadinessForMarket } from '../lib/price-provider.js';
 import {
   getEbayShadowReadiness,
   getEbaySandboxReadiness
@@ -24,6 +24,7 @@ export default async function handler(req, res) {
 
   const ebayShadow = getEbayShadowReadiness(process.env);
   const ebaySandbox = getEbaySandboxReadiness(process.env);
+  const pricingRuntime = getPriceProviderReadinessForMarket(marketConfig.market);
   const configured = {
     analysis: Boolean(process.env.OPENAI_API_KEY),
     catalog: Boolean(process.env.AUTOPARTS_API_KEY),
@@ -86,10 +87,12 @@ export default async function handler(req, res) {
       quoteAnalysisVerified: false,
       vinAndCatalog: configured.catalog && upstream.catalog === 'reachable',
       verifiedMarketPricing: configured.pricing,
+      sandboxPricingPreview: pricingRuntime.sandboxReady,
       ebayShadowPricingReady: marketConfig.market === 'US' && ebayShadow.ready,
       ebaySandboxReady: marketConfig.market === 'US' && ebaySandbox.ready,
       persistentAccounts: false
     },
+    pricingRuntime,
     configured,
     shadowPricing: marketConfig.market === 'US'
       ? { ebayProduction: ebayShadow, ebaySandbox }

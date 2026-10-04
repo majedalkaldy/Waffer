@@ -1,3 +1,5 @@
+import { renderPricingListings } from '/lib/pricing-view.js';
+window.wafferRenderPricingListings=renderPricingListings;
 import { t } from '/lib/i18n.js';
 import { RUNTIME_CONFIG } from '/lib/runtime-config.js';
 import { compareDisplayedTotals } from '/lib/total-check.js';
@@ -63,6 +65,10 @@ function applyLocale(locale){
  document.getElementById('heroTitle').textContent=t(locale,'heroTitle');
  document.getElementById('heroLead').textContent=t(locale,'heroLead');
  if(!document.getElementById('file').files[0])document.getElementById('fileText').textContent=t(locale,'upload');
+ document.getElementById('uploadBox').setAttribute('aria-label',t(locale,'uploadLabel'));
+ document.getElementById('vinOptionalLabel').textContent=t(locale,'optional');
+ document.getElementById('vin').placeholder=t(locale,'vinPlaceholder');
+ document.getElementById('offlineStatus').textContent=t(locale,'offline');
  document.getElementById('makeLabel').textContent=t(locale,'make');
  const makeSelect=document.getElementById('make');
  const retryMakes=document.getElementById('retryMakes');
@@ -97,7 +103,8 @@ function applyLocale(locale){
  document.getElementById('priceConfidenceLabel').textContent=t(locale,'priceConfidence');
  document.getElementById('overallLabel').textContent=t(locale,'overall');
  document.getElementById('findingsLabel').textContent=t(locale,'findings');
- document.getElementById('catalogMatchLabel').textContent='🔎 '+t(locale,'catalogMatch');
+ const catalogMatchLabel=document.getElementById('catalogMatchLabel');
+ if(catalogMatchLabel)catalogMatchLabel.textContent='🔎 '+t(locale,'catalogMatch');
  document.getElementById('beforePayLabel').textContent=t(locale,'beforePay');
  document.getElementById('confirmedSavingLabel').textContent=t(locale,'confirmedSaving');
  document.getElementById('privacyText').textContent=t(locale,'privacy');
@@ -133,6 +140,7 @@ function applyLocale(locale){
  if(!window.wafferPartMatches)document.getElementById('priceReadiness').textContent=t(locale,'priceWaiting');
  document.getElementById('workshopFollowupBtn').textContent=t(locale,'workshopFollowup');
  if(typeof window.wafferRenderPricingSummary==='function')window.wafferRenderPricingSummary();
+ if(typeof window.wafferRenderSystemHealth==='function')window.wafferRenderSystemHealth();
  if(typeof window.wafferRenderFieldTestDashboard==='function')window.wafferRenderFieldTestDashboard();
  const debugExport=document.getElementById('debugExportBtn');
  if(debugExport)debugExport.textContent=locale.startsWith('en')?'Export test report':'تصدير تقرير الاختبار';

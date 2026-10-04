@@ -17,6 +17,7 @@ test('client announces readiness on first load and renders the selected language
       files: [], disabled: false,
       options: id === 'localeSelect' ? [{ value: 'ar-SA' }, { value: 'en-SA' }] : [],
       classList: { contains: () => true },
+      setAttribute(name, value) { this[name] = value; },
       addEventListener: (type, fn) => listeners.set(id + ':' + type, fn)
     });
     return elements.get(id);
@@ -36,8 +37,12 @@ test('client announces readiness on first load and renders the selected language
   });
   assert.deepEqual(events, ['wafferClientModulesReady']);
   assert.equal(renderedLanguages.at(-1), 'ar-SA');
+  assert.match(element('uploadBox')['aria-label'], /ارفع/);
+  assert.match(element('vinOptionalLabel').textContent, /اختياري/);
   element('localeSelect').value = 'en-SA';
   listeners.get('localeSelect:change')();
   assert.equal(renderedLanguages.at(-1), 'en-SA');
+  assert.match(element('uploadBox')['aria-label'], /Upload/);
+  assert.equal(element('vinOptionalLabel').textContent, '(optional)');
   assert.equal(events.length, 1);
 });

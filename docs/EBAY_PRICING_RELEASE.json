@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "status": "PENDING",
+  "environment": "production",
+  "market": "US",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "expiresAt": null,
+  "productionApprovalReference": null,
+  "evidenceKind": null,
+  "sampleSha256": null,
+  "sample": null,
+  "note": "Not approved. Populate only after authorized real-provider capture, evidence review, and completed field tests. Sandbox and synthetic fixtures cannot activate production."
+}

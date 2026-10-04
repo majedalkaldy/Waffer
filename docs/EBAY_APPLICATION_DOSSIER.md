@@ -26,7 +26,7 @@ The synthetic route, credentialed Sandbox integration, and authorized Production
 
 ## Draft business-model answer
 
-Waffer helps U.S. vehicle owners review repair quotations and identify compatible replacement parts. Its existing vehicle-identification and catalog components can help establish vehicle and part identity. The proposed eBay integration would resolve canonical eBay Motors compatibility values, search fixed-price listings through Browse, and require exact part identity, explicit stock, known shipping, and a compatible vehicle result before producing a shadow offer for review.
+Waffer helps U.S. vehicle owners review repair quotations and identify compatible replacement parts. Its existing vehicle-identification and catalog components can help establish vehicle and part identity. The proposed eBay integration would resolve canonical eBay Motors compatibility values, search fixed-price listings through Browse, and require exact part number and manufacturer, explicit stock and exact canonical vehicle compatibility before producing a matched listing for review. Unknown shipping and checkout totals remain explicitly unverified.
 
 The server-side shadow adapter implements this provider-side sequence, but the public comparison API is not connected to it. After eBay authorization, integration validation, a real Production shadow pilot, and separate release approval, the intended public experience would display traceable offers and direct users to eBay for purchase.
 
@@ -39,7 +39,7 @@ The adapter uses API calls rather than scraping, preserves eBay Browse source or
 3. Retrieve candidate listing details in source order; reject candidates lacking exact MPN or explicit in-stock evidence.
 4. Resolve category-specific canonical Year / Make / Model / Trim / Engine using the Motors Taxonomy resolver; fail closed on ambiguity.
 5. Call Browse `checkCompatibility`; only `COMPATIBLE` may qualify.
-6. Normalize item price plus known shipping, seller, HTTPS source URL, and checked-at time into a shadow result. Destination-specific shipping eligibility, tax/fees, and seller package quantities still require pilot/manual review; this is not a guaranteed checkout total.
+6. Keep item price and shipping estimate separate, with seller, HTTPS source URL and checked-at time. Never promote their sum to a final price or savings. Destination-specific shipping eligibility, tax/fees, and seller package quantities still require pilot/manual review; this is not a guaranteed checkout total.
 7. **Not yet implemented as an integrated public eBay flow:** connect an approved provider to the public registry, validate user-facing results, and enable approved listing link-out after the required release gates.
 
 The CLI runner accepts prepared case data. Running its commands does not demonstrate the full browser quotation/VIN/catalog/eBay path, and the synthetic route does not execute any of these external-service steps.
@@ -152,8 +152,8 @@ No login, key creation, legal acceptance, application submission, or Production 
 
 1. **External status unverified:** the owner must establish Developer account/keyset status, Sandbox access, and any required Buy API/EPN/Production approvals.
 2. **Integration evidence missing:** execute and document authorized Sandbox calls; offline regression tests and fictional fixtures do not replace this.
-3. **Public eBay path unwired:** implement and review any later public/Sandbox browser integration while preserving fail-closed behavior until authorized activation.
-4. **Pilot inputs incomplete:** the manufacturer candidate section below retains eight structurally complete cases and twelve evidence gaps. A valid 20–50-case real set and live canonical/offer checks remain required.
+3. **Runtime wired, activation pending:** the server registry, API and listing UI are wired under `docs/EBAY_RUNTIME_INTEGRATION.md`. Production remains disabled; no live integration has been verified.
+4. **Pilot execution incomplete:** all 20 manufacturer candidates now have sourced required inputs. Exact eBay canonical identity, authorized real captures and listing checks remain required.
 5. **Traffic/application packet incomplete:** hypothetical pilot planning is available, but Growth Check inputs and submission materials still need owner review.
 6. **Commercial release not established:** Production evidence, manual review, relevant terms, and separate provider/release decisions remain mandatory.
 
@@ -169,7 +169,7 @@ The pilot runner uses the same preflight before checking credentials or making p
 The placeholder template intentionally fails this check until replaced with researched inputs.
 
 Production input preflight requires 20–50 unique case IDs and unique part/vehicle combinations,
-positive integer quantities, real part names/numbers, and vehicle year/make/model/trim/engine.
+positive integer quantities, real part names/numbers/manufacturers, and vehicle year/make/model/trim/engine.
 Each Production case must carry `evidence.catalogVerified: true`, an HTTPS `evidence.sourceUrl`,
 and `evidence.notes` describing the exact manufacturer catalog match and any constraints.
 Only set the review flag after checking the cited source; the validator cannot verify the claim itself.
@@ -179,39 +179,21 @@ After all identity fields are supported by evidence, the eBay Taxonomy resolver 
 validation does not prove current inventory, eBay availability, exact listing fitment, live pricing,
 provider approval, or commercial release readiness.
 
-## Manufacturer-sourced candidate set (2026-10-03)
+## Manufacturer-sourced candidate set (2026-10-04)
 
-`docs/EBAY_PILOT_RESEARCH_CASES.json` contains 20 research candidates, 18 distinct part numbers,
-across six Toyota/Ford models. Each cites its primary manufacturer application chart/manual.
-Eight Camry/RAV4/Prius cases additionally cite Toyota's US vehicle specifications for LE or Two trim and engine
-dimensions. Twelve cases deliberately retain unresolved trim or engine dimensions.
+`docs/EBAY_PILOT_RESEARCH_CASES.json` contains 20 distinct research cases across six Toyota/Ford models. All required manufacturer/vehicle fields are present and offline input preflight passes 20/20. This is **input completeness only**, not eBay approval, live compatibility, real price evidence or launch readiness.
 
-Run the offline gap report:
+The completion audit is recorded in `docs/EBAY_PILOT_SOURCE_AUDIT_2026-10-04.json` with source URLs, exact qualifications and source-file hashes.
+
+- Two Corolla cases explicitly replace 2015 with **2014 Corolla LE / 2ZR-FE 1.8L four-cylinder**. The official 2014 vehicle description supports the trim/engine pairing. Toyota's oil chart covers 2014–2015 / 2ZRFE with `04152-YZZA6`; the cabin chart covers 2014–2019 and footnote 4 maps to warranty pollen filter `87139-07020`. The warranty qualification is preserved.
+- Five 2018 F-150 cases use **Lariat**. Ford's US towing guide supports Lariat / 3.5L EcoBoost V6 and / 5.0L V8; a FordDirect factory window sticker independently supports a 2018 Lariat / 2.7L V6 EcoBoost configuration.
+- Five 2018 Explorer cases use **Sport / 3.5L EcoBoost V6 / six cylinders**. Ford's US towing guide explicitly restricts this engine to Sport/Platinum and lists the applicable 4WD configuration.
+- Eight earlier Camry/RAV4/Prius cases retain their existing evidence. Part numbers, quantities and left/right positions are unchanged.
 
 ```bash
 npm run ebay:validate-cases -- production docs/EBAY_PILOT_RESEARCH_CASES.json
 ```
 
-Expected result: **invalid batch**, with 12 missing-trim cases. This is useful research preparation,
-not a passed 20-case pilot. Complete the gaps using verifiable vehicle evidence before provider calls.
-Eight structurally complete candidates also still require live eBay Taxonomy and listing compatibility.
-Historical source dates are retained; current part-number supersessions and seller package quantities
-must be checked during the authorized pilot. No forecast values or live prices were invented.
+Expected result: **20/20 valid research inputs**. The exact canonical eBay Trim/Engine values are still unknown. The runtime resolver now refuses prefix-only trim matches and displacement/cylinder guesses; collect and independently verify exact canonical values before using them. Do not turn `Lariat`, `LE`, a catalog engine code or a unique approximate match into a verified vehicle claim.
 
-### Remaining identity evidence gaps
-
-The second manufacturer-source audit added Prius Two / 1.8L for three cases, Corolla 1.8L
-for two cases, and F-150 V6 counts for four cases. Sources:
-- [Toyota 2015 Prius press PDF](https://pressroom.toyota.com/?generate_pdf=28421), page 3.
-- [Toyota 2015 Corolla press PDF](https://pressroom.toyota.com/?generate_pdf=28408), pages 2 and 4.
-- [Ford 2018 F-150 technical guide](https://media.ford.com/content/dam/fordmedia/North%20America/US/product/2018/f-150/18_F150.pdf), page 2.
-
-Twelve candidates remain blocked before pilot execution:
-- Two Corolla cases: no retrieved source explicitly pairs 2ZRFE with a named 2015 trim; the product-specification page was inaccessible.
-- Five F-150 cases: the retrieved guide lists engines and trims separately and restricts engine availability to selected series; it does not establish exact pairings.
-- Five Explorer cases: the manufacturer spec-sheet URL returned 404. Search extracts alone were not accepted as full-source evidence; trim and cylinder count remain unset.
-
-These are documented source-evidence gaps, not proof that only an account-restricted provider can
-resolve them. A verifiable manufacturer specification or actual vehicle identity can close them.
-Do not infer combinations from separate engine/trim lists. Even after the gaps are closed, eBay
-Production authorization and live canonical fitment/offer checks are separate mandatory gates.
+Historical catalogs do not establish current supersessions, seller pack size, quantity availability, shipping destination eligibility or live offers. Review those in the authorized pilot. No provider calls, approval, account terms, live prices or commercial launch were implied by this source audit.

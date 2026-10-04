@@ -329,7 +329,7 @@ if (!failures.length) {
     failures.push('Price comparison numeric validation is incomplete');
   }
   if (!priceCompare.includes("from '../lib/price-provider.js'") ||
-      !priceCompare.includes('lookupVerifiedPricing({') ||
+      !priceCompare.includes('lookupPricing = lookupVerifiedPricing') || !priceCompare.includes('lookupPricing({') ||
       !priceCompare.includes('calculateVerifiedOfferSaving({')) {
     failures.push('Price comparison is not wired to the trusted price-provider contract');
   }
@@ -375,7 +375,7 @@ if (!failures.length) {
   }
   const pricingLimitIndex = priceCompare.indexOf('checkPricingRequestLimit(req, RUNTIME_CONFIG)');
   const pricingMarketValidationIndex = priceCompare.indexOf('if (!marketConfig.supported)');
-  const pricingLookupIndex = priceCompare.indexOf('lookupVerifiedPricing({');
+  const pricingLookupIndex = priceCompare.indexOf('lookupPricing({');
   if (!(pricingLimitIndex > pricingMarketValidationIndex && pricingLookupIndex > pricingLimitIndex)) {
     failures.push('Pricing rate guard must run after validation and before trusted price lookup');
   }
@@ -387,10 +387,10 @@ if (!failures.length) {
   const pricingFunction = pricingFunctionStart >= 0 && pricingFunctionEnd > pricingFunctionStart
     ? app.slice(pricingFunctionStart, pricingFunctionEnd)
     : '';
-  const capabilityGuardIndex = pricingFunction.indexOf('if(!window.wafferVerifiedMarketPricing)');
+  const capabilityGuardIndex = pricingFunction.indexOf('if(!window.wafferVerifiedMarketPricing && !window.wafferSandboxPricingPreview)');
   const pricingFetchIndex = pricingFunction.indexOf("fetch('/api/price-compare'");
   if (!(capabilityGuardIndex >= 0 && pricingFetchIndex > capabilityGuardIndex)) {
-    failures.push('Client must gate /api/price-compare behind verifiedMarketPricing capability');
+    failures.push('Client must gate /api/price-compare behind an explicit production or sandbox capability');
   }
   if (!pricingFunction.includes('{maxItems:10}') || !pricingFunction.includes('offset+=2')) {
     failures.push('Trusted pricing client must bound item count and request concurrency');
@@ -950,7 +950,12 @@ if (!failures.length) {
   if (!healthClient.includes('run!==healthCheckRun') || !healthClient.includes('healthCheckController?.abort()')) {
     failures.push('Client health checks are not protected against stale responses');
   }
-  if (!healthClient.includes('Core services ready') || !healthClient.includes('الخدمات الأساسية جاهزة')) {
+  const healthRendererStart = app.indexOf('function renderSystemHealth(){');
+  const healthRenderer = healthRendererStart >= 0 && healthRendererStart < healthFunctionStart
+    ? app.slice(healthRendererStart, healthFunctionStart)
+    : '';
+  if (!healthRenderer.includes('Core services ready') || !healthRenderer.includes('الخدمات الأساسية جاهزة') ||
+      !healthClient.includes('renderSystemHealth();') || !appModule.includes('window.wafferRenderSystemHealth()')) {
     failures.push('Health status is not localized for Arabic and English');
   }
 

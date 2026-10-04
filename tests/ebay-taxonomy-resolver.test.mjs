@@ -37,7 +37,8 @@ test('taxonomy resolver returns a canonical vehicle only from deterministic matc
       make:'FORD',
       model:'F-150',
       nhtsa:{
-        trim:'XLT',
+        trim:'XLT Crew Cab Pickup 4-Door',
+        engineModel:'3.5L 3496CC V6 GAS DOHC Turbocharged',
         displacementL:3.5,
         engineCylinders:6
       }
@@ -63,8 +64,8 @@ test('taxonomy resolver returns a canonical vehicle only from deterministic matc
   assert.equal(result.model,'F-150');
   assert.equal(result.trim,'XLT Crew Cab Pickup 4-Door');
   assert.equal(result.engine,'3.5L 3496CC V6 GAS DOHC Turbocharged');
-  assert.equal(result.matchBasis.trim,'UNIQUE_PREFIX');
-  assert.equal(result.matchBasis.engine,'UNIQUE_ENGINE_DIMENSIONS');
+  assert.equal(result.matchBasis.trim,'EXACT_TEXT');
+  assert.equal(result.matchBasis.engine,'EXACT_TEXT');
   assert.deepEqual(calls[3][2],[
     ['Year','2024'],['Make','Ford'],['Model','F-150']
   ]);
@@ -118,4 +119,10 @@ test('taxonomy resolver rejects ambiguous engines with same displacement and cyl
 
   assert.equal(result.canonical,false);
   assert.equal(result.reason,'ENGINE_AMBIGUOUS_OR_UNRESOLVED');
+});
+
+for(const [requested,returned] of [['S','SE Sedan 4-Door'],['XLT','XLT Sport']])test('trim '+requested+' cannot be inferred as '+returned,async()=>{
+ const values={Make:'Ford',Model:'F-150',Trim:returned,Engine:'3.5L 3496CC V6 GAS DOHC Turbocharged'};
+ const result=await resolveEbayCanonicalVehicle({categoryId:'33559',vehicle:{year:'2024',make:'Ford',model:'F-150',trim:requested,engine:values.Engine},getProperties:async()=>({compatibilityProperties:['Year','Make','Model','Trim','Engine'].map(name=>({name}))}),getValues:async(_id,key)=>({compatibilityPropertyValues:[{value:values[key]}]})});
+ assert.equal(result.canonical,false);
 });

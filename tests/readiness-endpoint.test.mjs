@@ -63,11 +63,13 @@ test('readiness v2 reports approved field evidence but keeps public beta blocked
     assert.equal(res.body.promotion.manualReviewRequired, false);
     assert.equal(res.body.promotion.publicBetaReady, false);
     assert.equal(res.body.promotion.manualBlockerCount, 0);
-    assert.equal(res.body.promotion.machineBlockerCount, 1);
+    assert.equal(res.body.promotion.machineBlockerCount, 2);
 
     assert.equal(res.body.configured.analysis, true);
     assert.equal(res.body.configured.catalog, true);
     assert.equal(res.body.configured.pricing, false);
+    assert.equal(res.body.pricingRuntime.productionReady,false);
+    assert.ok(res.body.pricingRuntime.blockers.includes('PROVIDER_DISABLED'));
 
     assert.equal(res.body.knownBlockers.includes('FIELD_TEST_INCOMPLETE'), false);
     assert.ok(res.body.knownBlockers.includes('VERIFIED_PRICE_PROVIDER_MISSING'));
@@ -119,7 +121,7 @@ test('readiness v2 reports missing service configuration without network calls',
     assert.ok(res.body.knownBlockers.includes('CATALOG_NOT_CONFIGURED'));
     assert.equal(res.body.promotion.publicBetaReady, false);
     assert.equal(res.body.promotion.manualReviewRequired, false);
-    assert.equal(res.body.promotion.machineBlockerCount, 3);
+    assert.equal(res.body.promotion.machineBlockerCount, 4);
     assert.equal(res.body.promotion.manualBlockerCount, 0);
     assert.equal(fetchCalls, 0);
   } finally {

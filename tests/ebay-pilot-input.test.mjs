@@ -6,7 +6,7 @@ import {validateEbayPilotInput} from '../lib/price-providers/ebay-pilot-input.js
 
 function sample(count = 20) {
   return {cases: Array.from({length: count}, (_, index) => ({
-    caseId: `case-${index}`, partNumber: `MPN-${index}`, partName: 'Oil filter', quantity: 1,
+    caseId: `case-${index}`, partNumber: `MPN-${index}`, partName: 'Oil filter', manufacturer: 'Example', quantity: 1,
     vehicle: {year: 2020, make: 'Example', model: 'Example', trim: 'Example', engine: '2.5L'},
     evidence: {catalogVerified: true, sourceUrl: 'https://manufacturer.example/catalog.pdf', notes: 'Synthetic fixture only; never live evidence.'}
   }))};
@@ -60,16 +60,25 @@ test('missing trim cannot reach the resolver as a supposedly ready pilot', () =>
   assert.ok(report.cases[0].reasons.includes('VEHICLE_TRIM_REQUIRED'));
 });
 
-test('researched candidate set exposes all unresolved trim gaps without masquerading as pilot evidence', () => {
+test('researched candidate set has 20 input-complete cases but no live pricing evidence', () => {
   const payload = JSON.parse(fs.readFileSync(new URL('../docs/EBAY_PILOT_RESEARCH_CASES.json', import.meta.url)));
   const report = validateEbayPilotInput(payload, {environment: 'production'});
   assert.equal(report.caseCount, 20);
-  assert.equal(report.valid, false);
-  assert.equal(report.cases.filter(entry => entry.valid).length, 8);
-  assert.equal(report.cases.filter(entry => entry.reasons.includes('VEHICLE_TRIM_REQUIRED')).length, 12);
+  assert.equal(report.valid, true);
+  assert.equal(report.cases.filter(entry => entry.valid).length, 20);
+  assert.equal(report.cases.filter(entry => entry.reasons.includes('VEHICLE_TRIM_REQUIRED')).length, 0);
   for (const entry of payload.cases) {
     assert.equal(entry.bestOffer, undefined);
     assert.equal(entry.marketRange, undefined);
     assert.ok(entry.evidence.sourceUrl.startsWith('https://'));
   }
 });
+
+ test('Corolla replacement preserves historical part application and source qualifications',()=>{
+  const payload=JSON.parse(fs.readFileSync(new URL('../docs/EBAY_PILOT_RESEARCH_CASES.json',import.meta.url)));
+  const oil=payload.cases.find(row=>row.caseId==='us-04-corolla-oil');
+  const cabin=payload.cases.find(row=>row.caseId==='us-05-corolla-cabin');
+  for(const row of [oil,cabin]){assert.equal(row.vehicle.year,2014);assert.equal(row.vehicle.trim,'LE');assert.equal(row.researchStatus,'CATALOG_CANDIDATE_RUNTIME_FITMENT_REQUIRED');}
+  assert.equal(oil.partNumber,'04152-YZZA6');assert.equal(cabin.partNumber,'87139-07020');
+  assert.match(cabin.evidence.notes,/warranty|Warranty/);
+ });
