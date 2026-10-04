@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Waffer reviewer-only synthetic UX demonstration. Fictional data, no live eBay API calls or purchasable offers.">
+  <title>Waffer | Synthetic review demo</title>
+  <link rel="stylesheet" href="/review-demo/styles.css">
+  <script type="module" src="/review-demo/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to demo</a>
+  <header><a class="brand" href="/">WAFFER <span>Review workspace</span></a><span class="tag">UX simulation</span></header>
+  <main id="main">
+    <div class="notice" role="note"><strong>Synthetic demo · Fictional data · No live eBay calls</strong><span>This is not eBay Sandbox API evidence or a production quotation. Nothing here can be purchased.</span></div>
+    <section class="intro"><p class="eyebrow">PARTS COMPARISON / REVIEW ONLY</p><h1>A clear path from identity to a cautious result.</h1><p>Walk through the intended experience using fictional inputs. Try a match, an empty search, a source error, stale data, and uncertain fitment.</p></section>
+    <div class="workspace">
+      <section class="panel" aria-labelledby="input-heading">
+        <h2 id="input-heading"><span class="step">1</span> Choose a test case</h2>
+        <p class="subtle">No VIN, personal data, or credentials are needed. All choices stay in this page’s memory.</p>
+        <form id="demo-form">
+          <label for="vehicle">Fictional vehicle</label><select id="vehicle" name="vehicle" required></select>
+          <label for="part">Fictional part</label><select id="part" name="part" required></select>
+          <div class="field-pair"><div><label for="quantity">Quantity</label><select id="quantity" name="quantity"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div><div><label for="scenario">Scenario</label><select id="scenario" name="scenario" required></select></div></div>
+          <div class="actions"><button id="run" type="submit">Run synthetic comparison</button><button id="reset" type="reset" class="secondary">Reset</button></div>
+        </form>
+        <noscript><p>Enable JavaScript to run this local simulation. Live pricing remains disabled.</p></noscript>
+      </section>
+      <section class="panel result-panel" aria-labelledby="result-heading">
+        <h2 id="result-heading"><span class="step">2</span> Inspect the outcome</h2>
+        <p id="progress" class="subtle" role="status" aria-live="polite">Choose a scenario, then run the demo.</p>
+        <div id="result" aria-live="polite" aria-atomic="true"></div>
+      </section>
+    </div>
+    <section class="boundary" aria-labelledby="boundary-heading"><h2 id="boundary-heading">What this review proves</h2><p>Only the synthetic interface and its empty, error, freshness, and fitment states. The eBay adapter is isolated CLI/shadow code; this demo never calls it.</p><p>The normal Waffer flow still has no verified price provider. Live prices and savings stay disabled: <strong>VERIFIED_PRICE_PROVIDER_MISSING</strong>.</p><a href="/">Return to normal Waffer</a></section>
+  </main>
+  <footer>Waffer · Review demonstration · No checkout · No retailer links</footer>
+</body>
+</html>

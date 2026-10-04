@@ -1,4 +1,4 @@
-const CACHE_NAME = 'waffer-shell-v38';
+const CACHE_NAME = 'waffer-shell-v39';
 const SHELL = ['/', '/index.html', '/styles.css', '/app.js', '/app-module.js', '/vin-ui.js', '/parts-match.js', '/manifest.webmanifest', '/lib/i18n.js', '/lib/runtime-config.js', '/lib/total-check.js', '/lib/image-optimization.js', '/lib/identity.js', '/lib/pricing-client.js', '/lib/field-test-client.js', '/lib/field-test-fixtures.js', '/lib/field-test-evidence-validator.js'];
 
 self.addEventListener('install', event => {
@@ -23,6 +23,9 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const request = event.request;
   const url = new URL(request.url);
+
+  // The isolated synthetic review is never part of the normal app's offline shell.
+  if (url.pathname === '/review-demo' || url.pathname.startsWith('/review-demo/')) return;
 
   // Never cache API calls or user analysis data.
   if (url.pathname.startsWith('/api/') || request.method !== 'GET') return;

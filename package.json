@@ -14,6 +14,7 @@
     "ebay:readiness": "node scripts/check-ebay-readiness.mjs",
     "ebay:pilot": "node scripts/run-ebay-pilot.mjs",
     "ebay:estimate-volume": "node scripts/estimate-ebay-api-volume.mjs",
-    "ebay:validate-cases": "node scripts/validate-ebay-pilot-cases.mjs"
+    "ebay:validate-cases": "node scripts/validate-ebay-pilot-cases.mjs",
+    "ebay:estimate-pilot-volume": "node scripts/estimate-ebay-pilot-volume.mjs"
   }
 }

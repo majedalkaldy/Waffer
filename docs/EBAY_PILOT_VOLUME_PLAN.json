@@ -1,0 +1,11 @@
+{
+  "evidenceType": "HYPOTHETICAL_PLAN_NOT_ACTUAL_TRAFFIC",
+  "scope": "Proposed 20–50-case batch only. These are developer planning scenarios, not approved demand forecasts, measured calls, or a submitted Growth Check. The synthetic review page makes no provider API calls.",
+  "cacheAssumption": "Current adapter reuses category taxonomy within a single lookup. Cross-case and cross-run reuse is not assumed. Each category requires one properties plus four value requests if fully resolved.",
+  "retryAssumption": "A maximum of one full manual rerun per case is budgeted in the rerun and stress scenarios. It is not automatic retry behavior. New runs require a revised plan.",
+  "scenarios": [
+    { "name": "20-case single-pass plan", "caseCount": 20, "attemptsPerCase": 1, "candidateItemsPerAttempt": 3, "eligibleItemsPerAttempt": 2, "distinctCategoriesPerAttempt": 1, "oauthTokenRequests": 1 },
+    { "name": "35-case plan with one full rerun", "caseCount": 35, "attemptsPerCase": 2, "candidateItemsPerAttempt": 5, "eligibleItemsPerAttempt": 4, "distinctCategoriesPerAttempt": 2, "oauthTokenRequests": 2 },
+    { "name": "50-case cold-category stress budget", "caseCount": 50, "attemptsPerCase": 2, "candidateItemsPerAttempt": 10, "eligibleItemsPerAttempt": 10, "distinctCategoriesPerAttempt": 10, "oauthTokenRequests": 100 }
+  ]
+}
