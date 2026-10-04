@@ -47,3 +47,7 @@ Official references checked 2026-10-04:
 - https://developer.ebay.com/api-docs/buy/static/api-browse.html
 - https://developer.ebay.com/api-docs/buy/buy-requirements.html
 - https://developer.ebay.com/develop/get-started/get-started-on-a-buying-application
+
+## Isolated browser regression
+
+`npm run test:browser` runs 3 fixture-server contract checks and 12 Chromium full-app cases on loopback, at 1280×900 and 390×844. The actual upload, vehicle UI, pricing handler/adapter and listing renderer use fictional transport; all external browser requests are blocked. CI installs pinned Playwright and Chromium without provider credentials. Test fixtures and failure reports are excluded by `.vercelignore` and are never normal deployment assets. These tests complement, and do not replace, inspection of the protected deployed preview or genuine authorized provider evidence.
