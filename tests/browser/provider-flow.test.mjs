@@ -1,7 +1,7 @@
 // SYNTHETIC TEST ONLY. Never navigates Vercel, eBay, or another external site.
 import test, {before, after} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdir, writeFile} from 'node:fs/promises';
+import {mkdir, writeFile, readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {chromium} from 'playwright';
 import {startFixtureServer} from './fixture-server.mjs';
@@ -192,10 +192,19 @@ for (const viewport of VIEWPORTS) {
         assert.match(await page.locator('#privacyText').innerText(),locale==='en-US'?/does not guarantee zero retention/:/لا يضمن انعدام الاحتفاظ/);
         await assertNoOverflow(page);
       }
+      await page.goto(server.origin+'?debug=1');
+      await page.waitForFunction(()=>typeof window.wafferBuildDiagnosticReport==='function' && !document.getElementById('make').disabled);
       await page.clock.install();
       await beginAnalysis(page);
-      const captured=await page.evaluate(()=>window.wafferBuildDiagnosticReport({analysis:window.analysis,vehicle:window.wafferVehicle,pricingResults:window.wafferPricingResults,pricingSummary:window.wafferPricingSummary}));
-      assert.doesNotMatch(JSON.stringify(captured),/1HGCM82633A004352|synthetic-seller|sourceUrl|matchedListing|180\.00|FIXTURE-123/);
+      await page.locator('#backBtn').click();
+      await page.locator('#result').waitFor({state:'visible'});
+      const downloaded=page.waitForEvent('download');
+      await page.locator('#debugExportBtn').click();
+      const download=await downloaded;
+      const captured=JSON.parse(await readFile(await download.path(),'utf8'));
+      await page.locator('#detailsBtn').click();
+      await page.locator('#advanced').waitFor({state:'visible'});
+      assert.doesNotMatch(JSON.stringify(captured),/1HGCM82633A004352|synthetic-seller|sourceUrl|"matchedListing":|180\.00|FIXTURE-123/);
       const count=server.state.prices.length;
       await page.clock.fastForward(300002);
       await page.waitForFunction(()=>window.wafferPricingResults.length===0);
