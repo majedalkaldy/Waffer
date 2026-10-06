@@ -1,6 +1,6 @@
-const CACHE_NAME = 'waffer-shell-provider-wiring-20261004c';
+const CACHE_NAME = 'waffer-shell-data-privacy-20261006a';
 const SHELL = ['/', '/index.html', '/styles.css', '/app.js', '/app-module.js', '/vin-ui.js', '/parts-match.js', '/manifest.webmanifest', '/lib/i18n.js', '/lib/runtime-config.js', '/lib/total-check.js', '/lib/image-optimization.js', '/lib/identity.js', '/lib/pricing-client.js',
-  '/lib/pricing-view.js',
+  '/lib/pricing-view.js', '/lib/diagnostic-privacy.js',
   '/lib/matched-listing.js', '/lib/field-test-client.js', '/lib/field-test-fixtures.js', '/lib/field-test-evidence-validator.js'];
 
 self.addEventListener('install', event => {

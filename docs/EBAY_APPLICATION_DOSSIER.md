@@ -1,6 +1,6 @@
 # Waffer — eBay Buy API Application Dossier
 
-Prepared: 2026-10-03 · Revised: 2026-10-04
+Prepared: 2026-10-03 · Revised: 2026-10-06
 
 **Draft preparation packet, not a completed application or proof of eBay approval.**
 This document does not authorize accepting eBay contracts, policies, or legal terms on behalf of the account owner.
@@ -8,7 +8,7 @@ This document does not authorize accepting eBay contracts, policies, or legal te
 ## Current implementation and evidence boundary
 
 - **Implemented in code:** server-side eBay Sandbox/Production shadow adapter, OAuth client-credentials flow, Browse search/item/compatibility calls, Taxonomy resolver, readiness checks, input preflight, batch pilot runner, and regression tests.
-- **Not wired to the public app:** `/api/price-compare` uses `lib/price-provider.js`, whose `MARKET_PRICE_PROVIDERS` registry is intentionally empty. It does not invoke the separate eBay shadow adapter. With a valid permitted pricing request, the normal app returns `WAITING_FOR_VERIFIED_PRICE_SOURCE`, null market prices/offer/saving, and `NOT_CALCULATED` savings.
+- **Wired behind disabled release gates:** `/api/price-compare` uses the gated eBay runtime through `lib/price-provider.js`. Production requires explicit provider mode, approval and reviewed real pilot evidence; Sandbox is isolated and cannot be enabled in production. The default disabled path returns `WAITING_FOR_VERIFIED_PRICE_SOURCE`, null market prices/offer/saving, and `NOT_CALCULATED` savings. See [runtime integration](EBAY_RUNTIME_INTEGRATION.md).
 - **Synthetic reviewer UI:** `/review-demo/` is an isolated static route using fictional vehicle, part, listing, and price fixtures. It illustrates success, empty, error, stale, and uncertain-fitment states without remote service calls, checkout, or listing link-out. See [reviewer instructions](SYNTHETIC_REVIEW_DEMO.md).
 - **Unverified external prerequisites:** eBay Developer account/keyset status, successful Sandbox OAuth/API execution, and Production Buy API approval have not been established by this packet. Configuration flags are not evidence of provider approval.
 - **Release remains gated:** `verifiedMarketPricing` remains disabled. Neither the synthetic UI nor a passing offline test is evidence of live inventory, real pricing, actual fitment, a completed provider pilot, or commercial readiness.
@@ -20,15 +20,15 @@ The synthetic route, credentialed Sandbox integration, and authorized Production
 - Product: **Waffer**
 - Intended primary eBay marketplace: **United States / EBAY_US**
 - Product purpose: review automotive repair quotations, establish part identity/fitment, and eventually compare traceable offers
-- Proposed purchase model: after approval and separate public integration, direct the user to the source listing on eBay to complete a purchase. Waffer does not perform checkout. The synthetic route has no listing link-out or checkout.
+- Proposed purchase model: after approval and successful gated validation, direct the user to the source listing on eBay to complete a purchase. Waffer does not perform checkout. The synthetic route has no listing link-out or checkout.
 - APIs proposed: Browse API and Taxonomy API, using Identity API application tokens
-- Current stage: field-test product with separately implemented CLI/shadow eBay tooling and an isolated synthetic reviewer demonstration
+- Current stage: field-test product with a gated runtime integration, CLI/shadow eBay tooling and an isolated synthetic reviewer demonstration
 
 ## Draft business-model answer
 
 Waffer helps U.S. vehicle owners review repair quotations and identify compatible replacement parts. Its existing vehicle-identification and catalog components can help establish vehicle and part identity. The proposed eBay integration would resolve canonical eBay Motors compatibility values, search fixed-price listings through Browse, and require exact part number and manufacturer, explicit stock and exact canonical vehicle compatibility before producing a matched listing for review. Unknown shipping and checkout totals remain explicitly unverified.
 
-The server-side shadow adapter implements this provider-side sequence, but the public comparison API is not connected to it. After eBay authorization, integration validation, a real Production shadow pilot, and separate release approval, the intended public experience would display traceable offers and direct users to eBay for purchase.
+The server-side adapter is connected to the public comparison API behind disabled release gates. After eBay authorization, integration validation, a real Production shadow pilot, and separate release approval, it can display matched listings and direct users to eBay for purchase. Passing synthetic tests does not satisfy those release requirements.
 
 The adapter uses API calls rather than scraping, preserves eBay Browse source order while testing candidates, and returns the first qualifying offer. Those code properties do not establish that eBay has reviewed or approved Waffer's use case.
 
@@ -40,7 +40,7 @@ The adapter uses API calls rather than scraping, preserves eBay Browse source or
 4. Resolve category-specific canonical Year / Make / Model / Trim / Engine using the Motors Taxonomy resolver; fail closed on ambiguity.
 5. Call Browse `checkCompatibility`; only `COMPATIBLE` may qualify.
 6. Keep item price and shipping estimate separate, with seller, HTTPS source URL and checked-at time. Never promote their sum to a final price or savings. Destination-specific shipping eligibility, tax/fees, and seller package quantities still require pilot/manual review; this is not a guaranteed checkout total.
-7. **Not yet implemented as an integrated public eBay flow:** connect an approved provider to the public registry, validate user-facing results, and enable approved listing link-out after the required release gates.
+7. **Implemented but gated public flow:** runtime wiring and listing display are present. Enable only after actual provider authorization, real-pilot review and release gates pass; the renderer distinguishes matched listings from verified checkout totals.
 
 The CLI runner accepts prepared case data. Running its commands does not demonstrate the full browser quotation/VIN/catalog/eBay path, and the synthetic route does not execute any of these external-service steps.
 
@@ -62,7 +62,7 @@ The adapter targets `EBAY_US`, Motors compatibility tree `100`, and category-spe
 
 ## Proposed data processing and display
 
-The intended integration would process vehicle identity, requested part number/description, listing identifier, seller display name, item price, known shipping, stock evidence, compatibility status, source URL, and verification timestamp. Storage/retention and user-facing presentation must be reviewed before public integration; this packet does not establish a deployed eBay retention workflow.
+The intended integration would process vehicle identity, requested part number/description, listing identifier, seller display name, item price, known shipping, stock evidence, compatibility status, source URL, and verification timestamp. The browser drops provider responses after their five-minute freshness window and on reset; it does not automatically refetch expired data. Default diagnostics omit seller/listing payloads. OpenAI analysis is a separate single-call path with no automatic eBay API-to-model route. Upload notices prohibit retailer API datasets, but content origin is not automatically verified. These code controls do not certify compliance with eBay policy or establish authorization.
 
 Browse-only access does not require buyer passwords or checkout credentials. The synthetic route uses only fictional local fixtures; it is not a place to enter real VINs, customer quotations, credentials, or personal data.
 

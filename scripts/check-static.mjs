@@ -990,8 +990,8 @@ if (!failures.length) {
   if (analyze.includes('res.locals.openaiFileId')) {
     failures.push('PDF cleanup still depends on response locals instead of one finally path');
   }
-  if (!analyze.includes('finally {\n    await cleanupOpenAIFile(openaiFileId')) {
-    failures.push('Uploaded PDF cleanup is not guaranteed by handler finally');
+  if (!/finally \{[\s\S]*?cleanupOpenAIFile\(fileId/.test(analyze) || analyze.indexOf('return res.status(status).json(body)') < analyze.indexOf('cleanupOpenAIFile(fileId')) {
+    failures.push('Uploaded PDF cleanup must be attempted in finally before the response is sent');
   }
   const pdfJsonRead = analyze.indexOf('uj = await up.json()');
   const pdfTimeoutClear = analyze.indexOf('clearTimeout(uploadTimeout)');

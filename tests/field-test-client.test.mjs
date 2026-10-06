@@ -56,7 +56,7 @@ test('evidence snapshot captures traceability from current runtime',()=>{
     notes:'VIN matched',
     now:()=> '2026-09-24T03:00:00.000Z',
     analysis:{
-      requestId:'analysis-5',
+      requestId:'11111111-2222-4333-8444-555555555555',
       completedAt:'2026-09-24T02:59:00.000Z',
       engineVersion:'mvp-2026-09',
       acceptance:{schemaValid:true},
@@ -83,9 +83,14 @@ test('evidence snapshot captures traceability from current runtime',()=>{
   assert.equal(entry.id,5);
   assert.equal(entry.status,'PASS');
   assert.equal(entry.testedAt,'2026-09-24T03:00:00.000Z');
-  assert.equal(entry.evidence.requestId,'analysis-5');
+  assert.equal(entry.evidence.requestId,'11111111-2222-4333-8444-555555555555');
   assert.equal(entry.evidence.commit,'abcdef12');
   assert.equal(entry.evidence.vehicle.vehicleId,9445);
+  assert.equal(entry.evidence.vehicle.vin,undefined);
+  assert.equal(entry.evidence.vehicle.vinValid,true);
+  assert.equal(entry.notes,'');
+  assert.equal(entry.notesPresent,true);
+  assert.equal(entry.evidence.total,undefined);
   assert.equal(entry.evidence.catalogState.status,'COMPLETED');
   assert.deepEqual(entry.evidence.itemSummary,{
     total:3,
@@ -130,7 +135,8 @@ test('draft update replaces only the selected scenario and preserves others',()=
 
   assert.equal(draft.scenarios.length,2);
   assert.equal(draft.scenarios.find(item=>item.id===1).status,'FAIL');
-  assert.equal(draft.scenarios.find(item=>item.id===1).notes,'first revised');
+  assert.equal(draft.scenarios.find(item=>item.id===1).notes,'');
+  assert.equal(draft.scenarios.find(item=>item.id===1).notesPresent,true);
   assert.equal(draft.scenarios.find(item=>item.id===2).status,'FAIL');
 });
 
@@ -158,7 +164,9 @@ test('export is explicitly draft-only and includes official and automation conte
   assert.equal(exported.summary.draftPassed,2);
   assert.equal(exported.scenarios.length,10);
   assert.equal(exported.scenarios[1].automation.coverage,'PARTIAL');
-  assert.deepEqual(exported.preflight,preflight);
+  assert.equal(exported.preflight.ranAt,preflight.ranAt);
+  assert.deepEqual(exported.preflight.checks,[{id:'canvas-jpeg',ok:true,severity:'critical',details:''}]);
+  assert.equal(exported.privacyMode,'minimized-v1');
 });
 
 

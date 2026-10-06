@@ -9,6 +9,7 @@ let pricingPromise=null;
 let pricingPromiseRunId=0;
 let pricingCompletedRunId=0;
 let pricingExpiryTimer=null;
+let pricingDataExpired=false;
 window.wafferAnalysisRunId=0;
 window.wafferVerifiedMarketPricing=false;
 window.wafferSandboxPricingPreview=false;
@@ -28,6 +29,7 @@ function beginAnalysisRun(){
  pricingPromise=null;
  pricingPromiseRunId=0;
  pricingCompletedRunId=0;
+ pricingDataExpired=false;
  window.wafferPricingResults=[];
  window.wafferPricingSummary=null;
  return analysisRunId;
@@ -45,13 +47,14 @@ function invalidateAnalysisRun(){
  pricingPromise=null;
  pricingPromiseRunId=0;
  pricingCompletedRunId=0;
+ pricingDataExpired=false;
  window.wafferPricingResults=[];
  window.wafferPricingSummary=null;
 }
 function isCurrentAnalysisRun(runId){return runId===analysisRunId;}
 const debugMode=new URLSearchParams(location.search).get('debug')==='1';
-const FIELD_TEST_DRAFT_KEY='waffer-field-test-draft-v1';
-const FIELD_TEST_PREFLIGHT_KEY='waffer-field-test-preflight-v1';
+const FIELD_TEST_DRAFT_KEY='waffer-field-test-draft-minimized-v2';
+const FIELD_TEST_PREFLIGHT_KEY='waffer-field-test-preflight-minimized-v2';
 let fieldTestOfficial={scenarios:[]};
 let fieldTestAutomation={scenarios:[]};
 let fieldTestDraft={version:1,scenarios:[]};
@@ -307,7 +310,8 @@ async function start(){
    }
    if(!isCurrentAnalysisRun(runId))return;
    if(!resp.ok){
-     throw new Error(apiErrorMessage(d));
+     const cleanupNotice=d?.uploadPrivacy?.pdfCleanup==='UNCONFIRMED'?ui(' لم يتأكد حذف PDF من OpenAI.',' PDF deletion from OpenAI could not be confirmed.'):'';
+     throw new Error(apiErrorMessage(d)+cleanupNotice);
    }
    if(!d || typeof d!=='object' || !Array.isArray(d.items)){
      throw new Error(en?'The analysis service returned an incomplete result.':'لم تُرجع خدمة التحليل نتيجة مكتملة.');
@@ -391,6 +395,12 @@ async function start(){
 }
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function render(){
+ const cleanupWarning=document.getElementById('uploadCleanupWarning');
+ if(cleanupWarning){
+   const unconfirmed=analysis?.uploadPrivacy?.pdfCleanup==='UNCONFIRMED';
+   cleanupWarning.classList.toggle('hidden',!unconfirmed);
+   cleanupWarning.textContent=unconfirmed?ui('لم يتأكد حذف PDF من OpenAI. طُلب انتهاء صلاحيته بعد ساعة، وقد تنطبق سياسات احتفاظ أخرى.','PDF deletion from OpenAI could not be confirmed. A one-hour file expiry was requested; other retention policies may still apply.'):'';
+ }
  const engineMeta=document.getElementById('rEngineMeta');
  if(engineMeta){
    const when=analysis.completedAt?new Date(analysis.completedAt):null;
@@ -641,7 +651,31 @@ function currentPricingVehicle(){
  };
 }
 
+function purgeExpiredPricingData(){
+ const entries=window.wafferPricingResults||[];
+ if(!entries.length || typeof window.wafferRetainFreshPricing!=='function')return;
+ const fresh=window.wafferRetainFreshPricing(entries);
+ if(fresh.length!==entries.length){
+   window.wafferPricingResults=fresh;
+   window.wafferPricingSummary=window.wafferSummarizeVerifiedPricing?.(fresh,analysis?.engineContext?.currency||'USD')||null;
+   pricingDataExpired=true;
+ }
+}
+function schedulePricingExpiry(runId){
+ clearTimeout(pricingExpiryTimer);
+ const expires=window.wafferNextPricingExpiry?.(window.wafferPricingResults||[]);
+ if(expires!==null && expires!==undefined)pricingExpiryTimer=setTimeout(()=>{
+   if(!isCurrentAnalysisRun(runId))return;
+   renderPricingSummary();
+   schedulePricingExpiry(runId);
+ },Math.max(1,expires-Date.now()+1));
+}
+// Timers can be throttled in background tabs; prune before any resumed rendering/export.
+window.addEventListener('pageshow',()=>renderPricingSummary());
+window.addEventListener('focus',()=>renderPricingSummary());
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)renderPricingSummary();});
 function renderPricingSummary(){
+ purgeExpiredPricingData();
  const label=document.getElementById('confirmedSavingLabel');
  const note=document.getElementById('savingNote');
  const readiness=document.getElementById('priceReadiness');
@@ -654,6 +688,12 @@ function renderPricingSummary(){
    retry.classList.toggle('hidden',!window.wafferVerifiedMarketPricing && !window.wafferSandboxPricingPreview);
    retry.textContent=ui('إعادة فحص الأسعار','Check prices again');
    retry.onclick=()=>{if(pricingPromise)return;pricingCompletedRunId=0;refreshVerifiedPricing();};
+ }
+ if(pricingDataExpired && !(window.wafferPricingResults||[]).length){
+   label.textContent=ui('التوفير المؤكد: غير محسوب','Confirmed savings: not calculated');
+   note.textContent=ui('انتهت صلاحية بيانات المزود وحُذفت من حالة الصفحة.','Provider data expired and was cleared from page state.');
+   readiness.textContent=ui('اختر إعادة فحص الأسعار لطلب جديد؛ لا تُحدّث الأسعار تلقائيًا.','Choose Check prices again for a new request. Prices are not refreshed automatically.');
+   return;
  }
  if(window.wafferSandboxPricingPreview){
    label.textContent=ui('Sandbox: بيانات اختبار فقط','Sandbox: test data only');
@@ -707,7 +747,8 @@ async function refreshVerifiedPricing(runId=analysisRunId){
  const vehicle=currentPricingVehicle();
  const selected=window.wafferSelectPriceableItems(analysis,vehicle,{maxItems:10});
  if(!selected.length){
-   window.wafferPricingResults=[];
+   pricingDataExpired=false;
+ window.wafferPricingResults=[];
    window.wafferPricingSummary=window.wafferSummarizeVerifiedPricing([],analysis?.engineContext?.currency||'SAR');
    pricingCompletedRunId=runId;
    renderPricingSummary();
@@ -759,15 +800,15 @@ async function refreshVerifiedPricing(runId=analysisRunId){
    }
 
    if(!isCurrentAnalysisRun(runId)||controller.signal.aborted)return;
-   window.wafferPricingResults=entries;
+   pricingDataExpired=false;
+   window.wafferPricingResults=entries.map(entry=>window.wafferPreparePricingEntry(entry));
    window.wafferPricingSummary=window.wafferSummarizeVerifiedPricing(
-     entries,
+     window.wafferPricingResults,
      analysis?.engineContext?.currency||'SAR'
    );
    pricingCompletedRunId=runId;
-   clearTimeout(pricingExpiryTimer);
-   pricingExpiryTimer=setTimeout(()=>{if(isCurrentAnalysisRun(runId))renderPricingSummary();},300001);
    renderPricingSummary();
+   schedulePricingExpiry(runId);
  })().catch(error=>{
    if(!controller.signal.aborted){
      console.error('Verified pricing error:',error);
@@ -797,6 +838,7 @@ function resetAnalysis(){
  window.wafferVehicleId='';
  window.wafferModelId='';
  window.wafferManufacturerId='';
+ pricingDataExpired=false;
  window.wafferPricingResults=[];
  window.wafferPricingSummary=null;
  pricingCompletedRunId=0;
@@ -863,13 +905,13 @@ function fieldTestDraftFromStorage(){
    const raw=localStorage.getItem(FIELD_TEST_DRAFT_KEY);
    if(!raw)return {version:1,scenarios:[]};
    const parsed=JSON.parse(raw);
-   return parsed&&Array.isArray(parsed.scenarios)?parsed:{version:1,scenarios:[]};
+   return window.wafferSanitizeFieldTestDraft?.(parsed)||{version:1,scenarios:[]};
  }catch{
    return {version:1,scenarios:[]};
  }
 }
 function saveFieldTestDraft(){
- try{localStorage.setItem(FIELD_TEST_DRAFT_KEY,JSON.stringify(fieldTestDraft));}catch(e){
+ try{fieldTestDraft=window.wafferSanitizeFieldTestDraft?.(fieldTestDraft)||{version:1,scenarios:[]};localStorage.setItem(FIELD_TEST_DRAFT_KEY,JSON.stringify(fieldTestDraft));}catch(e){
    console.error('Field test draft save failed:',e);
  }
 }
@@ -942,11 +984,12 @@ function fieldTestPreflightFromStorage(){
    const raw=localStorage.getItem(FIELD_TEST_PREFLIGHT_KEY);
    if(!raw)return null;
    const parsed=JSON.parse(raw);
-   return parsed?.format==='waffer-browser-preflight-v1'?parsed:null;
+   return window.wafferSanitizeFieldTestPreflight?.(parsed)||null;
  }catch{return null;}
 }
 function saveFieldTestPreflight(){
  try{
+   fieldTestPreflight=window.wafferSanitizeFieldTestPreflight?.(fieldTestPreflight)||null;
    if(fieldTestPreflight)localStorage.setItem(FIELD_TEST_PREFLIGHT_KEY,JSON.stringify(fieldTestPreflight));
    else localStorage.removeItem(FIELD_TEST_PREFLIGHT_KEY);
  }catch{}
@@ -1631,7 +1674,7 @@ function captureFieldTestResult(){
    const en=window.wafferLocale?.startsWith('en');
    const details=(preview.validation.errors||[]).slice(0,3).join('\n• ');
    alert(
-     (en?'Cannot save this status until the evidence is complete.':'لا يمكن حفظ هذه الحالة حتى يكتمل الدليل.')+
+     (en?'Privacy-safe capture omits VIN and note text. This scenario needs separately reviewed evidence for promotion; diagnostic export is still available.':'لا يتضمن الالتقاط الآمن للخصوصية VIN أو نص الملاحظات. يحتاج هذا السيناريو دليلًا يُراجع بشكل منفصل للترقية؛ ما زال تصدير التشخيص متاحًا.')+
      (details?'\n• '+details:'')
    );
    return;
@@ -1732,43 +1775,21 @@ window.addEventListener('wafferClientModulesReady',()=>{void initFieldTestDashbo
 
 function exportDebugReport(){
  if(!analysis)return;
- const vehicle=window.wafferVehicle||{};
- const report={
-   exportedAt:new Date().toISOString(),
-   requestId:analysis.requestId||null,
-   engineVersion:analysis.engineVersion||null,
-   completedAt:analysis.completedAt||null,
-   engineContext:analysis.engineContext||null,
-   acceptance:analysis.acceptance||null,
-   catalogState:window.wafferCatalogState||null,
+ purgeExpiredPricingData();
+ if(typeof window.wafferBuildDiagnosticReport!=='function')return;
+ const report=window.wafferBuildDiagnosticReport({
+   analysis,
+   vehicle:window.wafferVehicle||{},
+   catalogState:window.wafferCatalogState,
    pricingCapability:window.wafferVerifiedMarketPricing===true,
-   pricingResults:window.wafferPricingResults||[],
-   pricingSummary:window.wafferPricingSummary||null,
-   upload:window.wafferUploadMeta||null,
-   vehicle:{
-     vehicleId:vehicle.vehicleId||window.wafferVehicleId||null,
-     manufacturerName:vehicle.manufacturerName||null,
-     modelName:vehicle.modelName||null,
-     vehicleDescription:vehicle.vehicleDescription||null
-   },
-   analysisSummary:{
-     total:analysis.total||null,
-     calculatedTotal:analysis.calculatedTotal||null,
-     transparency:analysis.transparency??null,
-     identityConfidence:analysis.identityConfidence??null,
-     compatibilityConfidence:analysis.compatibilityConfidence??null,
-     priceConfidence:analysis.priceConfidence??null,
-     overallConfidence:analysis.overallConfidence??null,
-     itemCount:Array.isArray(analysis.items)?analysis.items.length:0,
-     missingCount:Array.isArray(analysis.missing)?analysis.missing.length:0,
-     conflictCount:Array.isArray(analysis.conflicts)?analysis.conflicts.length:0
-   }
- };
+   pricingSummary:window.wafferPricingSummary,
+   upload:window.wafferUploadMeta
+ });
  const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob);
  const a=document.createElement('a');
  a.href=url;
- a.download='waffer-test-'+(analysis.requestId||Date.now())+'.json';
+ a.download='waffer-test-'+(report.requestId||Date.now())+'.json';
  document.body.appendChild(a);
  a.click();
  a.remove();

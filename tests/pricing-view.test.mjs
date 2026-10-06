@@ -36,3 +36,11 @@ test('Arabic and hostile seller text are handled as plain text nodes',()=>{
  assert.match(text(root),/غير موثّق/);assert.match(text(root),/<img src=x onerror=alert\(1\)>/);
  assert.equal(find(root,'img').length,0);assert.equal(find(root,'script').length,0);
 });
+
+test('only tracked listing links carry conditional compensation disclosure',()=>{
+ const root=dom();const data=entry();renderPricingListings(root,[data],{now:fixtureNow});
+ assert.doesNotMatch(text(root),/affiliate compensation/);
+ data.matchedListing.sourceUrl+='?campid=synthetic-campaign';renderPricingListings(root,[data],{now:fixtureNow});
+ assert.match(text(root),/A purchase may result in affiliate compensation/);assert.match(find(root,'a')[0].rel,/sponsored/);
+ renderPricingListings(root,[data],{now:fixtureNow,locale:'ar-US'});assert.match(text(root),/تعويض تسويق بالعمولة/);
+});
