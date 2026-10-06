@@ -1,3 +1,11 @@
+import { buildDiagnosticReport, sanitizeFieldTestDraft, sanitizeFieldTestPreflight } from '/lib/diagnostic-privacy.js';
+window.wafferBuildDiagnosticReport=buildDiagnosticReport;
+window.wafferSanitizeFieldTestDraft=sanitizeFieldTestDraft;
+window.wafferSanitizeFieldTestPreflight=sanitizeFieldTestPreflight;
+import { retainFreshPricing, nextPricingExpiry, preparePricingEntry } from '/lib/pricing-client.js';
+window.wafferRetainFreshPricing=retainFreshPricing;
+window.wafferPreparePricingEntry=preparePricingEntry;
+window.wafferNextPricingExpiry=nextPricingExpiry;
 import { renderPricingListings } from '/lib/pricing-view.js';
 window.wafferRenderPricingListings=renderPricingListings;
 import { t } from '/lib/i18n.js';

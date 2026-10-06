@@ -44,15 +44,28 @@ function analysis(overrides = {}) {
   };
 }
 
+// Preserve the historical reviewed-evidence contract independently of minimized browser capture.
 function passEntry(input) {
-  return createFieldTestEvidence({
-    status: 'PASS',
-    now: () => NOW,
-    ...input
-  });
+  const source = input.analysis;
+  const itemSummary = { total: 0, part: 0, labor: 0, service: 0, fee: 0, nonPart: 0 };
+  for (const item of source?.items || []) {
+    itemSummary.total += 1;
+    itemSummary[item.itemType || 'part'] += 1;
+  }
+  itemSummary.nonPart = itemSummary.labor + itemSummary.service + itemSummary.fee;
+  return {
+    id: input.scenarioId, status: 'PASS', testedAt: NOW, notes: input.notes || '',
+    evidence: source ? {
+      requestId: source.requestId, completedAt: source.completedAt,
+      engineVersion: source.engineVersion, commit: source.deployment.commit,
+      acceptance: source.acceptance, itemSummary, vehicle: input.vehicle || {},
+      upload: input.upload || null, catalogState: input.catalogState || null,
+      total: source.total, calculatedTotal: source.calculatedTotal
+    } : null
+  };
 }
 
-test('field-test client and validator share a satisfiable 10/10 promotion contract', () => {
+test('historical reviewed field-test evidence retains its 10/10 promotion contract', () => {
   const maxBytes = Number(RUNTIME_CONFIG.maxUploadBytes);
 
   const scenarios = [
@@ -173,10 +186,7 @@ test('field-test client and validator share a satisfiable 10/10 promotion contra
     assert.ok(entry.evidence?.requestId);
   }
 
-  const exported = buildFieldTestExport({
-    draft: { version: 1, scenarios },
-    exportedAt: NOW
-  });
+  const exported = { format: 'waffer-field-test-draft-v1', scenarios, exportedAt: NOW };
 
   const validation = validateFieldTestDraft(exported);
   assert.equal(validation.valid, true, validation.errors.join('\n'));
@@ -220,4 +230,22 @@ test('field-test client and validator share a satisfiable 10/10 promotion contra
   const noVinAcceptance = structuredClone(publicCandidate);
   noVinAcceptance.scenarios.find(entry => entry.id === 5).evidence.acceptance.hasVin = false;
   assert.equal(validateOfficialFieldTestResults(noVinAcceptance).valid, false);
+});
+
+
+test('default browser capture and export cannot be mistaken for reviewed promotion evidence', () => {
+  const snapshot = createFieldTestEvidence({
+    scenarioId: 5, status: 'PASS', now: () => NOW,
+    analysis: analysis({ requestId: '11111111-2222-4333-8444-555555555555' }),
+    vehicle: { vehicleId: 9445, vin: VIN }, catalogState: { status: 'COMPLETED' },
+    notes: 'Private reviewer note'
+  });
+  const exported = buildFieldTestExport({ draft: { scenarios: [snapshot] }, exportedAt: NOW });
+  const validation = validateFieldTestDraft(exported);
+  assert.equal(validation.promotionCandidate, false);
+  assert.ok(validation.errors.some(message => message.includes('separately reviewed evidence')));
+  assert.equal(JSON.stringify(exported).includes(VIN), false);
+  assert.equal(JSON.stringify(exported).includes('Private reviewer note'), false);
+  assert.throws(() => buildOfficialFieldTestResultsFromDraft(exported), /validation failed/);
+  assert.equal(validateOfficialFieldTestResults(exported).promotionCandidate, false);
 });

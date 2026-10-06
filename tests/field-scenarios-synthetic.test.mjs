@@ -33,10 +33,12 @@ function completeAiResult(overrides = {}) {
     overallConfidence: 75,
     missing: [],
     conflicts: [],
-    nextActions: [],
+    nextActions: ['Verify part identity'],
     items: [
       {
         name: 'Brake pad',
+        manufacturer: 'not visible', quantity: '1', compatibility: 'not verifiable',
+        priceAssessment: 'needs price source', conflict: 'none visible', judgment: '',
         partNumber: 'BRK-123',
         itemType: 'part',
         identityConfidence: 80,
@@ -158,6 +160,8 @@ test('synthetic scenario 9: missing part numbers cap identity and price confiden
       items: [
         {
           name: 'Brake pad',
+        manufacturer: 'not visible', quantity: '1', compatibility: 'not verifiable',
+        priceAssessment: 'needs price source', conflict: 'none visible', judgment: '',
           partNumber: 'غير ظاهر',
           itemType: 'part',
           identityConfidence: 99,

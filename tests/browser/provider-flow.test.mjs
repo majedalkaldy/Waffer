@@ -1,7 +1,7 @@
 // SYNTHETIC TEST ONLY. Never navigates Vercel, eBay, or another external site.
 import test, {before, after} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdir, writeFile} from 'node:fs/promises';
+import {mkdir, writeFile, readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {chromium} from 'playwright';
 import {startFixtureServer} from './fixture-server.mjs';
@@ -184,6 +184,39 @@ function assertUnpriced(response) {
 }
 
 for (const viewport of VIEWPORTS) {
+  test(`${viewport.name}: privacy notice, minimized download and expiry clear provider data without a refetch`, {timeout: 35000}, async t => {
+    await runFixture(t, viewport, 'matched', async ({page,server}) => {
+      for(const locale of ['en-US','ar-US']){
+        await page.locator('#localeSelect').selectOption(locale);
+        assert.match(await page.locator('#privacyText').innerText(),/OpenAI/);
+        assert.match(await page.locator('#privacyText').innerText(),locale==='en-US'?/does not guarantee zero retention/:/لا يضمن انعدام الاحتفاظ/);
+        await assertNoOverflow(page);
+      }
+      await page.goto(server.origin+'?debug=1');
+      await page.waitForFunction(()=>typeof window.wafferBuildDiagnosticReport==='function' && !document.getElementById('make').disabled);
+      await page.clock.install();
+      await beginAnalysis(page);
+      await page.locator('#backBtn').click();
+      await page.locator('#result').waitFor({state:'visible'});
+      const downloaded=page.waitForEvent('download');
+      await page.locator('#debugExportBtn').click();
+      const download=await downloaded;
+      const captured=JSON.parse(await readFile(await download.path(),'utf8'));
+      await page.locator('#detailsBtn').click();
+      await page.locator('#advanced').waitFor({state:'visible'});
+      assert.doesNotMatch(JSON.stringify(captured),/1HGCM82633A004352|synthetic-seller|sourceUrl|"matchedListing":|180\.00|FIXTURE-123/);
+      const count=server.state.prices.length;
+      await page.clock.fastForward(300002);
+      await page.waitForFunction(()=>window.wafferPricingResults.length===0);
+      assert.equal(await page.locator('#pricingListings a').count(),0);
+      assert.equal(await page.evaluate(()=>window.wafferPricingSummary?.verifiedSaving||0),0);
+      assert.match(await page.locator('#priceReadiness').innerText(),/not refreshed automatically/);
+      assert.equal(server.state.prices.length,count,'Expiry must not trigger another provider request');
+      await page.locator('#newAnalysisBtn').click();
+      await page.locator('#home').waitFor({state:'visible'});
+      assert.equal(await page.evaluate(()=>window.wafferPricingResults.length),0);
+    });
+  });
   test(`${viewport.name}: visible home EN-AR-EN-AR switches keep layout and readiness/accessibility text localized`, {timeout: 30_000}, async t => {
     await runFixture(t, viewport, 'health-not-ready', async ({page, server, healthResponses}) => {
       setPhase(page, 'home locale: await completed not-ready health response');

@@ -78,7 +78,7 @@ test('analysis body timeout returns 504 and deletes uploaded PDF', async () => {
       return { ok: true, status: 200, json: () => hangingBody(options.signal) };
     }
     if (String(url).includes('/v1/files/file_timeout') && options.method === 'DELETE') {
-      return { ok: true, status: 200 };
+      return { ok: true, status: 200, json: async () => ({id: String(url).split('/').pop(), deleted: true}) };
     }
     throw new Error('Unexpected fetch: ' + url);
   };
@@ -103,7 +103,7 @@ test('malformed model JSON returns 502 and still deletes uploaded PDF', async ()
       return { ok: true, status: 200, json: async () => ({ output_text: 'not-json' }) };
     }
     if (String(url).includes('/v1/files/file_bad_json') && options.method === 'DELETE') {
-      return { ok: true, status: 200 };
+      return { ok: true, status: 200, json: async () => ({id: String(url).split('/').pop(), deleted: true}) };
     }
     throw new Error('Unexpected fetch: ' + url);
   };

@@ -13,7 +13,7 @@ const ASSETS = new Map([
   ['/app.js', 'app.js'], ['/app-module.js', 'app-module.js'], ['/vin-ui.js', 'vin-ui.js'],
   ['/parts-match.js', 'parts-match.js'],
   ...['i18n', 'runtime-config', 'total-check', 'image-optimization', 'identity',
-    'pricing-client', 'pricing-view', 'matched-listing', 'field-test-client',
+    'pricing-client', 'pricing-view', 'matched-listing', 'field-test-client', 'diagnostic-privacy',
     'field-test-fixtures', 'field-test-evidence-validator'].map(name => [`/lib/${name}.js`, `lib/${name}.js`])
 ]);
 const SCENARIOS = new Set(['matched', 'unknown-shipping', 'sandbox', 'stale', 'empty',

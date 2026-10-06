@@ -77,7 +77,9 @@ test('dashboard previews current evidence and blocks invalid non-pending capture
   assert.ok(app.includes('function renderFieldTestEvidencePreview'));
   assert.ok(app.includes("document.getElementById('fieldTestEvidencePreview')"));
   assert.ok(app.includes("input.status!=='PENDING' && preview && !preview.validation.valid"));
-  assert.ok(app.includes('Cannot save this status until the evidence is complete.'));
+  assert.ok(app.includes('Privacy-safe capture omits VIN and note text.'));
+  assert.ok(app.includes('separately reviewed evidence for promotion'));
+  assert.ok(app.includes('diagnostic export is still available'));
   assert.ok(app.includes("fieldTestNotes')?.addEventListener('input'"));
   assert.ok(app.includes('item.textContent=message.text'));
 });
