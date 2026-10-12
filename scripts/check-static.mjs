@@ -379,8 +379,8 @@ if (!failures.length) {
   if (!(pricingLimitIndex > pricingMarketValidationIndex && pricingLookupIndex > pricingLimitIndex)) {
     failures.push('Pricing rate guard must run after validation and before trusted price lookup');
   }
-  if (!clientSource.includes("window.wafferVerifiedMarketPricing=d?.capabilities?.verifiedMarketPricing===true")) {
-    failures.push('UI does not bind pricing capability to live health');
+  if (!clientSource.includes("window.wafferVerifiedMarketPricing=d?.configured?.pricing===true")) {
+    failures.push('UI does not bind pricing capability to server configuration');
   }
   const pricingFunctionStart = app.indexOf('async function refreshVerifiedPricing');
   const pricingFunctionEnd = app.indexOf('function resetAnalysis()', pricingFunctionStart);
@@ -954,7 +954,7 @@ if (!failures.length) {
   const healthRenderer = healthRendererStart >= 0 && healthRendererStart < healthFunctionStart
     ? app.slice(healthRendererStart, healthFunctionStart)
     : '';
-  if (!healthRenderer.includes('Core services ready') || !healthRenderer.includes('الخدمات الأساسية جاهزة') ||
+  if (!healthRenderer.includes('Core services configured') || !healthRenderer.includes('الخدمات الأساسية مهيأة') ||
       !healthClient.includes('renderSystemHealth();') || !appModule.includes('window.wafferRenderSystemHealth()')) {
     failures.push('Health status is not localized for Arabic and English');
   }

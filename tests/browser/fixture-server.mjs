@@ -119,6 +119,12 @@ export async function startFixtureServer({scenario = 'matched'} = {}) {
         return;
       }
       if (req.method !== 'GET') return json(res, {error: 'Fixture method not allowed'}, 405);
+      if (route === '/api/readiness') return json(res, {
+        ok: true, service: 'waffer-readiness', status: 'not_promotion_ready', synthetic: true,
+        configured: {analysis: state.scenario !== 'health-not-ready', catalog: state.scenario !== 'health-not-ready',
+          pricing: !['sandbox', 'health-not-ready'].includes(state.scenario)},
+        pricingRuntime: {sandboxReady: state.scenario === 'sandbox'}
+      });
       if (route === '/api/health') {
         if (state.scenario === 'health-not-ready') return json(res, {
           ok: false, status: 'unavailable', service: 'waffer', synthetic: true,

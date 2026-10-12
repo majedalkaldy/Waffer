@@ -1908,32 +1908,20 @@ function renderSystemHealth(){
  const d=systemHealthState;
  const en=window.wafferLocale?.startsWith('en');
  if(d.status==='checking'){
-   el.textContent=en?'Checking service readiness...':'جارٍ التحقق من جاهزية الخدمات...';
+   el.textContent=en?'Checking service configuration...':'جارٍ التحقق من إعداد الخدمات...';
    setSystemStatusTone(el,'warn');
  }else if(d.status==='request_error'){
-   el.textContent=en?'⚠ Could not verify service status':'⚠ تعذر التحقق من حالة الخدمة';
+   el.textContent=en?'⚠ Could not verify service configuration':'⚠ تعذر التحقق من إعداد الخدمة';
    setSystemStatusTone(el,'warn');
- }else if(d.status==='ready'){
-   const ms=Number(d?.latency?.catalogMs);
-   const latencyText=Number.isFinite(ms)
-     ? (en?' • catalog ':' • الكتالوج ')+ms+'ms'
-     : '';
-   const analysisBasis=d?.verification?.analysis==='configuration_only'
-     ? (en?' • analysis configured':' • التحليل مهيأ')
-     : '';
-   const version=d?.version?' • '+d.version:'';
-   const commit=d?.deployment?.commit?' • '+d.deployment.commit:'';
-   el.textContent=(en?'● Core services ready':'● الخدمات الأساسية جاهزة')+analysisBasis+latencyText+version+commit;
-   setSystemStatusTone(el,'ok');
- }else if(d.status==='degraded'){
+ }else if(d.configured?.analysis===true && d.configured?.catalog===true){
    el.textContent=en
-     ? '⚠ Analysis is configured, but catalog service is currently limited'
-     : '⚠ التحليل مهيأ، لكن خدمة الكتالوج محدودة حاليًا';
-   setSystemStatusTone(el,'warn');
+     ? '● Core services configured • Provider connectivity not tested'
+     : '● الخدمات الأساسية مهيأة • لم يُختبر الاتصال بالمزودين';
+   setSystemStatusTone(el,'ok');
  }else{
    el.textContent=en
-     ? '⚠ Some required services are not ready'
-     : '⚠ بعض الخدمات المطلوبة غير جاهزة';
+     ? '⚠ Some required services are not configured • Provider connectivity not tested'
+     : '⚠ بعض الخدمات المطلوبة غير مهيأة • لم يُختبر الاتصال بالمزودين';
    setSystemStatusTone(el,'warn');
  }
 }
@@ -1947,14 +1935,19 @@ async function checkSystemHealth(){
  try{
    let r,d;
    try{
-     r=await fetch('/api/health?market=US&locale=en-US&currency=USD',{cache:'no-store',signal:controller.signal});
+     r=await fetch('/api/readiness?market=US&locale=en-US&currency=USD',{cache:'no-store',signal:controller.signal});
      d=await r.json();
    }finally{
      clearTimeout(timer);
    }
    if(run!==healthCheckRun)return;
-   window.wafferVerifiedMarketPricing=d?.capabilities?.verifiedMarketPricing===true;
-   window.wafferSandboxPricingPreview=d?.capabilities?.sandboxPricingPreview===true;
+   // Configuration only: this endpoint never probes paid providers. Live diagnostics remain /api/health.
+   if(!r.ok || d?.ok!==true || d?.service!=='waffer-readiness' ||
+      typeof d?.configured?.analysis!=='boolean' || typeof d?.configured?.catalog!=='boolean'){
+     throw new Error('Invalid service configuration response');
+   }
+   window.wafferVerifiedMarketPricing=d?.configured?.pricing===true;
+   window.wafferSandboxPricingPreview=d?.pricingRuntime?.sandboxReady===true;
    if((window.wafferVerifiedMarketPricing || window.wafferSandboxPricingPreview) && analysis){
      void refreshVerifiedPricing(analysisRunId);
    }else if(typeof window.wafferRenderPricingSummary==='function'){
