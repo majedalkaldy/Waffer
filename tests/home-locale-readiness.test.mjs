@@ -6,19 +6,19 @@ import {t} from '../lib/i18n.js';
 const read = file => readFileSync(new URL('../' + file, import.meta.url), 'utf8');
 const app = read('app.js');
 const renderer = app.slice(app.indexOf('let healthCheckRun=0;'), app.indexOf('async function checkSystemHealth(){'));
-for (const [status, en, ar, tone] of [
-  ['checking', /Checking service readiness/, /جارٍ التحقق/, 'warn'],
-  ['ready', /Core services ready.*analysis configured.*catalog 12ms/, /الخدمات الأساسية جاهزة.*التحليل مهيأ.*الكتالوج 12ms/, 'ok'],
-  ['degraded', /catalog service is currently limited/, /خدمة الكتالوج محدودة/, 'warn'],
-  ['unavailable', /Some required services are not ready/, /بعض الخدمات المطلوبة غير جاهزة/, 'warn'],
-  ['request_error', /Could not verify service status/, /تعذر التحقق من حالة الخدمة/, 'warn']
+for (const [status, configured, en, ar, tone] of [
+  ['checking', {}, /Checking service configuration/, /جارٍ التحقق/, 'warn'],
+  ['not_promotion_ready', {analysis: true, catalog: true}, /Core services configured.*Provider connectivity not tested/, /الخدمات الأساسية مهيأة.*لم يُختبر الاتصال بالمزودين/, 'ok'],
+  ['not_promotion_ready', {analysis: true, catalog: false}, /Some required services are not configured.*Provider connectivity not tested/, /بعض الخدمات المطلوبة غير مهيأة/, 'warn'],
+  ['not_promotion_ready', {analysis: false, catalog: false}, /Some required services are not configured/, /بعض الخدمات المطلوبة غير مهيأة/, 'warn'],
+  ['request_error', {}, /Could not verify service configuration/, /تعذر التحقق من إعداد الخدمة/, 'warn']
 ]) {
   test(`cached ${status} readiness re-renders in either language without another request`, () => {
     const classes = new Set();
     const el = {textContent: '', classList: {remove: (...names) => names.forEach(n => classes.delete(n)), add: n => classes.add(n)}};
     const context = vm.createContext({window: {wafferLocale: 'en-US'}, document: {getElementById: () => el}, fetch: () => assert.fail('Locale rendering must not fetch')});
     vm.runInContext(renderer, context);
-    context.healthFixture = {status, latency: {catalogMs: 12}, verification: {analysis: 'configuration_only'}, deployment: {commit: 'abc123'}};
+    context.healthFixture = {status, configured};
     vm.runInContext('systemHealthState=healthFixture; window.wafferRenderSystemHealth();', context);
     assert.match(el.textContent, en);
     assert.deepEqual([...classes], [`system-status-${tone}`]);

@@ -5,7 +5,6 @@ import {mkdir, writeFile, readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {chromium} from 'playwright';
 import {startFixtureServer} from './fixture-server.mjs';
-import {isExpectedHealthResourceError} from './expected-resource-error.mjs';
 import {input, vehicle} from '../fixtures/ebay-runtime-fixture.mjs';
 import {buildFieldTestPdfBytes} from '../../lib/field-test-fixtures.js';
 
@@ -62,8 +61,8 @@ async function runFixture(t, viewport, scenario, exercise) {
   const externalRequests = [];
   const clientLeaks = [];
   const responseChecks = [];
-  const healthResponses = [];
-  const healthUrl = `${server.origin}/api/health?market=US&locale=en-US&currency=USD`;
+  const readinessResponses = [];
+  const readinessUrl = `${server.origin}/api/readiness?market=US&locale=en-US&currency=USD`;
   page.on('pageerror', error => runtimeErrors.push({
     kind: 'pageerror', message: error.message, stack: error.stack || null, ...errorContext(page)
   }));
@@ -93,7 +92,7 @@ async function runFixture(t, viewport, scenario, exercise) {
   page.on('response', response => {
     if (!/javascript|json|text\/html/.test(response.headers()['content-type'] || '')) return;
     responseChecks.push(response.text().then(body => {
-      if (response.url() === healthUrl) healthResponses.push({url: response.url(), status: response.status(), bodyStatus: JSON.parse(body).status});
+      if (response.url() === readinessUrl) readinessResponses.push({url: response.url(), status: response.status(), bodyStatus: JSON.parse(body).status});
       if (SECRET_PATTERNS.test(body)) clientLeaks.push(response.url());
     }).catch(() => {})); // An intentionally aborted obsolete response has no readable body.
   });
@@ -105,11 +104,12 @@ async function runFixture(t, viewport, scenario, exercise) {
     await page.waitForFunction(() => typeof window.wafferRenderPricingListings === 'function' && !document.getElementById('make').disabled);
     await assertNoOverflow(page);
     setPhase(page, 'exercise scenario');
-    await exercise({page, server, healthResponses});
+    await exercise({page, server, readinessResponses});
     setPhase(page, 'final layout and runtime assertions');
     await assertNoOverflow(page);
+    assert.equal(server.state.requests.filter(request => request.path === '/api/health').length, 0, 'Startup, reloads and UI flows must never invoke live health');
     await Promise.all(responseChecks);
-    const unexpectedErrors = runtimeErrors.filter(entry => !isExpectedHealthResourceError(entry, {scenario, healthUrl, observedResponses: healthResponses}));
+    const unexpectedErrors = runtimeErrors;
     assert.deepEqual(unexpectedErrors, [], 'Unexpected browser runtime/console errors');
     assert.deepEqual(externalRequests, [], 'Requests must stay on the loopback fixture origin');
     assert.deepEqual(clientLeaks, [], 'No credential/token/configuration secrets may reach the client');
@@ -128,7 +128,7 @@ async function runFixture(t, viewport, scenario, exercise) {
       await page.screenshot({path: resolve(directory, `${name}.png`), fullPage: true});
       await writeFile(resolve(directory, `${name}.json`), JSON.stringify({
         notice: 'SYNTHETIC TEST ONLY. No live/provider release evidence.',
-        error: error.stack, ...errorContext(page), runtimeErrors, healthResponses, externalRequests, clientLeaks,
+        error: error.stack, ...errorContext(page), runtimeErrors, readinessResponses, externalRequests, clientLeaks,
         requests: server.state.requests, unexpected: server.state.unexpected, failures: server.state.failures,
         pricingStatuses: server.state.prices.map(record => ({scenario: record.scenario, status: record.response?.status, completed: record.completed}))
       }, null, 2));
@@ -217,13 +217,43 @@ for (const viewport of VIEWPORTS) {
       assert.equal(await page.evaluate(()=>window.wafferPricingResults.length),0);
     });
   });
+  test(`${viewport.name}: cold startup, reconnect and reload use configuration only`, async t => {
+    await runFixture(t, viewport, 'matched', async ({page, server}) => {
+      await page.waitForFunction(() => document.getElementById('systemStatus').textContent.includes('Provider connectivity not tested'));
+      assert.match(await page.locator('#systemStatus').innerText(), /Core services configured/);
+      assert.doesNotMatch(await page.locator('#systemStatus').innerText(), /services ready|catalog.*ms/i);
+      const requests = () => server.state.requests.filter(request => request.path === '/api/readiness').length;
+      const initial = requests();
+      assert.equal(initial, 1);
+      await page.evaluate(() => window.dispatchEvent(new Event('online')));
+      await eventually(() => requests() === initial + 1, 'Reconnect must use configuration-only readiness');
+      await page.reload();
+      await page.waitForFunction(() => document.getElementById('systemStatus').textContent.includes('Provider connectivity not tested'));
+      assert.equal(requests(), initial + 2);
+      assert.equal(server.state.transports.length, 0, 'Startup must not trigger pricing');
+    });
+  });
+  test(`${viewport.name}: invalid readiness response fails closed in both locales`, async t => {
+    await runFixture(t, viewport, 'matched', async ({page, server}) => {
+      await page.route('**/api/readiness?*', route => route.fulfill({
+        status: 200, contentType: 'application/json', body: JSON.stringify({ok: true, configured: {pricing: true}})
+      }));
+      await page.reload();
+      await page.waitForFunction(() => document.getElementById('systemStatus').textContent.includes('Could not verify service configuration'));
+      assert.equal(await page.evaluate(() => window.wafferVerifiedMarketPricing), false);
+      assert.equal(await page.evaluate(() => window.wafferSandboxPricingPreview), false);
+      await page.locator('#localeSelect').selectOption('ar-US');
+      assert.match(await page.locator('#systemStatus').innerText(), /تعذر التحقق من إعداد الخدمة/);
+      assert.equal(server.state.transports.length, 0);
+    });
+  });
   test(`${viewport.name}: visible home EN-AR-EN-AR switches keep layout and readiness/accessibility text localized`, {timeout: 30_000}, async t => {
-    await runFixture(t, viewport, 'health-not-ready', async ({page, server, healthResponses}) => {
-      setPhase(page, 'home locale: await completed not-ready health response');
-      await page.waitForFunction(() => document.getElementById('systemStatus').textContent.includes('Some required services are not ready'));
-      await eventually(() => healthResponses.some(response => response.status === 503 && response.bodyStatus === 'unavailable'), 'Browser must observe the actual unavailable HTTP 503 health fixture');
-      const healthRequestCount = server.state.requests.filter(request => request.path === '/api/health').length;
-      assert.ok(healthRequestCount > 0);
+    await runFixture(t, viewport, 'health-not-ready', async ({page, server, readinessResponses}) => {
+      setPhase(page, 'home locale: await completed missing-configuration response');
+      await page.waitForFunction(() => document.getElementById('systemStatus').textContent.includes('Some required services are not configured'));
+      await eventually(() => readinessResponses.some(response => response.status === 200 && response.bodyStatus === 'not_promotion_ready'), 'Browser must observe the configuration-only readiness fixture');
+      const readinessRequestCount = server.state.requests.filter(request => request.path === '/api/readiness').length;
+      assert.ok(readinessRequestCount > 0);
       for (const locale of ['en-US', 'ar-US', 'en-US', 'ar-US']) {
         setPhase(page, `home locale: ${locale} with not-ready services`);
         await page.locator('#home').waitFor({state: 'visible'});
@@ -234,7 +264,7 @@ for (const viewport of VIEWPORTS) {
         const arabic = locale === 'ar-US';
         assert.equal(await page.locator('html').getAttribute('dir'), arabic ? 'rtl' : 'ltr');
         assert.equal(await page.locator('html').getAttribute('lang'), arabic ? 'ar' : 'en');
-        const warning = arabic ? 'بعض الخدمات المطلوبة غير جاهزة' : 'Some required services are not ready';
+        const warning = arabic ? 'بعض الخدمات المطلوبة غير مهيأة' : 'Some required services are not configured';
         await page.waitForFunction(expected => document.getElementById('systemStatus').textContent.includes(expected), warning);
         const readiness = await page.locator('#systemStatus').innerText();
         const vinLabel = await page.locator('label:has(#vinLabel)').innerText();
@@ -242,7 +272,7 @@ for (const viewport of VIEWPORTS) {
         const uploadAria = await page.locator('#uploadBox').getAttribute('aria-label');
         assert.match(await page.locator('#systemStatus').getAttribute('class'), /system-status-warn/);
         if (arabic) {
-          assert.doesNotMatch(readiness, /Some required services are not ready/);
+          assert.doesNotMatch(readiness, /Some required services are not configured/);
           assert.match(vinLabel, /اختياري/);
           assert.doesNotMatch(vinLabel, /optional/i);
           assert.match(placeholder, /[\u0600-\u06ff]/);
@@ -262,12 +292,12 @@ for (const viewport of VIEWPORTS) {
         assert.equal(await page.evaluate(() => window.wafferVerifiedMarketPricing), false);
         assert.equal(await page.evaluate(() => window.wafferSandboxPricingPreview), false);
       }
-      assert.equal(server.state.requests.filter(request => request.path === '/api/health').length, healthRequestCount,
-        'Locale switches should render cached health without repeating the health request');
+      assert.equal(server.state.requests.filter(request => request.path === '/api/readiness').length, readinessRequestCount,
+        'Locale switches should render cached configuration without repeating the readiness request');
       setPhase(page, 'home locale: reload persisted Arabic preference');
       await page.reload();
       await page.locator('#home').waitFor({state: 'visible'});
-      await page.waitForFunction(() => document.documentElement.dir === 'rtl' && document.getElementById('systemStatus').textContent.includes('بعض الخدمات المطلوبة غير جاهزة'));
+      await page.waitForFunction(() => document.documentElement.dir === 'rtl' && document.getElementById('systemStatus').textContent.includes('بعض الخدمات المطلوبة غير مهيأة'));
       assert.equal(await page.locator('#localeSelect').inputValue(), 'ar-US');
       assert.equal(await page.locator('html').getAttribute('lang'), 'ar');
       assert.match(await page.locator('label:has(#vinLabel)').innerText(), /اختياري/);
