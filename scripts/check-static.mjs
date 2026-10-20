@@ -77,6 +77,7 @@ const required = [
   'tests/catalog-data-cdn-cache.test.mjs',
   'lib/price-provider.js',
   'lib/price-providers/ebay-us.js',
+  'lib/price-providers/ebay-affiliate-config.js',
   'lib/price-providers/ebay-taxonomy-resolver.js',
   'lib/price-providers/ebay-shadow-registry.js',
   'lib/price-providers/ebay-pilot.js',
