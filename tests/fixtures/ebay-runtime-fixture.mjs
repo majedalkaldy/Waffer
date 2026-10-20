@@ -21,7 +21,7 @@ export function fixtureTransport({environment='production', item={}, compatibili
   const calls=[];
   let searched=0;
   const fetchImpl=async(url,options={})=>{
-    calls.push({url:String(url),method:options.method,body:options.body,redirect:options.redirect});
+    calls.push({url:String(url),method:options.method,headers:{...options.headers},body:options.body,redirect:options.redirect});
     if(delay) return new Promise(()=>{});
     let payload;
     let code=200;
