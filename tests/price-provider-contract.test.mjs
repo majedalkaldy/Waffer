@@ -326,7 +326,7 @@ test('sandbox mock diagnostics stay test-only and can never become verified pric
     provider,
     marketConfig:{market:'US',locale:'en-US',currency:'USD'},
     part:{name:'User part',number:'USER-123'},
-    vehicle:{vehicleId:'v1',make:'Ford',model:'F-150',year:'2024',trim:'XLT',engine:'3.5L V6'},
+    vehicle:{vehicleId:'9445',make:'Ford',model:'F-150',year:'2024',trim:'XLT',engine:'3.5L V6'},
     now:Date.parse('2026-10-29T18:35:39.000Z')
   });
 
