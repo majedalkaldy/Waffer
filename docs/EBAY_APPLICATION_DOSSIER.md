@@ -123,7 +123,7 @@ Inspect exact identity, canonical fitment, current inventory, seller package qua
 npm run ebay:estimate-pilot-volume -- docs/EBAY_PILOT_VOLUME_PLAN.json
 ```
 
-The current scenarios estimate **221 calls for 20 cases**, **1,402 calls for 35 cases**, and **7,200 calls for 50 cases**, including explicit OAuth budgets of 1, 2, and 100 requests respectively. The 20-case plan is one pass; the 35/50-case plans budget one initial pass plus one complete manual rerun per case. No automatic retry behavior is implied.
+The current scenarios budget **441 requests for 20 cases**, **2,802 requests for 35 cases**, and **14,300 requests for 50 cases**, including one automatic retry per non-OAuth request and explicit OAuth budgets of 1, 2, and 100 respectively. Baseline counts before automatic HTTP retries remain 221, 1,402, and 7,200. The 20-case plan is one pass; the 35/50-case plans budget one initial pass plus one complete manual rerun per case. Manual reruns are separate from automatic HTTP retries; use `requestBudget.total`, not the legacy baseline `calls.total`.
 
 Category Taxonomy resolution is reused only within a single adapter lookup; the model assumes no cross-case or cross-run cache savings. A fully resolved category costs one properties request and four values requests in this plan. Early candidate rejection or the first accepted offer may reduce actual calls; token expiry, process restarts, or further reruns require revised assumptions. These totals are batch budgets, not rate-limit guarantees. If a batch is run entirely within one hour, hourly calls equal its batch total.
 
@@ -137,7 +137,7 @@ The output is a model driven by documented assumptions, not measured traffic, a 
 npm run ebay:estimate-volume -- docs/EBAY_GROWTH_CHECK_INPUT.json
 ```
 
-The existing estimator reports Browse search, item-detail, compatibility, and Taxonomy method estimates. Reconcile model scope, caching, retries, authentication overhead, peak concentration, and any limits against the actual implementation and intended use before owner review. Neither estimator submits an application or establishes approval.
+The daily estimator reports Browse search, item-detail, compatibility, and Taxonomy baseline estimates plus explicit category, retry and OAuth budgets. Use `dailyRequestBudget.total` and `peakHourlyRequestBudget.total`; legacy `daily`/`peakHourly` exclude retries and OAuth. See [accounting assumptions and limitations](EBAY_VOLUME_ACCOUNTING.md). Reconcile model scope, caching, retries, authentication overhead, peak concentration, and any limits against the actual implementation and intended use before owner review. Neither estimator submits an application or establishes approval.
 
 ## Application/support material still to assemble
 

@@ -83,14 +83,16 @@ npm run ebay:estimate-pilot-volume -- docs/EBAY_PILOT_VOLUME_PLAN.json
 This command is offline. Its assumptions/output are not measured traffic, a live pilot, a validated production forecast, or an approved Growth Check submission. Running the synthetic page generates no eBay API traffic to measure.
 
 Current illustrative batch totals, including explicit OAuth budgets:
-- 20 cases, one pass: **221 calls** (3 candidate items, 2 eligible checks, 1 category per attempt; 1 OAuth request).
-- 35 cases, one pass plus one full manual rerun each: **1,402 calls** (5 candidates, 4 eligible checks, 2 categories per attempt; 2 OAuth requests).
-- 50 cases, cold-category stress budget with one full manual rerun each: **7,200 calls** (10 candidates/checks/categories per attempt; 100 OAuth requests).
+- 20 cases, one pass: **441 requests including automatic retries** (3 candidate items, 2 eligible checks, 1 category per attempt; 1 OAuth request).
+- 35 cases, one pass plus one full manual rerun each: **2,802 requests including automatic retries** (5 candidates, 4 eligible checks, 2 categories per attempt; 2 OAuth requests).
+- 50 cases, cold-category stress budget with one full manual rerun each: **14,300 requests including automatic retries** (10 candidates/checks/categories per attempt; 100 OAuth requests).
 
-The current adapter reuses category Taxonomy resolution only within a single lookup. No cross-case or cross-run cache reuse is assumed. Each fully resolved category is budgeted as one properties request plus four values requests. Reruns are a planning allowance for a complete **manual** rerun, not implemented automatic retries. Rejections or the first accepted offer may stop candidate processing early. Token expiry, process restarts, or additional reruns require revisiting the plan; these totals are not rate-limit guarantees. If the whole batch runs within one hour, its hourly call total equals the batch total.
+The current adapter reuses category Taxonomy resolution only within a single lookup. No cross-case or cross-run cache reuse is assumed. Each fully resolved category is budgeted as one properties request plus four values requests. Reruns are a planning allowance for a complete **manual** rerun, separate from the automatic HTTP retries budgeted here. Rejections or the first accepted offer may stop candidate processing early. Token expiry, process restarts, or additional reruns require revisiting the plan; these totals are not rate-limit guarantees. If the whole batch runs within one hour, its hourly call total equals the batch total.
 
 `docs/EBAY_GROWTH_CHECK_INPUT.json` remains an incomplete zero-placeholder application input. It must not be treated as a completed forecast or silently populated from the demo fixtures. Real account approval, real case evidence, reviewed planning assumptions, and submission authorization remain separate.
 
 ## Reviewer report checklist
 
 Record the five scenario outcomes, repeat/reset results, desktop/mobile evidence, keyboard findings, network/isolation findings, normal pricing regression, exact build/revision, and the actual automated checks run. Note any test that was blocked or not run. A concise report with retained synthetic labels is sufficient; do not include credentials or personal data.
+
+Volume accounting: these scenario totals budget one automatic retry for every non-OAuth request, separately from manual reruns; OAuth is not doubled. See [offline accounting](EBAY_VOLUME_ACCOUNTING.md) for baseline compatibility and limitations.
