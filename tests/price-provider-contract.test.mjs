@@ -290,3 +290,52 @@ test('saving is calculated only from a validated offer and never from market med
   assert.equal(noOffer.amount, null);
   assert.equal(noOffer.status, 'NOT_CALCULATED');
 });
+
+
+test('sandbox mock diagnostics stay test-only and can never become verified pricing', async () => {
+  const provider={
+    id:'ebay-us-browse-shadow-sandbox',
+    environment:'sandbox',
+    label:'eBay Sandbox',
+    async lookup(){
+      return {
+        checkedAt:'2026-10-29T18:35:39.000Z',
+        sourceLabel:'eBay Sandbox: official compatibility mock',
+        sandboxPreview:{
+          mock:true,
+          mockScenario:'EBAY_OFFICIAL_COMPATIBILITY_SEARCH',
+          query:'brakes',
+          categoryId:'33559',
+          itemCount:50,
+          total:12000,
+          firstItemId:'v1|183785336317|0',
+          compatibilityMatch:'EXACT',
+          vehicle:{
+            year:'2012',
+            make:'Honda',
+            model:'Civic',
+            trim:'EX Sedan 4-Door',
+            engine:'1.8L 1799CC l4 GAS SOHC Naturally Aspirated'
+          }
+        }
+      };
+    }
+  };
+
+  const result=await lookupVerifiedPricing({
+    provider,
+    marketConfig:{market:'US',locale:'en-US',currency:'USD'},
+    part:{name:'User part',number:'USER-123'},
+    vehicle:{vehicleId:'v1',make:'Ford',model:'F-150',year:'2024',trim:'XLT',engine:'3.5L V6'},
+    now:Date.parse('2026-10-29T18:35:39.000Z')
+  });
+
+  assert.equal(result.status,'SANDBOX_ONLY');
+  assert.equal(result.environment,'sandbox');
+  assert.equal(result.marketRange,null);
+  assert.equal(result.bestOffer,null);
+  assert.equal(result.matchedListing,null);
+  assert.equal(result.sandboxPreview.mock,true);
+  assert.equal(result.sandboxPreview.compatibilityMatch,'EXACT');
+  assert.equal(result.sandboxPreview.vehicle.make,'Honda');
+});
