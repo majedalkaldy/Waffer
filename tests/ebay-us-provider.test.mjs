@@ -142,18 +142,25 @@ test('eBay shadow provider preserves source ordering and accepts only explicit M
 });
 
 
-test('eBay Sandbox mode uses sandbox OAuth and does not require production approval', async () => {
+test('eBay Sandbox mode uses the documented compatibility mock and never binds it to the user part', async () => {
   const calls=[];
   const fetchImpl=async(url)=>{
     calls.push(String(url));
     return {
       ok:true,
       status:200,
+      headers:{get(){return null;}},
       async json(){
         if(String(url).includes('/identity/v1/oauth2/token')) {
           return {access_token:'sandbox-token',expires_in:7200};
         }
-        return {itemSummaries:[]};
+        return {
+          total:12000,
+          itemSummaries:[{
+            itemId:'v1|183785336317|0',
+            compatibilityMatch:'EXACT'
+          }]
+        };
       }
     };
   };
@@ -163,18 +170,31 @@ test('eBay Sandbox mode uses sandbox OAuth and does not require production appro
     clientSecret:'sandbox-secret',
     environment:'sandbox',
     productionAccessApproved:false,
-    fetchImpl
+    fetchImpl,
+    now:()=>Date.parse('2026-10-29T18:35:39.000Z')
   });
 
   const result=await provider.lookup({
     market:'US',
     currency:'USD',
-    part:{name:'brake pads',number:'BC123'},
-    vehicle:{year:2024,make:'Ford',model:'F-150'}
+    part:{name:'user brake pads',number:'USER-PART-999',manufacturer:'User Brand'},
+    vehicle:{year:2024,make:'Ford',model:'F-150',trim:'XLT',engine:'3.5L V6'}
   });
 
   assert.equal(provider.environment,'sandbox');
   assert.equal(result.bestOffer,null);
+  assert.equal(result.matchedListing,null);
+  assert.equal(result.sandboxPreview.mock,true);
+  assert.equal(result.sandboxPreview.mockScenario,'EBAY_OFFICIAL_COMPATIBILITY_SEARCH');
+  assert.equal(result.sandboxPreview.compatibilityMatch,'EXACT');
+  assert.equal(result.sandboxPreview.vehicle.year,'2012');
+  assert.equal(result.sandboxPreview.vehicle.make,'Honda');
+  assert.equal(result.sandboxPreview.vehicle.model,'Civic');
   assert.ok(calls[0].startsWith('https://api.sandbox.ebay.com/identity/v1/oauth2/token'));
   assert.ok(calls[1].startsWith('https://api.sandbox.ebay.com/buy/browse/v1/item_summary/search'));
+  assert.ok(calls[1].includes('q=brakes'));
+  assert.ok(calls[1].includes('category_ids=33559'));
+  assert.ok(calls[1].includes('compatibility_filter='));
+  assert.equal(calls[1].includes('USER-PART-999'),false);
+  assert.equal(calls.length,2);
 });

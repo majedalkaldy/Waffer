@@ -64,7 +64,10 @@ for (const value of [campaign, '8008550']) test('Sandbox registries ignore produ
   for (const factory of [createConfiguredEbayRuntimeProvider, createConfiguredEbaySandboxProvider]) {
     const transport = fixtureTransport({ environment: 'sandbox' });
     const provider = factory({ ...sandboxEnv, EBAY_AFFILIATE_CAMPAIGN_ID: value }, { fetchImpl: transport.fetchImpl });
-    assert.ok((await provider.lookup(input)).matchedListing);
+    const result = await provider.lookup(input);
+    assert.equal(result.matchedListing, null);
+    assert.equal(result.bestOffer, null);
+    assert.equal(result.sandboxPreview?.mock, true);
     assert.ok(transport.calls.every(c => c.url.startsWith('https://api.sandbox.ebay.com/') && c.headers['X-EBAY-C-ENDUSERCTX'] === undefined));
   }
 });

@@ -44,3 +44,41 @@ test('only tracked listing links carry conditional compensation disclosure',()=>
  assert.match(text(root),/A purchase may result in affiliate compensation/);assert.match(find(root,'a')[0].rel,/sponsored/);
  renderPricingListings(root,[data],{now:fixtureNow,locale:'ar-US'});assert.match(text(root),/تعويض تسويق بالعمولة/);
 });
+
+
+test('official eBay Sandbox mock renders connectivity evidence without fake listing economics',()=>{
+ const root=dom();
+ const data={
+   part:{number:'USER-123'},
+   status:'SANDBOX_TEST_DATA_ONLY',
+   pricingProvider:{environment:'sandbox'},
+   sandboxPreview:{
+     mock:true,
+     mockScenario:'EBAY_OFFICIAL_COMPATIBILITY_SEARCH',
+     query:'brakes',
+     categoryId:'33559',
+     itemCount:50,
+     total:12000,
+     firstItemId:'v1|183785336317|0',
+     compatibilityMatch:'EXACT',
+     vehicle:{
+       year:'2012',
+       make:'Honda',
+       model:'Civic',
+       trim:'EX Sedan 4-Door',
+       engine:'1.8L 1799CC l4 GAS SOHC Naturally Aspirated'
+     },
+     checkedAt:new Date(fixtureNow).toISOString()
+   }
+ };
+ renderPricingListings(root,[data],{now:fixtureNow});
+ const rendered=text(root);
+ assert.match(rendered,/eBay Sandbox compatibility test/);
+ assert.match(rendered,/SANDBOX MOCK DATA ONLY/);
+ assert.match(rendered,/Honda/);
+ assert.match(rendered,/EXACT/);
+ assert.match(rendered,/not the user's part/);
+ assert.doesNotMatch(rendered,/Price per listing unit/);
+ assert.doesNotMatch(rendered,/Seller:/);
+ assert.equal(find(root,'a').length,0);
+});
