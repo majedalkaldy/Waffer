@@ -78,7 +78,13 @@ test('official eBay Sandbox mock renders connectivity evidence without fake list
  assert.match(rendered,/Honda/);
  assert.match(rendered,/EXACT/);
  assert.match(rendered,/not the user's part/);
+ assert.match(rendered,/OAuth\/Browse Sandbox mock test only/);
+ assert.doesNotMatch(rendered,/Taxonomy/);
  assert.doesNotMatch(rendered,/Price per listing unit/);
  assert.doesNotMatch(rendered,/Seller:/);
+ assert.equal(find(root,'a').length,0);
+ renderPricingListings(root,[data],{now:fixtureNow,locale:'ar-US'});
+ assert.match(text(root),/اختبار OAuth وBrowse ببيانات Sandbox الوهمية فقط/);
+ assert.doesNotMatch(text(root),/Taxonomy/);
  assert.equal(find(root,'a').length,0);
 });
