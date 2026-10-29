@@ -1,6 +1,6 @@
 # eBay access plan for Waffer
 
-Updated: 2026-10-03
+Updated: 2026-10-29
 
 ## Goal
 
@@ -18,13 +18,16 @@ Waffer supports an isolated eBay Sandbox path using:
 
 Sandbox does **not** activate user-facing verified pricing.
 
-Use it to validate:
-- client-credentials OAuth;
-- Browse search;
-- item detail retrieval;
-- eBay Motors Taxonomy property resolution;
-- `check_compatibility`;
-- Waffer normalization and failure handling.
+Validated live on 2026-10-29:
+- client-credentials OAuth: PASS (HTTP 200);
+- eBay Motors Taxonomy compatibility properties: PASS (HTTP 200);
+- Browse compatible-item search using eBay's documented Sandbox mock scenario: PASS (HTTP 200);
+- compatibility result in mock search: PASS (`EXACT`);
+- item-resource retrieval and `checkCompatibility` against the returned mock IDs: Sandbox limitation (HTTP 404 because those mock IDs are not retrievable item resources).
+
+See `docs/EBAY_SANDBOX_LIVE_RESULT_2026-10-29.md`.
+
+Sandbox remains test-only and does not activate verified pricing.
 
 ### Production
 
@@ -41,9 +44,9 @@ Even with all four present, `verifiedMarketPricing` remains false until Waffer's
 
 According to eBay's current Buy API documentation, production access is restricted and requires an approved buying application. The practical sequence is:
 
-1. eBay Developer account and application keysets.
-2. eBay Partner Network / Buy API application where applicable.
-3. Working Sandbox integration.
+1. eBay Developer account and Sandbox keyset. **Completed.**
+2. Working Sandbox OAuth/Taxonomy/Browse integration. **Completed on 2026-10-29.**
+3. eBay Partner Network / Buy API application where applicable.
 4. Application Growth Check for restricted Production APIs.
 5. eBay review/support process and any required agreements.
 6. Production keyset enabled for the approved Buy API use case.
