@@ -141,7 +141,7 @@ export default async function handler(req,res){
       let itemLookupMode='REST_ITEM_ID';
 
       if(!item.ok && item.status===404){
-        const legacyItemId=(itemId.match(/v1\\|([^|]+)\\|/)||[])[1]||'';
+        const legacyItemId=String(itemId).split('|')[1]||'';
         if(legacyItemId){
           const legacyQuery=new URLSearchParams({legacy_item_id:legacyItemId});
           const legacy=await ebayGet(
