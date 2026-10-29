@@ -1,6 +1,6 @@
 # Waffer — eBay Buy API Application Dossier
 
-Prepared: 2026-10-03 · Revised: 2026-10-06
+Prepared: 2026-10-03 · Revised: 2026-10-29
 
 **Draft preparation packet, not a completed application or proof of eBay approval.**
 This document does not authorize accepting eBay contracts, policies, or legal terms on behalf of the account owner.
@@ -10,7 +10,8 @@ This document does not authorize accepting eBay contracts, policies, or legal te
 - **Implemented in code:** server-side eBay Sandbox/Production shadow adapter, OAuth client-credentials flow, Browse search/item/compatibility calls, Taxonomy resolver, readiness checks, input preflight, batch pilot runner, and regression tests.
 - **Wired behind disabled release gates:** `/api/price-compare` uses the gated eBay runtime through `lib/price-provider.js`. Production requires explicit provider mode, approval and reviewed real pilot evidence; Sandbox is isolated and cannot be enabled in production. The default disabled path returns `WAITING_FOR_VERIFIED_PRICE_SOURCE`, null market prices/offer/saving, and `NOT_CALCULATED` savings. See [runtime integration](EBAY_RUNTIME_INTEGRATION.md).
 - **Synthetic reviewer UI:** `/review-demo/` is an isolated static route using fictional vehicle, part, listing, and price fixtures. It illustrates success, empty, error, stale, and uncertain-fitment states without remote service calls, checkout, or listing link-out. See [reviewer instructions](SYNTHETIC_REVIEW_DEMO.md).
-- **Unverified external prerequisites:** eBay Developer account/keyset status, successful Sandbox OAuth/API execution, and Production Buy API approval have not been established by this packet. Configuration flags are not evidence of provider approval.
+- **Verified Sandbox evidence (2026-10-29):** eBay Sandbox application credentials were configured in Vercel Preview and successfully authenticated with OAuth. Motors Taxonomy compatibility properties returned Year/Make/Model/Trim/Engine, and the documented Browse compatibility mock returned HTTP 200 with an `EXACT` match. The mock item IDs were not retrievable through getItem/getItemByLegacyId/checkCompatibility, which is recorded as a Sandbox mock-data limitation rather than Production evidence. See `EBAY_SANDBOX_LIVE_RESULT_2026-10-29.md`.
+- **Still unverified externally:** Production Buy API approval, EPN/commercial status where applicable, Production credentials, real Production listing retrieval, and a real Production shadow pilot.
 - **Release remains gated:** `verifiedMarketPricing` remains disabled. Neither the synthetic UI nor a passing offline test is evidence of live inventory, real pricing, actual fitment, a completed provider pilot, or commercial readiness.
 
 The synthetic route, credentialed Sandbox integration, and authorized Production shadow pilot are three separate evidence stages. Do not describe the synthetic route as an eBay Sandbox integration or present its screenshots as API-run evidence.
@@ -81,9 +82,13 @@ Open `/review-demo/` on the build under review and follow [SYNTHETIC_REVIEW_DEMO
 
 Reviewer screenshots can support a discussion of the proposed UX only. They must retain the synthetic labels and must not be submitted as evidence of successful Sandbox calls, live quotations, inventory, fitment, Production access, or launch readiness. A route in a local checkout does not establish a deployed/reviewer-accessible URL; verify the exact reviewed build before sharing one.
 
-## Credentialed Sandbox validation still required
+## Credentialed Sandbox validation completed
 
-The repository contains the adapter, Taxonomy resolver, readiness gate, batch runner, and tests. Sandbox credentials and successful Sandbox API results are unverified. After the owner confirms access and an authorized operator configures credentials securely, prepare real Sandbox inputs and run:
+The repository contains the adapter, Taxonomy resolver, readiness gate, batch runner, and tests. On 2026-10-29, the owner created a Sandbox keyset and the credentials were configured securely in Vercel Preview. A live smoke run then confirmed OAuth, Taxonomy and the documented Browse compatibility mock.
+
+Observed live results are recorded in `docs/EBAY_SANDBOX_LIVE_RESULT_2026-10-29.md`.
+
+For any future Sandbox batch work, use:
 
 ```bash
 npm run ebay:validate-cases -- sandbox <completed-sandbox-cases.json>
@@ -93,7 +98,7 @@ npm run ebay:pilot -- sandbox <completed-sandbox-cases.json> <sandbox-output.jso
 
 `docs/EBAY_PILOT_CASES.json` is an incomplete placeholder, not a runnable approved case set. Keep the output explicitly labeled `environment: "sandbox"`; Sandbox evidence cannot pass the Production pricing gate. Record the exact build, run date, redacted inputs/output, and observed success/failure results without exposing secrets.
 
-A support-case Sandbox walkthrough should be written only after a genuine authorized run. Identify the actual test entry point (currently the CLI), completed test cases, prerequisites, and reproducible results. Do not tell a reviewer that the normal public app runs eBay searches or offers link-out when it does not. A browser-connected Sandbox build remains additional work.
+A support-case Sandbox walkthrough can now reference the genuine authorized 2026-10-29 run. Identify the actual test entry point (currently the CLI), completed test cases, prerequisites, and reproducible results. Do not tell a reviewer that the normal public app runs eBay searches or offers link-out when it does not. A browser-connected Sandbox build remains additional work.
 
 ## Production shadow pilot still required
 
@@ -150,8 +155,8 @@ No login, key creation, legal acceptance, application submission, or Production 
 
 ## Current blockers
 
-1. **External status unverified:** the owner must establish Developer account/keyset status, Sandbox access, and any required Buy API/EPN/Production approvals.
-2. **Integration evidence missing:** execute and document authorized Sandbox calls; offline regression tests and fictional fixtures do not replace this.
+1. **Production approval still external:** Developer/Sandbox access is established, but any required Buy API/EPN/Production approvals remain outstanding.
+2. **Sandbox integration evidence captured:** OAuth, Taxonomy and official Browse mock search are documented; real Production item retrieval/checkCompatibility remains pending Production access.
 3. **Runtime wired, activation pending:** the server registry, API and listing UI are wired under `docs/EBAY_RUNTIME_INTEGRATION.md`. Production remains disabled; no live integration has been verified.
 4. **Pilot execution incomplete:** all 20 manufacturer candidates now have sourced required inputs. Exact eBay canonical identity, authorized real captures and listing checks remain required.
 5. **Traffic/application packet incomplete:** hypothetical pilot planning is available, but Growth Check inputs and submission materials still need owner review.
