@@ -136,18 +136,45 @@ export default async function handler(req,res){
 
     const itemId=String(summaries[0]?.itemId||'').trim();
     if(itemId){
-      const item=await ebayGet('/buy/browse/v1/item/'+encodeURIComponent(itemId),auth.token);
+      let item=await ebayGet('/buy/browse/v1/item/'+encodeURIComponent(itemId),auth.token);
+      let resolvedItemId=item.payload?.itemId||itemId;
+      let itemLookupMode='REST_ITEM_ID';
+
+      if(!item.ok && item.status===404){
+        const legacyItemId=(itemId.match(/v1\\|([^|]+)\\|/)||[])[1]||'';
+        if(legacyItemId){
+          const legacyQuery=new URLSearchParams({legacy_item_id:legacyItemId});
+          const legacy=await ebayGet(
+            '/buy/browse/v1/item/get_item_by_legacy_id?'+legacyQuery.toString(),
+            auth.token
+          );
+          if(legacy.ok){
+            item=legacy;
+            resolvedItemId=legacy.payload?.itemId||resolvedItemId;
+            itemLookupMode='LEGACY_ITEM_ID_FALLBACK';
+          }else{
+            report.legacyItemFallback={
+              ok:false,
+              status:legacy.status,
+              legacyItemId,
+              error:legacy.payload?.errors?.[0]?.message||legacy.payload?.message||null
+            };
+          }
+        }
+      }
+
       report.item={
         ok:item.ok,
         status:item.status,
-        itemId:item.payload?.itemId||itemId,
+        lookupMode:itemLookupMode,
+        itemId:item.payload?.itemId||resolvedItemId,
         title:item.payload?.title||null,
         categoryId:item.payload?.categoryId||null,
         error:item.ok?null:(item.payload?.errors?.[0]?.message||item.payload?.message||null)
       };
 
       const compat=await ebayPost(
-        '/buy/browse/v1/item/'+encodeURIComponent(itemId)+'/check_compatibility',
+        '/buy/browse/v1/item/'+encodeURIComponent(resolvedItemId)+'/check_compatibility',
         auth.token,
         {compatibilityProperties:[
           {name:'Year',value:'2012'},
