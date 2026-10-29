@@ -378,7 +378,9 @@ for (const viewport of VIEWPORTS) {
       assert.equal(response.matchedListing, null);
       assert.equal(response.sandboxPreview.environment, 'sandbox');
       assertUnpriced(response);
-      assert.match(await page.locator('#pricingListings').innerText(), /SANDBOX TEST DATA ONLY/);
+      assert.match(await page.locator('#pricingListings').innerText(), /SANDBOX MOCK DATA ONLY/);
+      assert.match(await page.locator('#pricingListings').innerText(), /eBay Sandbox compatibility test/);
+      assert.match(await page.locator('#pricingListings').innerText(), /not the user's part/);
       assert.match(await page.locator('#confirmedSavingLabel').innerText(), /Sandbox: test data only/);
       assert.match(await page.locator('#savingNote').innerText(), /not real prices/);
       assert.equal(await page.locator('#pricingListings a').count(), 0);
