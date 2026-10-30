@@ -17,7 +17,7 @@ test('bounded 20–50-case plans expose explicit retries, category cache, and OA
 
 test('plans reject missing, impossible, or unbounded assumptions', () => {
   const base = plan.scenarios[0];
-  for (const patch of [{caseCount:0}, {caseCount:51}, {caseCount:20.5}, {attemptsPerCase:3}, {candidateItemsPerAttempt:11}, {eligibleItemsPerAttempt:4}, {distinctCategoriesPerAttempt:3}, {oauthTokenRequests:0}, {oauthTokenRequests:21}]) {
+  for (const patch of [{caseCount:0}, {caseCount:51}, {caseCount:20.5}, {attemptsPerCase:3}, {candidateItemsPerAttempt:11}, {eligibleItemsPerAttempt:4}, {distinctCategoriesPerAttempt:3}, {oauthTokenRequests:0}]) {
     assert.equal(estimatePilotVolume({...base,...patch}).valid,false);
   }
   assert.equal(estimatePilotVolume().valid,false);
@@ -29,4 +29,19 @@ test('offline planning CLI prints labeled estimates without credentials or exter
   const report = JSON.parse(output.stdout);
   assert.equal(report.evidenceType, 'HYPOTHETICAL_PLAN_NOT_ACTUAL_TRAFFIC');
   assert.equal(report.reports[2].calls.total,7200);
+});
+
+test('automatic HTTP retries are separate from full reruns and never multiply OAuth', () => {
+  const results = plan.scenarios.map(estimatePilotVolume);
+  assert.deepEqual(results.map(r => r.requestBudget.total), [441, 2802, 14300]);
+  assert.ok(results.every(r => r.planningInputsComplete));
+  const r = estimatePilotVolume({...plan.scenarios[0], automaticRetryRate: 0, oauthTokenRequests: 100});
+  assert.equal(r.valid, true); // Token budget is not falsely capped at one per lookup.
+  assert.equal(r.requestBudget.total, 320);
+  const {automaticRetryRate, ...legacy} = plan.scenarios[0];
+  assert.equal(estimatePilotVolume(legacy).planningInputsComplete, false);
+  assert.equal(estimatePilotVolume(legacy).requestBudget.total, 221);
+  for (const automaticRetryRate of [-1, 2, null, '1', NaN]) {
+    assert.equal(estimatePilotVolume({...legacy, automaticRetryRate}).valid, false);
+  }
 });
