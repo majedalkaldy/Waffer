@@ -1,9 +1,12 @@
 {
-  "_instructions": "Replace every zero with measured or explicitly approved planning assumptions before using this file for eBay Application Growth Check estimates.",
+  "_instructions": "Incomplete placeholders, not a forecast. Supply measured or explicitly approved planning inputs, including category diversity, automatic retry rate and OAuth budget. Zero rates may be valid only when intentionally justified. See EBAY_VOLUME_ACCOUNTING.md.",
   "dailyActiveUsers": 0,
   "searchesPerUser": 0,
   "candidateItemsInspectedPerSearch": 0,
   "fitmentEligibleCandidateRate": 0,
   "taxonomyCacheMissRate": 0,
-  "peakHourShare": 0
+  "peakHourShare": 0,
+  "taxonomyCategoriesPerSearch": null,
+  "automaticRetryRate": null,
+  "oauthTokenRequests": null
 }
