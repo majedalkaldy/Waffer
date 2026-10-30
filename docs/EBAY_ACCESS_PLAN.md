@@ -1,6 +1,6 @@
 # eBay access plan for Waffer
 
-Updated: 2026-10-29
+Updated: 2026-10-30
 
 ## Goal
 
@@ -31,14 +31,16 @@ Sandbox remains test-only and does not activate verified pricing.
 
 ### Production
 
-Production shadow mode requires all four gates:
+The standalone Production shadow adapter requires these four configuration inputs; their presence alone is not authorization or public-runtime readiness:
 
 - `EBAY_CLIENT_ID`
 - `EBAY_CLIENT_SECRET`
 - `EBAY_BUY_PRODUCTION_APPROVED=true`
 - `EBAY_SHADOW_ENABLED=true`
 
-Even with all four present, `verifiedMarketPricing` remains false until Waffer's provider Pilot and live review are separately passed.
+Configuration metadata confirms both Production credential variables are present, without inspecting their values. Presence does not authenticate a keyset or establish Buy API authorization. The owner reports Production key enablement and a marketplace account-deletion exemption; neither report is independently verified by this packet.
+
+Even with all four inputs present, the public runtime additionally requires explicit provider mode and reviewed Production evidence under [runtime integration](EBAY_RUNTIME_INTEGRATION.md). `verifiedMarketPricing` remains disabled until the provider pilot, evidence review and release controls are satisfied.
 
 ## eBay approval path
 
@@ -46,10 +48,10 @@ According to eBay's current Buy API documentation, production access is restrict
 
 1. eBay Developer account and Sandbox keyset. **Completed.**
 2. Working Sandbox OAuth/Taxonomy/Browse integration. **Completed on 2026-10-29.**
-3. eBay Partner Network / Buy API application where applicable.
-4. Application Growth Check for restricted Production APIs.
+3. EPN membership and campaign are confirmed; AI/use-case review remains pending. Membership is distinct from Buy API Production authorization.
+4. Application Growth Check for restricted Production APIs: owner-reported not submitted; traffic inputs and supporting evidence remain incomplete.
 5. eBay review/support process and any required agreements.
-6. Production keyset enabled for the approved Buy API use case.
+6. Verify Production keyset entitlement for the approved Buy API use case. Owner-reported key enablement is not independent confirmation of this entitlement.
 
 ## Waffer use case to present
 
@@ -79,12 +81,14 @@ Waffer does not perform checkout itself in the current model.
 
 ## Before requesting Production activation
 
-Do not submit guessed traffic numbers. Prepare measured or explicitly estimated:
+Do not submit guessed traffic numbers. Prepare measured or explicitly approved, clearly labeled planning assumptions:
 - peak hourly Browse calls;
 - daily Browse calls;
 - Taxonomy calls, noting category/vehicle caching;
 - expected U.S. monthly users;
 - expected click-through volume to eBay.
+
+Use the [dossier evidence checklist](EBAY_APPLICATION_DOSSIER.md#technical-growth-check-preparation-status-2026-10-30) to separate confirmed metadata, owner reports, pending approvals and missing real-run evidence. A null committed release sample does not prove no data is stored: the pilot CLI can write JSON captures, so retention/deletion handling needs explicit review.
 
 The application should also include screenshots or a testable Sandbox flow and explain that eBay Browse ordering is preserved within the eBay source.
 

@@ -1,6 +1,6 @@
 # Waffer — eBay Buy API Application Dossier
 
-Prepared: 2026-10-03 · Revised: 2026-10-29
+Prepared: 2026-10-03 · Revised: 2026-10-30
 
 **Draft preparation packet, not a completed application or proof of eBay approval.**
 This document does not authorize accepting eBay contracts, policies, or legal terms on behalf of the account owner.
@@ -11,7 +11,9 @@ This document does not authorize accepting eBay contracts, policies, or legal te
 - **Wired behind disabled release gates:** `/api/price-compare` uses the gated eBay runtime through `lib/price-provider.js`. Production requires explicit provider mode, approval and reviewed real pilot evidence; Sandbox is isolated and cannot be enabled in production. The default disabled path returns `WAITING_FOR_VERIFIED_PRICE_SOURCE`, null market prices/offer/saving, and `NOT_CALCULATED` savings. See [runtime integration](EBAY_RUNTIME_INTEGRATION.md).
 - **Synthetic reviewer UI:** `/review-demo/` is an isolated static route using fictional vehicle, part, listing, and price fixtures. It illustrates success, empty, error, stale, and uncertain-fitment states without remote service calls, checkout, or listing link-out. See [reviewer instructions](SYNTHETIC_REVIEW_DEMO.md).
 - **Verified Sandbox evidence (2026-10-29):** eBay Sandbox application credentials were configured in Vercel Preview and successfully authenticated with OAuth. Motors Taxonomy compatibility properties returned Year/Make/Model/Trim/Engine, and the documented Browse compatibility mock returned HTTP 200 with an `EXACT` match. The mock item IDs were not retrievable through getItem/getItemByLegacyId/checkCompatibility, which is recorded as a Sandbox mock-data limitation rather than Production evidence. See `EBAY_SANDBOX_LIVE_RESULT_2026-10-29.md`.
-- **Still unverified externally:** Production Buy API approval, EPN/commercial status where applicable, Production credentials, real Production listing retrieval, and a real Production shadow pilot.
+- **Configuration presence and membership:** configuration metadata confirms both Production credential variables are present; their values were not inspected. EPN membership and an affiliate campaign are confirmed. None of these establishes valid credentials, Buy API entitlement, AI/use-case approval, or release authorization.
+- **Owner-reported account state:** the owner reports an enabled Production keyset, a granted marketplace account-deletion exemption, and an Application Growth Check not yet submitted. These reports are not independently verified account approval or compliance evidence in this packet. EPN AI/use-case review remains pending.
+- **Still unverified externally:** Production Buy API authorization for this use case, successful real Production listing retrieval, and a reviewed real Production shadow pilot.
 - **Release remains gated:** `verifiedMarketPricing` remains disabled. Neither the synthetic UI nor a passing offline test is evidence of live inventory, real pricing, actual fitment, a completed provider pilot, or commercial readiness.
 
 The synthetic route, credentialed Sandbox integration, and authorized Production shadow pilot are three separate evidence stages. Do not describe the synthetic route as an eBay Sandbox integration or present its screenshots as API-run evidence.
@@ -65,6 +67,8 @@ The adapter targets `EBAY_US`, Motors compatibility tree `100`, and category-spe
 
 The intended integration would process vehicle identity, requested part number/description, listing identifier, seller display name, item price, known shipping, stock evidence, compatibility status, source URL, and verification timestamp. The browser drops provider responses after their five-minute freshness window and on reset; it does not automatically refetch expired data. Default diagnostics omit seller/listing payloads. OpenAI analysis is a separate single-call path with no automatic eBay API-to-model route. Upload notices prohibit retailer API datasets, but content origin is not automatically verified. These code controls do not certify compliance with eBay policy or establish authorization.
 
+The committed `EBAY_PRICING_RELEASE.json` remains `PENDING` with `sample: null`. This establishes that the repository does not contain an approved release sample there; it does **not** prove no Production data was ever collected or stored elsewhere. The pilot CLI can print a sample and persist it to a caller-selected JSON output path (`scripts/run-ebay-pilot.mjs`). Before any authorized real capture, identify output/log destinations, access controls, retention and deletion handling. Browser expiry and omitted diagnostic payloads are not a system-wide no-storage guarantee. An owner-reported account-deletion exemption is not proof that all data-handling obligations are discharged.
+
 Browse-only access does not require buyer passwords or checkout credentials. The synthetic route uses only fictional local fixtures; it is not a place to enter real VINs, customer quotations, credentials, or personal data.
 
 ## Security and activation controls
@@ -73,7 +77,7 @@ Browse-only access does not require buyer passwords or checkout credentials. The
 - Separate Sandbox and Production environment-variable names/base URLs are implemented.
 - Production shadow creation requires credentials plus explicit approval and enablement flags. The account owner must verify actual approval separately; setting a flag does not grant it.
 - Readiness reports inspect local configuration presence/flags only. They do not authenticate with eBay or verify a keyset, entitlement, approval, or working API integration.
-- The public pricing path has request controls and timeouts, but its provider registry remains empty. These controls are not evidence that the standalone pilot has been load-tested.
+- The public pricing path has request controls and timeouts, but its configured provider remains disabled behind release gates. These controls are not evidence that the standalone pilot has been load-tested.
 - Shadow readiness and successful offline tests do not activate user-facing verified pricing.
 
 ## Synthetic reviewer demonstration available without credentials
@@ -98,7 +102,7 @@ npm run ebay:pilot -- sandbox <completed-sandbox-cases.json> <sandbox-output.jso
 
 `docs/EBAY_PILOT_CASES.json` is an incomplete placeholder, not a runnable approved case set. Keep the output explicitly labeled `environment: "sandbox"`; Sandbox evidence cannot pass the Production pricing gate. Record the exact build, run date, redacted inputs/output, and observed success/failure results without exposing secrets.
 
-A support-case Sandbox walkthrough can now reference the genuine authorized 2026-10-29 run. Identify the actual test entry point (currently the CLI), completed test cases, prerequisites, and reproducible results. Do not tell a reviewer that the normal public app runs eBay searches or offers link-out when it does not. A browser-connected Sandbox build remains additional work.
+A support-case Sandbox walkthrough can now reference the genuine authorized 2026-10-29 run. Identify the actual test entry point (currently the CLI), completed test cases, prerequisites, and reproducible results. Do not tell a reviewer that the normal public app runs eBay searches or offers link-out when it does not. The browser-connected fixed Sandbox mock path is now implemented. It uses a predetermined Honda Civic/brakes scenario, not the user’s part or a real offer; deployment-specific end-to-end evidence remains separate from code availability.
 
 ## Production shadow pilot still required
 
@@ -139,6 +143,22 @@ npm run ebay:estimate-volume -- docs/EBAY_GROWTH_CHECK_INPUT.json
 
 The existing estimator reports Browse search, item-detail, compatibility, and Taxonomy method estimates. Reconcile model scope, caching, retries, authentication overhead, peak concentration, and any limits against the actual implementation and intended use before owner review. Neither estimator submits an application or establishes approval.
 
+## Technical Growth Check preparation status (2026-10-30)
+
+This is an evidence checklist, not a certified application answer or permission to submit. Do not copy owner-reported states into verified-approval fields without the required account evidence.
+
+| Topic | Established preparation | Still required before using as an application claim |
+| --- | --- | --- |
+| Intended service | U.S. repair-quotation review; gated part identity/fitment and proposed eBay listing link-out; no Waffer checkout | Review the actual proposed use case and requested permissions against the application |
+| Account/access | EPN membership and campaign confirmed; both Production credential variables present in configuration metadata | Verify actual Buy API use-case authorization; distinguish pending AI review from membership and owner-reported key enablement |
+| Sandbox | Repository records OAuth, Taxonomy and fixed Browse mock results; item-resource checks returned 404 | Preserve exact tested build, scenario, sanitized request/response evidence and limitations; mock data does not establish Production access |
+| Workload | Offline daily and batch tools; request-accounting correction is proposed in [draft PR #99](https://github.com/majedalkaldy/Waffer/pull/99), not merged at this review | Reviewed daily/monthly users, searches, candidate/category mix, retries, OAuth budget, peak concentration and expected click-throughs; no guessed or demo-derived traffic |
+| Data handling | Browser expiry and diagnostic minimization controls; CLI can persist sample JSON | Inventory actual outputs/logs and document retention/deletion handling; do not attest that nothing is stored merely because the committed release sample is null |
+| Production validation | Source-researched pilot inputs and offline preflight available; release record remains pending | Authorized genuine captures, exact canonical fitment, item/compatibility chain, manual review and independent release decision |
+| Submission | Owner reports Growth Check has not been submitted | Complete truthful inputs and review applicable account requirements before any separately authorized submission |
+
+The Sandbox wording correction in [draft PR #98](https://github.com/majedalkaldy/Waffer/pull/98) and request-accounting correction in draft PR #99 are distinct from the deployed main revision. Do not describe draft changes as deployed or convert hypothetical budget totals into observed usage. No new provider requests or application submission are performed by this preparation.
+
 ## Application/support material still to assemble
 
 Before any submission, the owner should verify the current eBay requirements and applicable EPN/Buy API approval path using the references below. The earlier proposed support-ticket subject, `Buy API Production Access (<EPN registered eBay user ID>)`, must be checked against the then-current instructions rather than treated as verified submission guidance.
@@ -155,11 +175,11 @@ No login, key creation, legal acceptance, application submission, or Production 
 
 ## Current blockers
 
-1. **Production approval still external:** Developer/Sandbox access is established, but any required Buy API/EPN/Production approvals remain outstanding.
+1. **Production approval still external:** EPN membership and credential-variable presence are confirmed, but EPN AI/use-case review and Production Buy API authorization remain separate gates. Owner-reported key enablement or exemption does not establish either approval.
 2. **Sandbox integration evidence captured:** OAuth, Taxonomy and official Browse mock search are documented; real Production item retrieval/checkCompatibility remains pending Production access.
-3. **Runtime wired, activation pending:** the server registry, API and listing UI are wired under `docs/EBAY_RUNTIME_INTEGRATION.md`. Production remains disabled; no live integration has been verified.
+3. **Runtime wired, activation pending:** the server registry, API and listing UI are wired under `docs/EBAY_RUNTIME_INTEGRATION.md`. Production remains disabled; no real Production listing/compatibility flow has been verified by this packet.
 4. **Pilot execution incomplete:** all 20 manufacturer candidates now have sourced required inputs. Exact eBay canonical identity, authorized real captures and listing checks remain required.
-5. **Traffic/application packet incomplete:** hypothetical pilot planning is available, but Growth Check inputs and submission materials still need owner review.
+5. **Traffic/application packet incomplete:** Growth Check is owner-reported not submitted. Hypothetical pilot planning is available, but application inputs and submission materials still need review; no demand figures are supplied here.
 6. **Commercial release not established:** Production evidence, manual review, relevant terms, and separate provider/release decisions remain mandatory.
 
 References retained for owner verification before submission (not re-verified as part of the offline demo work):
