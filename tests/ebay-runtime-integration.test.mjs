@@ -188,3 +188,61 @@ test('an upstream 401 invalidates the token for the next lookup without replayin
  assert.equal(transport.calls.filter(c=>c.url.includes('/oauth2/token')).length,2);
  assert.equal(transport.calls.filter(c=>c.url.includes('/item_summary/search?')).length,2);
 });
+
+// Fully authored transport data. Cross-references are not the offered item's identity.
+for (const [name, item] of [
+ ['requested identity in title only', {mpn:null,brand:null,title:'Fixture Brand FIXTURE-123 replacement'}],
+ ['requested number only in cross-reference aspect', {mpn:'OTHER-456',localizedAspects:[{name:'Cross Reference Part Number',value:'FIXTURE-123'}]}],
+ ['requested number only in interchange aspect', {mpn:null,localizedAspects:[{name:'Interchange Part Number',value:'FIXTURE-123'}]}],
+ ['requested number only in supersession aspect', {mpn:null,localizedAspects:[{name:'Superseded Part Number',value:'FIXTURE-123'}]}],
+ ['same number from a different brand', {brand:'Other Fixture Brand',title:'Replaces Fixture Brand FIXTURE-123'}],
+ ['conflicting item and product MPN', {mpn:'OTHER-456',product:{mpn:'FIXTURE-123',brand:'Fixture Brand'}}],
+ ['conflicting product and item MPN', {product:{mpn:'OTHER-456'}}],
+ ['conflicting item and aspect MPN', {mpn:'OTHER-456',localizedAspects:[{name:'Manufacturer Part Number',value:'FIXTURE-123'}]}],
+ ['conflicting aspect and item MPN', {localizedAspects:[{name:'MPN',value:'OTHER-456'}]}],
+ ['multiple distinct MPN aspect values', {mpn:null,localizedAspects:[{name:'MPN',value:['FIXTURE-123','OTHER-456']}]}],
+ ['conflicting item and product brand', {brand:'Other Fixture Brand',product:{brand:'Fixture Brand'}}],
+ ['conflicting product and item brand', {product:{brand:'Other Fixture Brand'}}],
+ ['conflicting item and aspect brand', {brand:'Other Fixture Brand',localizedAspects:[{name:'Brand',value:'Fixture Brand'}]}],
+ ['conflicting aspect and item brand', {localizedAspects:[{name:'Brand',value:'Other Fixture Brand'}]}],
+ ['multiple distinct brand aspect values', {brand:null,localizedAspects:[{name:'Brand',value:['Fixture Brand','Other Fixture Brand']}]}],
+ ['conflicting brand aspect with padded name', {localizedAspects:[{name:' Brand ',value:'Other Fixture Brand'}]}],
+ ['nonempty punctuation-only MPN conflict', {product:{mpn:'???'}}],
+ ['nonempty punctuation-only brand conflict', {product:{brand:'???'}}],
+ ['malformed MPN value', {product:{mpn:{value:'FIXTURE-123'}}}],
+ ['malformed brand value', {product:{brand:false}}]
+]) test(name+' cannot be promoted to a matched listing',async()=>{
+ const transport=fixtureTransport({item});
+ const provider=createConfiguredEbayRuntimeProvider(productionEnv,{...options(),fetchImpl:transport.fetchImpl});
+ const result=await lookup(provider);
+ assert.equal(result.status,'NO_VERIFIED_PRICE');
+ assert.equal(result.matchedListing,null);assert.equal(result.bestOffer,null);assert.equal(result.marketRange,null);
+ assert.equal(calculateVerifiedOfferSaving({workshopUnitPrice:100,bestOffer:result.bestOffer}).amount,null);
+ assert.equal(transport.calls.filter(c=>c.url.includes('/check_compatibility')||c.url.includes('/commerce/taxonomy/')).length,0);
+});
+
+for (const [name,item] of [
+ ['consistent normalized identity across structured fields',{mpn:'fixture-123',brand:'Fixture Brand',product:{mpn:'FIXTURE 123',brand:'fixture-brand'},localizedAspects:[{name:'MPN',value:['FIXTURE123','fixture-123']},{name:'Brand',value:['Fixture Brand','fixture brand']}]}],
+ ['identity in product fields only',{mpn:null,brand:null,product:{mpn:'FIXTURE-123',brand:'Fixture Brand'}}],
+ ['identity in item aspects only',{mpn:null,brand:null,localizedAspects:[{name:' Manufacturer Part Number ',value:'FIXTURE-123'},{name:' Brand ',value:'Fixture Brand'}]}],
+ ['blank optional structured fields',{product:{mpn:'  ',brand:''},localizedAspects:[{name:'MPN',value:[null,'']},{name:'Brand',value:'  '}]}],
+ ['different cross-reference alongside exact item identity',{localizedAspects:[{name:'Cross Reference Part Number',value:'OTHER-456'},{name:'Interchange Part Number',value:'OTHER-789'}]}]
+]) test(name+' remains eligible only with confirmed fitment',async()=>{
+ const transport=fixtureTransport({item});
+ const provider=createConfiguredEbayRuntimeProvider(productionEnv,{...options(),fetchImpl:transport.fetchImpl});
+ const result=await lookup(provider);
+ assert.equal(result.status,'MATCHED_LISTING');
+ assert.equal(result.matchedListing.identityBasis,'EXACT_MPN_AND_BRAND');
+ assert.equal(result.matchedListing.vehicleVerified,true);assert.equal(result.bestOffer,null);
+ assert.equal(transport.calls.filter(c=>c.url.includes('/check_compatibility')).length,1);
+});
+
+for(const compatibility of ['UNDETERMINED','NOT_COMPATIBLE','UNKNOWN','',null])
+ test('exact structured identity with '+String(compatibility)+' fitment withholds listing and savings',async()=>{
+  const transport=fixtureTransport({compatibility});
+  const provider=createConfiguredEbayRuntimeProvider(productionEnv,{...options(),fetchImpl:transport.fetchImpl});
+  const result=await lookup(provider);
+  assert.equal(result.status,'NO_VERIFIED_PRICE');assert.equal(result.matchedListing,null);assert.equal(result.bestOffer,null);
+  assert.equal(calculateVerifiedOfferSaving({workshopUnitPrice:100,bestOffer:result.bestOffer}).amount,null);
+  assert.equal(transport.calls.filter(c=>c.url.includes('/check_compatibility')).length,1);
+ });
