@@ -4,6 +4,12 @@ import assert from 'node:assert/strict';
 import vehiclesHandler from '../api/vehicles.js';
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 
+function assertNoStore(res) {
+  for (const header of ['Cache-Control', 'CDN-Cache-Control', 'Vercel-CDN-Cache-Control']) {
+    assert.equal(res.headers[header], 'no-store', header);
+  }
+}
+
 const originalFetch = globalThis.fetch;
 const originalKey = process.env.AUTOPARTS_API_KEY;
 
@@ -24,7 +30,7 @@ test.afterEach(() => {
   else process.env.AUTOPARTS_API_KEY = originalKey;
 });
 
-test('successful manufacturer response is cacheable only at Vercel CDN', async () => {
+test('manufacturer success forbids storage at every cache layer', async () => {
   process.env.AUTOPARTS_API_KEY = 'test-key';
   let calls = 0;
 
@@ -48,11 +54,7 @@ test('successful manufacturer response is cacheable only at Vercel CDN', async (
   assert.equal(res.statusCode, 200);
   assert.equal(calls, 1);
   assert.equal(res.headers['Cache-Control'], 'no-store');
-  assert.equal(
-    res.headers['Vercel-CDN-Cache-Control'],
-    'public, max-age=' + RUNTIME_CONFIG.manufacturersCdnCacheSeconds +
-      ', stale-while-revalidate=' + RUNTIME_CONFIG.manufacturersCdnStaleSeconds
-  );
+  assertNoStore(res);
   assert.equal(res.body.count, 2);
   assert.deepEqual(
     res.body.manufacturers.map(item => item.manufacturerName),
@@ -74,7 +76,7 @@ test('upstream manufacturer failure is never marked cacheable', async () => {
 
   assert.equal(res.statusCode, 502);
   assert.equal(res.body.code, 'CATALOG_UPSTREAM_ERROR');
-  assert.equal(res.headers['Vercel-CDN-Cache-Control'], undefined);
+  assertNoStore(res);
 });
 
 test('invalid upstream body is never marked cacheable', async () => {
@@ -91,13 +93,10 @@ test('invalid upstream body is never marked cacheable', async () => {
 
   assert.equal(res.statusCode, 502);
   assert.equal(res.body.code, 'CATALOG_INVALID_RESPONSE');
-  assert.equal(res.headers['Vercel-CDN-Cache-Control'], undefined);
+  assertNoStore(res);
 });
 
-test('manufacturer cache durations are positive and stale window is longer', () => {
-  assert.ok(RUNTIME_CONFIG.manufacturersCdnCacheSeconds > 0);
-  assert.ok(
-    RUNTIME_CONFIG.manufacturersCdnStaleSeconds >=
-      RUNTIME_CONFIG.manufacturersCdnCacheSeconds
-  );
+test('manufacturer CDN storage and stale reuse are disabled',()=>{
+  assert.equal(RUNTIME_CONFIG.manufacturersCdnCacheSeconds,0);
+  assert.equal(RUNTIME_CONFIG.manufacturersCdnStaleSeconds,0);
 });

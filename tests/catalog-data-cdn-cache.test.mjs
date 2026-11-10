@@ -7,6 +7,12 @@ import criteriaHandler from '../api/article-criteria.js';
 import vinHandler from '../api/vin.js';
 import { RUNTIME_CONFIG } from '../lib/runtime-config.js';
 
+function assertNoStore(res) {
+  for (const header of ['Cache-Control', 'CDN-Cache-Control', 'Vercel-CDN-Cache-Control']) {
+    assert.equal(res.headers[header], 'no-store', header);
+  }
+}
+
 const originalFetch=globalThis.fetch;
 const originalKey=process.env.AUTOPARTS_API_KEY;
 
@@ -27,7 +33,7 @@ test.afterEach(()=>{
   else process.env.AUTOPARTS_API_KEY=originalKey;
 });
 
-test('products success is cached only at Vercel CDN',async()=>{
+test('products success forbids storage at every cache layer',async()=>{
   process.env.AUTOPARTS_API_KEY='test-key';
   globalThis.fetch=async()=>({
     ok:true,
@@ -40,14 +46,10 @@ test('products success is cached only at Vercel CDN',async()=>{
 
   assert.equal(res.statusCode,200);
   assert.equal(res.headers['Cache-Control'],'no-store');
-  assert.equal(
-    res.headers['Vercel-CDN-Cache-Control'],
-    'public, max-age='+RUNTIME_CONFIG.catalogDataCdnCacheSeconds+
-      ', stale-while-revalidate='+RUNTIME_CONFIG.catalogDataCdnStaleSeconds
-  );
+  assertNoStore(res);
 });
 
-test('articles success uses public catalog CDN policy',async()=>{
+test('articles success forbids storage at every cache layer',async()=>{
   process.env.AUTOPARTS_API_KEY='test-key';
   globalThis.fetch=async()=>({
     ok:true,
@@ -63,14 +65,10 @@ test('articles success uses public catalog CDN policy',async()=>{
   },res);
 
   assert.equal(res.statusCode,200);
-  assert.equal(
-    res.headers['Vercel-CDN-Cache-Control'],
-    'public, max-age='+RUNTIME_CONFIG.catalogDataCdnCacheSeconds+
-      ', stale-while-revalidate='+RUNTIME_CONFIG.catalogDataCdnStaleSeconds
-  );
+  assertNoStore(res);
 });
 
-test('article criteria success uses longer CDN policy',async()=>{
+test('article criteria success forbids storage at every cache layer',async()=>{
   process.env.AUTOPARTS_API_KEY='test-key';
   globalThis.fetch=async()=>({
     ok:true,
@@ -82,11 +80,7 @@ test('article criteria success uses longer CDN policy',async()=>{
   await criteriaHandler({method:'GET',query:{articleId:'1001',market:'SA'},headers:{}},res);
 
   assert.equal(res.statusCode,200);
-  assert.equal(
-    res.headers['Vercel-CDN-Cache-Control'],
-    'public, max-age='+RUNTIME_CONFIG.catalogCriteriaCdnCacheSeconds+
-      ', stale-while-revalidate='+RUNTIME_CONFIG.catalogCriteriaCdnStaleSeconds
-  );
+  assertNoStore(res);
 });
 
 test('upstream catalog errors are never marked cacheable',async()=>{
@@ -101,7 +95,7 @@ test('upstream catalog errors are never marked cacheable',async()=>{
   await productsHandler({method:'GET',query:{vehicleId:'9445',market:'SA'},headers:{}},res);
 
   assert.equal(res.statusCode,502);
-  assert.equal(res.headers['Vercel-CDN-Cache-Control'],undefined);
+  assertNoStore(res);
 });
 
 test('VIN responses remain private and are never CDN cached',async()=>{
@@ -124,9 +118,52 @@ test('VIN responses remain private and are never CDN cached',async()=>{
   assert.equal(res.headers['Vercel-CDN-Cache-Control'],undefined);
 });
 
-test('catalog CDN durations are positive and stale windows are longer',()=>{
-  assert.ok(RUNTIME_CONFIG.catalogDataCdnCacheSeconds>0);
-  assert.ok(RUNTIME_CONFIG.catalogDataCdnStaleSeconds>=RUNTIME_CONFIG.catalogDataCdnCacheSeconds);
-  assert.ok(RUNTIME_CONFIG.catalogCriteriaCdnCacheSeconds>=RUNTIME_CONFIG.catalogDataCdnCacheSeconds);
-  assert.ok(RUNTIME_CONFIG.catalogCriteriaCdnStaleSeconds>=RUNTIME_CONFIG.catalogCriteriaCdnCacheSeconds);
+test('catalog CDN storage and stale reuse are disabled',()=>{
+  for (const key of ['catalogDataCdnCacheSeconds','catalogDataCdnStaleSeconds','catalogCriteriaCdnCacheSeconds','catalogCriteriaCdnStaleSeconds']) assert.equal(RUNTIME_CONFIG[key],0,key);
 });
+
+// Synthetic transport only: every return path must keep the no-retention policy.
+const { default: manufacturersHandler } = await import('../api/vehicles.js');
+for (const [name, handler] of [
+  ['products', productsHandler], ['articles', articlesHandler],
+  ['criteria', criteriaHandler], ['manufacturers', manufacturersHandler]
+]) {
+  const request = (overrides = {}) => ({ method: 'GET', headers: {},
+    query: { vehicleId: '123', productId: '456', articleId: '789', market: 'US' }, ...overrides });
+  for (const [scenario, req, key, expected] of [
+    ['unsupported method', request({ method: 'POST' }), 'test-key', 405],
+    ['missing API key', request(), '', 500],
+    ['unsupported market', request({ query: { vehicleId:'123', productId:'456', articleId:'789', market:'INVALID' } }), 'test-key', 400],
+    ['cross-site request', request({ headers: { 'sec-fetch-site':'cross-site' } }), 'test-key', 403]
+  ]) test(name + ' prohibits caching on ' + scenario, async () => {
+    process.env.AUTOPARTS_API_KEY = key;
+    globalThis.fetch = async () => { throw new Error('Unexpected provider call'); };
+    const res = resRecorder();
+    await handler(req, res);
+    assert.equal(res.statusCode, expected);
+    assertNoStore(res);
+  });
+
+  for (const malformed of [false, true]) test(name + ' prohibits caching on ' + (malformed ? 'malformed response' : 'upstream failure'), async () => {
+    process.env.AUTOPARTS_API_KEY = 'test-key';
+    globalThis.fetch = async () => ({ ok: malformed, status: malformed ? 200 : 503,
+      json: async () => { if (malformed) throw new SyntaxError('fixture'); return { error:'fixture' }; },
+      text: async () => malformed ? 'invalid fixture' : '{"error":"fixture"}' });
+    const res = resRecorder();
+    await handler(request(), res);
+    assert.equal(res.statusCode, 502);
+    assertNoStore(res);
+  });
+
+  test(name + ' does not reuse a response across requests', async () => {
+    process.env.AUTOPARTS_API_KEY = 'test-key';
+    let calls = 0;
+    globalThis.fetch = async () => { calls++; return { ok:true, status:200,
+      json:async()=>[], text:async()=>'[]' }; };
+    for (let i=0; i<2; i++) {
+      const res=resRecorder(); await handler(request(),res);
+      assert.equal(res.statusCode,200); assertNoStore(res);
+    }
+    assert.equal(calls,2);
+  });
+}

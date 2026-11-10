@@ -4,7 +4,10 @@ import { enforceCatalogRequestGuard } from '../lib/catalog-abuse-guard.js';
 
 export default async function handler(req, res) {
   res.setHeader('Allow', 'GET');
+  // Catalog storage rights are unverified; do not retain responses for later reuse.
   res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('CDN-Cache-Control', 'no-store');
+  res.setHeader('Vercel-CDN-Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -48,11 +51,6 @@ export default async function handler(req, res) {
       .filter(item => item.manufacturerId !== '' && item.manufacturerName)
       .sort((a,b) => String(a.manufacturerName).localeCompare(String(b.manufacturerName)));
 
-    res.setHeader(
-      'Vercel-CDN-Cache-Control',
-      'public, max-age=' + RUNTIME_CONFIG.manufacturersCdnCacheSeconds +
-        ', stale-while-revalidate=' + RUNTIME_CONFIG.manufacturersCdnStaleSeconds
-    );
     return res.status(200).json({ ...ctx, count: manufacturers.length, manufacturers });
   } catch (error) {
     console.error('Vehicle manufacturers error:', error);
