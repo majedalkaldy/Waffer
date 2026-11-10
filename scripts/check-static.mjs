@@ -900,26 +900,23 @@ if (!failures.length) {
     failures.push('Manufacturers API timeout is not classified explicitly');
   }
   for (const [source,label] of [
-    [productsApi,'api/products.js'],
-    [articlesApi,'api/articles.js'],
-    [criteriaApi,'api/article-criteria.js']
+    [productsApi,'api/products.js'], [articlesApi,'api/articles.js'],
+    [criteriaApi,'api/article-criteria.js'], [vehiclesApi,'api/vehicles.js']
   ]) {
-    const cacheHeaderIndex = source.indexOf("'Vercel-CDN-Cache-Control'");
-    const upstreamGuardIndex = source.indexOf('if (!response.ok)');
-    if (!(cacheHeaderIndex > upstreamGuardIndex)) {
-      failures.push(label + ' CDN cache header must only be applied after successful upstream validation');
+    for (const header of ['Cache-Control', 'CDN-Cache-Control', 'Vercel-CDN-Cache-Control']) {
+      if (!source.includes("res.setHeader('" + header + "', 'no-store')")) {
+        failures.push(label + ' must prohibit response storage at every cache layer');
+      }
+    }
+    if (source.includes('stale-while-revalidate') || source.includes('public, max-age=')) {
+      failures.push(label + ' must not re-enable catalog response retention');
     }
   }
   if (vinApi.includes("'Vercel-CDN-Cache-Control'")) {
     failures.push('VIN responses must never be stored in the Vercel CDN');
   }
-  const manufacturerCacheHeader = vehiclesApi.indexOf("'Vercel-CDN-Cache-Control'");
-  const manufacturerUpstreamGuard = vehiclesApi.indexOf('if (!response.ok)');
-  if (!(manufacturerCacheHeader > manufacturerUpstreamGuard)) {
-    failures.push('Manufacturer CDN cache header must only be applied after successful upstream validation');
-  }
-  if (clientSource.includes("fetch('/api/vehicles',{cache:'no-store'")) {
-    failures.push('Manufacturer client request still bypasses the Vercel CDN cache');
+  if (!vinApi.includes("res.setHeader('Cache-Control', 'no-store')")) {
+    failures.push('VIN responses must never be stored');
   }
 
   if (!health.includes("analysis: configured.analysis ? 'configured_not_probed' : 'not_configured'") ||
@@ -1140,9 +1137,9 @@ if (!failures.length) {
     if (!(RUNTIME_CONFIG.clientManufacturersTimeoutMs > RUNTIME_CONFIG.manufacturersTimeoutMs)) {
       failures.push('Client manufacturers timeout must exceed server manufacturers timeout');
     }
-    if (!(RUNTIME_CONFIG.manufacturersCdnCacheSeconds > 0 &&
-          RUNTIME_CONFIG.manufacturersCdnStaleSeconds >= RUNTIME_CONFIG.manufacturersCdnCacheSeconds)) {
-      failures.push('Manufacturer CDN cache configuration is invalid');
+    if (!(RUNTIME_CONFIG.manufacturersCdnCacheSeconds === 0 &&
+          RUNTIME_CONFIG.manufacturersCdnStaleSeconds === 0)) {
+      failures.push('Manufacturer CDN retention must remain disabled until storage rights are verified');
     }
     if (!(RUNTIME_CONFIG.clientVinTimeoutMs > RUNTIME_CONFIG.vinTimeoutMs)) {
       failures.push('Client VIN timeout must exceed server VIN timeout');
@@ -1160,11 +1157,9 @@ if (!failures.length) {
           RUNTIME_CONFIG.priceRateLimitHourlyMax >= RUNTIME_CONFIG.priceRateLimitBurstMax)) {
       failures.push('Pricing rate-limit configuration is invalid');
     }
-    if (!(RUNTIME_CONFIG.catalogDataCdnCacheSeconds > 0 &&
-          RUNTIME_CONFIG.catalogDataCdnStaleSeconds >= RUNTIME_CONFIG.catalogDataCdnCacheSeconds &&
-          RUNTIME_CONFIG.catalogCriteriaCdnCacheSeconds >= RUNTIME_CONFIG.catalogDataCdnCacheSeconds &&
-          RUNTIME_CONFIG.catalogCriteriaCdnStaleSeconds >= RUNTIME_CONFIG.catalogCriteriaCdnCacheSeconds)) {
-      failures.push('Catalog CDN cache policy is invalid');
+    if (![RUNTIME_CONFIG.catalogDataCdnCacheSeconds, RUNTIME_CONFIG.catalogDataCdnStaleSeconds,
+          RUNTIME_CONFIG.catalogCriteriaCdnCacheSeconds, RUNTIME_CONFIG.catalogCriteriaCdnStaleSeconds].every(value => value === 0)) {
+      failures.push('Catalog CDN retention must remain disabled until storage rights are verified');
     }
 
     const robots = read('robots.txt');

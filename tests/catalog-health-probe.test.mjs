@@ -146,3 +146,17 @@ test('missing catalog key never performs an upstream request', async () => {
   assert.equal(result.cache, 'none');
   assert.equal(calls, 0);
 });
+
+test('health cache retains only operational status, not catalog response content', async () => {
+  let calls = 0;
+  const response = { ok:true, json() { throw new Error('Must not consume catalog data'); },
+    text() { throw new Error('Must not consume catalog data'); } };
+  const options = { marketConfig, apiKey:'test-key', timeoutMs:100, cacheMs:60_000,
+    fetchImpl:async()=>{ calls++; return response; }, clock:()=>1000 };
+  const first=await probeCatalogHealth(options);
+  const second=await probeCatalogHealth(options);
+  assert.equal(calls,1);
+  assert.equal(first.cache,'miss'); assert.equal(second.cache,'hit');
+  assert.deepEqual(Object.keys(second).sort(), ['ageMs','cache','checkedAt','latencyMs','upstream']);
+  assert.deepEqual(second,{upstream:'reachable',latencyMs:0,checkedAt:1000,cache:'hit',ageMs:0});
+});

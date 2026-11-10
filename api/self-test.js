@@ -39,10 +39,10 @@ export default async function handler(req, res) {
       RUNTIME_CONFIG.catalogArticlesTimeoutMs,
       RUNTIME_CONFIG.catalogCriteriaTimeoutMs
     ].every(value => Number(value) > 0 && Number(value) <= Number(RUNTIME_CONFIG.catalogMatchTimeoutMs)),
-    catalogCdnCache: Number(RUNTIME_CONFIG.catalogDataCdnCacheSeconds) > 0 &&
-      Number(RUNTIME_CONFIG.catalogDataCdnStaleSeconds) >= Number(RUNTIME_CONFIG.catalogDataCdnCacheSeconds) &&
-      Number(RUNTIME_CONFIG.catalogCriteriaCdnCacheSeconds) >= Number(RUNTIME_CONFIG.catalogDataCdnCacheSeconds) &&
-      Number(RUNTIME_CONFIG.catalogCriteriaCdnStaleSeconds) >= Number(RUNTIME_CONFIG.catalogCriteriaCdnCacheSeconds),
+    catalogCdnCache: [
+      RUNTIME_CONFIG.catalogDataCdnCacheSeconds, RUNTIME_CONFIG.catalogDataCdnStaleSeconds,
+      RUNTIME_CONFIG.catalogCriteriaCdnCacheSeconds, RUNTIME_CONFIG.catalogCriteriaCdnStaleSeconds
+    ].every(value => value === 0),
     healthCatalogTimeout: Number(RUNTIME_CONFIG.healthCatalogTimeoutMs) > 0,
     healthCatalogCache: Number(RUNTIME_CONFIG.healthCatalogCacheMs) >=
       Number(RUNTIME_CONFIG.healthCatalogTimeoutMs),
@@ -56,8 +56,8 @@ export default async function handler(req, res) {
         Number(RUNTIME_CONFIG.priceRateLimitBurstMax),
     manufacturersTimeout: Number(RUNTIME_CONFIG.manufacturersTimeoutMs) > 0 &&
       Number(RUNTIME_CONFIG.clientManufacturersTimeoutMs) > Number(RUNTIME_CONFIG.manufacturersTimeoutMs),
-    manufacturersCdnCache: Number(RUNTIME_CONFIG.manufacturersCdnCacheSeconds) > 0 &&
-      Number(RUNTIME_CONFIG.manufacturersCdnStaleSeconds) >= Number(RUNTIME_CONFIG.manufacturersCdnCacheSeconds),
+    manufacturersCdnCache: RUNTIME_CONFIG.manufacturersCdnCacheSeconds === 0 &&
+      RUNTIME_CONFIG.manufacturersCdnStaleSeconds === 0,
     vinTimeout: Number(RUNTIME_CONFIG.vinTimeoutMs) > 0 &&
       Number(RUNTIME_CONFIG.clientVinTimeoutMs) > Number(RUNTIME_CONFIG.vinTimeoutMs),
     saMarket: sa.supported === true && sa.market === 'SA' && sa.currency === 'SAR',
